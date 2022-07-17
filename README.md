@@ -1,5 +1,8 @@
 # SnipeBot4
-Discord bot that tracks osu! plays for snipes
+The upcoming build that will be implemented into the current snipebot
+- Efficiency Changes
+- Slash Command Support
+- Full Refactor & Code Cleanup
 
 ## FAQ
 **Will my data from SnipeBot3 be moved over?**  
