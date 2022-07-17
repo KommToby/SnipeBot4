@@ -1,5 +1,5 @@
 # SnipeBot4
-The upcoming build that will be implemented into the current snipebot
+The upcoming build that will be implemented into the [current snipebot](https://github.com/KommToby/SnipeBot3)
 - Efficiency Changes
 - Slash Command Support
 - Full Refactor & Code Cleanup
