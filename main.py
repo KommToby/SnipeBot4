@@ -1,6 +1,7 @@
 # pip install -U discord-py-interactions
 import json, discord, interactions, os
 from discord.ext import commands
+from osu_auth import auth
 
 with open("config.json") as f:
     DISCORD_CONFIG_DATA = json.load(f)["discord"]
@@ -8,6 +9,7 @@ with open("config.json") as f:
 
 # Define Bot
 client = interactions.Client(TOKEN)
+client.auth = auth.Auth()
 
 # Bot Online
 @client.event

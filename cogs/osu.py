@@ -1,8 +1,9 @@
-import discord, interactions
-
+import interactions
+from embed.osu import create_osu_embed
 class Osu(interactions.Extension): # must have commands.cog or this wont work
     def __init__(self, client):
         self.client: interactions.Client = client
+        self.osu = client.auth
 
     @interactions.extension_command(
             name="osu", 
@@ -16,7 +17,9 @@ class Osu(interactions.Extension): # must have commands.cog or this wont work
         ]
     )
     async def osu(self, ctx: interactions.CommandContext, username: str):
-        await ctx.send(f"You are '{username}'")
+        user_data = await self.osu.get_user_data(username)
+        embed = await create_osu_embed(user_data)
+        await ctx.send(embeds=embed)
 
 def setup(client):
     Osu(client)

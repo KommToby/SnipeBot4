@@ -1,4 +1,4 @@
-import discord, interactions
+import interactions
 
 class Ping(interactions.Extension): # must have commands.cog or this wont work
     def __init__(self, client):
