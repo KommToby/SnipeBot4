@@ -64,7 +64,7 @@ class Auth:
 
     # Users scores on a specific beatmap, returns their best score for every mod combination they have played
     async def get_score_data(self, beatmap_id: str, user_id: str):
-        return await self.get_api_v2(f"beatmaps/{beatmap_id}/scores/users/{user_id}")
+        return await self.get_api_v2(f"beatmaps/{beatmap_id}/scores/users/{user_id}") # has to be user id cannot be username
 
     # Users most recent plays on osu, only returns their 5 most recent plays
     async def get_recent_plays(self, user_id: str):

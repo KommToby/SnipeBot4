@@ -2,6 +2,7 @@
 import json, discord, interactions, os
 from discord.ext import commands
 from osu_auth import auth
+from database import _init_db
 
 with open("config.json") as f:
     DISCORD_CONFIG_DATA = json.load(f)["discord"]
@@ -10,6 +11,7 @@ with open("config.json") as f:
 # Define Bot
 client = interactions.Client(TOKEN)
 client.auth = auth.Auth()
+client.database  = _init_db.Database()
 
 # Bot Online
 @client.event
