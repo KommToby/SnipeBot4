@@ -12,6 +12,7 @@ client = interactions.Client(TOKEN)
 # Bot Online
 @client.event
 async def on_ready():
+    print("\n\n\n\n\n\n\n\n")
     try:
         print("Bot Connected To Discord")
         for filename in os.listdir("./cogs"):
