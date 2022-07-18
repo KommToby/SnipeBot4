@@ -17,8 +17,7 @@ class Osu(interactions.Extension): # must have commands.cog or this wont work
         ]
     )
     async def osu(self, ctx: interactions.CommandContext, username: str):
-        # user_data = await self.osu.get_user_data(username)
-        user_data = await self.osu.get_beatmap("2077721")
+        user_data = await self.osu.get_user_data(username)
         embed = await create_osu_embed(user_data)
         await ctx.send(embeds=embed)
 

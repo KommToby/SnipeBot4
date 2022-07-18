@@ -91,3 +91,20 @@ class Database:
                 second_pp varchar(16)
             )
         ''')  # for storing if someone has been sniped on a specific beatmap
+
+    ## GETS
+    async def get_channel(self, discord_id):
+        return self.cursor.execute(
+            "SELECT * FROM users WHERE discord_channel=?",
+            (discord_id,)).fetchone()
+        
+    ## ADDS
+    async def add_channel(self, channel_id, user_id, user_data):
+        user_data = await self.osu.get_user_data(str(user_id))
+        self.cursor.execute(
+            "INSERT INTO users VALUES(?,?,?,?,?,?,?,?,?)",
+            (channel_id, user_data['id'], user_data['username'], user_data['country_code'], user_data['avatar_url'], user_data['is_supporter'], user_data['cover_url'], user_data['playmode'], 0)
+        )
+        self.db.commit()        
+    ## UPDATES
+    ## DELETES
