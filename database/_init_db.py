@@ -123,6 +123,12 @@ class Database:
             (user_id, beatmap_id, sniped_user_id)
         ).fetchone()
 
+    async def get_user_score_with_zeros(self, user_id, beatmap_id):
+        return self.cursor.execute(
+            "SELECT * FROM scores WHERE user_id=? AND beatmap_id=?",
+            (user_id, beatmap_id)
+        ).fetchall()
+
     ## ADDS
     async def add_channel(self, channel_id, user_id, user_data):
         user_data = await self.osu.get_user_data(str(user_id))
