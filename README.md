@@ -6,6 +6,12 @@ The upcoming build that will be implemented into the [current snipebot](https://
 
 This is in a seperate repo as it is a major update, the whole of SnipeBot3 was built off [discord.py](https://discordpy.readthedocs.io/en/stable/), this is being built off [discord-interactions](https://discord-interactions.readthedocs.io).
 
+## Installation  
+### prerequisite
+- **Python 3+**: The language the bot is written in - [https://www.python.org/downloads/](https://www.python.org/downloads/)  
+- **interactions-py**: The framework of the bot - `pip install -U discord-py-interactions`  
+- **interactions-get**: An extension that allows additional api requests from discord - `pip install -u interactions-get`  
+
 ## FAQ
 **Will my data from SnipeBot3 be moved over?**  
 Yes. The old data should all be compatable with the new version
