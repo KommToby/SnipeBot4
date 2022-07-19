@@ -1,6 +1,8 @@
 import time, asyncio
 from embed.new_best_score import *
 from embed.snipe import *
+from interactions.ext.get import get
+
 
 class SnipeTracker:
     def __init__(self, client):
@@ -123,7 +125,7 @@ class SnipeTracker:
                     if play['score'] >= online_play['score']['score']: # If the recent play is the recent score, then its a new best
                         sniped_friends = await self.get_sniped_friends(play, f"{data[0]}")
                         discord_channel = f'{data[0]}'
-                        post_channel = await self.client.get_channel(int(discord_channel))
+                        post_channel = await get(self.client, interactions.Channel, channel_id=int(discord_channel))
                         beatmap_data = await self.osu.get_beatmap(play['beatmap']['id'])
                         await post_channel.send(embed=create_high_score_embed(play, sniped_friends, beatmap_data)) # posts the snipe embed
                         # Now we check if the main user has sniped another main user (if they are in another main users friend list)
@@ -139,9 +141,9 @@ class SnipeTracker:
                 if play['score'] >= online_play['score']['score']:                    
                     sniped_friends = await self.get_sniped_friends(play, f"{data[0]}")
                     discord_channel = f'{data[0]}'
-                    post_channel = await self.client.get_channel(int(discord_channel))
+                    post_channel = await get(self.client, interactions.Channel, channel_id=int(discord_channel))
                     beatmap_data = await self.osu.get_beatmap(play['beatmap']['id'])
-                    await post_channel.send(embed=create_high_score_embed(play, sniped_friends, beatmap_data))
+                    await post_channel.send(embeds=await create_high_score_embed(play, sniped_friends, beatmap_data))
 
     # The main infinite loop tracker
     async def tracker_loop(self):

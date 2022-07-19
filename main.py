@@ -1,4 +1,5 @@
 # pip install -U discord-py-interactions
+# pip install -u interactions-get
 import json, discord, interactions, os
 from discord.ext import commands
 from osu_auth import auth
