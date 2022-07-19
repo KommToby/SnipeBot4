@@ -184,7 +184,7 @@ class Database:
         )
         self.db.commit()
 
-    async def update_score(self, user_id, beatmap_id):
+    async def update_score_zeros(self, user_id, beatmap_id):
         self.cursor.execute(
             "UPDATE scores SET score=? AND accuracy=? AND max_combo=? AND passed=? AND pp=? AND rank=? AND count_300=? AND count_100=? AND count_50=? AND count_miss=? AND date=? WHERE user_id=? AND beatmap_id=?",
             (0, False, False, False, False, False, False, False, False, False, False, user_id, beatmap_id)
