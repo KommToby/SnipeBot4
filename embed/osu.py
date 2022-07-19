@@ -1,4 +1,4 @@
-import interactions, discord
+import interactions
 
 async def create_osu_embed(user):
     embed = interactions.Embed(
