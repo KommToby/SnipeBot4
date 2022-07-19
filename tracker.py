@@ -127,7 +127,7 @@ class SnipeTracker:
                         discord_channel = f'{data[0]}'
                         post_channel = await get(self.client, interactions.Channel, channel_id=int(discord_channel))
                         beatmap_data = await self.osu.get_beatmap(play['beatmap']['id'])
-                        await post_channel.send(embed=create_high_score_embed(play, sniped_friends, beatmap_data)) # posts the snipe embed
+                        await post_channel.send(embeds=await create_high_score_embed(play, sniped_friends, beatmap_data)) # posts the snipe embed
                         # Now we check if the main user has sniped another main user (if they are in another main users friend list)
                         main_users = await self.database.get_all_users()
                         for main_user in main_users:
@@ -271,4 +271,4 @@ class SnipeTracker:
         discord_channel = f'{main_user_db[0]}'
         post_channel = await self.client.fetch_channel(int(discord_channel))
         beatmap_data = await self.osu.get_beatmap(play['beatmap']['id'])
-        await post_channel.send(embed=create_friend_snipe_embed(play, main_username, beatmap_data))
+        await post_channel.send(embeds=await create_friend_snipe_embed(play, main_username, beatmap_data))
