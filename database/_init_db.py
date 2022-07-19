@@ -97,7 +97,32 @@ class Database:
         return self.cursor.execute(
             "SELECT * FROM users WHERE discord_channel=?",
             (discord_id,)).fetchone()
+
+    async def get_all_users(self):
+        return self.cursor.execute(
+            "SELECT * FROM users").fetchall()
+
+    async def get_main_recent_score(self, user_id):
+        return self.cursor.execute(
+            "SELECT recent_score FROM users WHERE osu_id=?",
+            (user_id,)).fetchone()
+
+    async def get_user_friends(self, discord_id):
+        return self.cursor.execute(
+            "SELECT * FROM friends WHERE discord_channel=?",
+            (discord_id,)).fetchall()
         
+    async def get_user_beatmap_play(self, user_id, beatmap_id):
+        return self.cursor.execute(
+            "SELECT * FROM scores WHERE user_id=? AND beatmap_id=?",
+        ).fetchall()
+
+    async def get_user_snipe_on_beatmap(self, user_id, beatmap_id, sniped_user_id):
+        return self.cursor.execute(
+            "SELECT user_id FROM snipes WHERE user_id=? AND beatmap_id=? AND second_user_id=?",
+            (user_id, beatmap_id, sniped_user_id)
+        ).fetchone()
+
     ## ADDS
     async def add_channel(self, channel_id, user_id, user_data):
         user_data = await self.osu.get_user_data(str(user_id))
@@ -106,5 +131,40 @@ class Database:
             (channel_id, user_data['id'], user_data['username'], user_data['country_code'], user_data['avatar_url'], user_data['is_supporter'], user_data['cover_url'], user_data['playmode'], 0)
         )
         self.db.commit()        
+
+    async def add_beatmap(self, id, sr, artist, song, diff, url, len, bpm, mapper, status, bms_id, od, ar, cs, hp, max_combo):
+        self.cursor.execute(
+            "INSERT INTO beatmaps VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            (id, sr, artist, song, diff, url, len, bpm, mapper, status, bms_id, od, ar, cs, hp, max_combo)
+        )
+        self.db.commit()
+
+    async def add_snipe(self, user_id, beatmap_id, second_user_id, date, first_score, second_score, first_accuracy, second_accuracy, first_mods, second_mods, first_pp, second_pp):
+        self.cursor.execute(
+            "INSERT INTO snipes VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+            (user_id, beatmap_id, second_user_id, date, first_score, second_score, first_accuracy, second_accuracy, first_mods, second_mods, first_pp, second_pp)
+        )
+        self.db.commit()
+
+    async def add_score(self, user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date):
+        self.cursor.execute(
+            "INSERT INTO scores VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            (user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date)
+        )
+        self.db.commit()
+
     ## UPDATES
+    async def update_score(self, user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date):
+        self.cursor.execute(
+            "UPDATE scores SET score=? AND accuracy=? AND max_combo=? AND passed=? AND pp=? AND rank=? AND count_300=? AND count_100=? AND count_50=? AND count_miss=? AND date=? WHERE user_id=? AND beatmap_id=?",
+            (score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, user_id, beatmap_id)
+        )
+        self.db.commit()
+
+    async def update_main_recent_score(self, main_user_id, score):
+        self.cursor.execute(
+            "UPDATE users SET recent_score=? WHERE osu_id=?",
+            (score, main_user_id)
+        )
+        self.db.commit()
     ## DELETES
