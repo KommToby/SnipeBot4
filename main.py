@@ -1,7 +1,6 @@
 # pip install -U discord-py-interactions
 # pip install -u interactions-get
-import json, discord, interactions, os
-from discord.ext import commands
+import json, interactions, os
 from osu_auth import auth
 from database import _init_db
 from tracker import SnipeTracker
