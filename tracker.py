@@ -173,32 +173,40 @@ class SnipeTracker:
 
     # When given a play, checks all users for snipes on that map.
     async def add_snipes(self, play):
+        users_checked = []
         main_users = await self.database.get_all_users()
         for main_user in main_users: # Check all main users to see if they have played the map
             main_user_play = await self.osu.get_score_data(play['beatmap']['id'], main_user[1])
             main_user_friends = await self.database.get_user_friends(main_user[0])
             if main_user_play:
+                # TODO
                 pass
             else:
-                self.add_scores(main_user_friends, main_user, play)
+                # if the main user hasnt played the map, only scores need to be checked
+                users_checked = self.add_scores(main_user_friends, main_user, play, users_checked)
 
-    async def add_scores(self, main_user_friends, main_user, play):
-        if not(await self.database.get_user_score_with_zeros(main_user, play['beatmap']['id'])):
-            # if the user doesnt have a score and hasnt played the map, it just stores a 0 score
-            await self.database.add_score(main_user[1], play['beatmap']['id'], 0, None, None, None, None, None, None, None, None, None)
+    async def add_scores(self, main_user_friends, main_user, play, users_checked):
+        if main_user[1] not in users_checked: # for main users who may be friends with other main users
+            if not(await self.database.get_user_score_with_zeros(main_user, play['beatmap']['id'])):
+                # if the user doesnt have a score and hasnt played the map, it just stores a 0 score
+                await self.database.add_score(main_user[1], play['beatmap']['id'], 0, None, None, None, None, None, None, None, None, None)
+                users_checked.append(main_user[1])
         for friend in main_user_friends:
-            if not(await self.database.get_user_score_with_zeros(friend[1], play['beatmap']['id'])):
-                # The friend has not played the map and has not got a score saved
-                await self.database.add_score(friend[1], play['beatmap']['id'], 0, None, None, None, None, None, None, None, None, None)
-            else:
-                friend_play = self.osu.get_score_data(play['beatmap']['id'], friend[1])
-                if friend_play:
-                    local_score = await self.database.get_user_beatmap_play(friend[1], play['beatmap']['id'])
-                    if local_score is not None:
-                        if friend_play['score']['score'] > int(local_score[2]): # if the new score is better than the stored one
-                            await self.database.update_score(friend[1], friend_play['score']['beatmap']['id'], friend_play['score']['score'], friend_play['score']['accuracy'], friend_play['score']['max_combo'], friend_play['score']['passed'], friend_play['score']['pp'], friend_play['score']['rank'], friend_play['score']['statistics']['count_300'], friend_play['score']['statistics']['count_100'], friend_play['score']['statistics']['count_50'], friend_play['score']['statistics']['count_miss'], friend_play['score']['created_at'])
+            if friend[1] not in users_checked: # for duplicate friends over multiple main users
+                if not(await self.database.get_user_score_with_zeros(friend[1], play['beatmap']['id'])):
+                    # The friend has not played the map and has not got a score saved
+                    await self.database.add_score(friend[1], play['beatmap']['id'], 0, None, None, None, None, None, None, None, None, None)
                 else:
-                    pass # because they already have a 0 score stored
+                    friend_play = self.osu.get_score_data(play['beatmap']['id'], friend[1])
+                    if friend_play:
+                        local_score = await self.database.get_user_beatmap_play(friend[1], play['beatmap']['id'])
+                        if local_score is not None:
+                            if friend_play['score']['score'] > int(local_score[2]): # if the new score is better than the stored one
+                                await self.database.update_score(friend[1], friend_play['score']['beatmap']['id'], friend_play['score']['score'], friend_play['score']['accuracy'], friend_play['score']['max_combo'], friend_play['score']['passed'], friend_play['score']['pp'], friend_play['score']['rank'], friend_play['score']['statistics']['count_300'], friend_play['score']['statistics']['count_100'], friend_play['score']['statistics']['count_50'], friend_play['score']['statistics']['count_miss'], friend_play['score']['created_at'])
+                    else:
+                        pass # because they already have a 0 score stored
+                users_checked.append(friend[1])
+        return users_checked
 
     ## this takes in the main users best play and their local play, adds the snipe data to the db, and posts the snipe embed to discord
     async def post_friend_snipe(self, main_user_play, play, main_user_db):
