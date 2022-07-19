@@ -3,7 +3,7 @@ import interactions
 async def create_osu_embed(user):
     embed = interactions.Embed(
         title=f"osu! profile for {user['username']}",
-        color=0xFF0000,
+        color=16711680,
     )
     embed.description = \
         f"""**Rank**: #{user['statistics']['global_rank']:,} **Weighted pp**: {round(user['statistics']['pp']):,}

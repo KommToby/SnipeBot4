@@ -37,7 +37,7 @@ async def create_high_score_embed(play, sniped_friends, beatmap_data):
         title=title_message,
         description=f"{play['beatmapset']['artist']} - {play['beatmapset']['title']} [{play['beatmap']['version']}]" +
                     f" - {play['beatmap']['difficulty_rating']}:star:",
-        color=1752220"
+        color=1752220
     )
     embed.set_thumbnail(url=play['beatmapset']['covers']['list@2x'])
     embed.set_author(name='Snipebot by Komm', icon_url=str(image))

@@ -32,7 +32,7 @@ async def create_friend_snipe_embed(play, main_user, beatmap_data):
         title=title_message,
         description=f"{play['beatmapset']['artist']} - {play['beatmapset']['title']} [{play['beatmap']['version']}]" +
                     f" - {play['beatmap']['difficulty_rating']}:star:",
-        colour=0x04FF00
+        color=327424
     )
     embed.set_thumbnail(url=play['beatmapset']['covers']['list@2x'])
     embed.set_author(name='Snipebot by Komm', icon_url=str(image))
