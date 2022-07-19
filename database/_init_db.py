@@ -98,6 +98,17 @@ class Database:
             "SELECT * FROM users WHERE discord_channel=?",
             (discord_id,)).fetchone()
 
+    async def get_snipe(self, user1, beatmap, user2):
+        return self.cursor.execute(
+            "SELECT * FROM snipes WHERE user_id=? AND beatmap_id=? AND second_user_id=?",
+            (user1, beatmap, user2)).fetchone()
+
+    async def get_score(self, user_id, beatmap_id):
+        return self.cursor.execute(
+            "SELECT * FROM scores WHERE user_id=? AND beatmap_id=?",
+            (user_id, beatmap_id)
+        ).fetchone()
+    
     async def get_all_users(self):
         return self.cursor.execute(
             "SELECT * FROM users").fetchall()
@@ -164,6 +175,13 @@ class Database:
         self.cursor.execute(
             "UPDATE scores SET score=? AND accuracy=? AND max_combo=? AND passed=? AND pp=? AND rank=? AND count_300=? AND count_100=? AND count_50=? AND count_miss=? AND date=? WHERE user_id=? AND beatmap_id=?",
             (score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, user_id, beatmap_id)
+        )
+        self.db.commit()
+
+    async def update_score(self, user_id, beatmap_id):
+        self.cursor.execute(
+            "UPDATE scores SET score=? AND accuracy=? AND max_combo=? AND passed=? AND pp=? AND rank=? AND count_300=? AND count_100=? AND count_50=? AND count_miss=? AND date=? WHERE user_id=? AND beatmap_id=?",
+            (0, False, False, False, False, False, False, False, False, False, False, user_id, beatmap_id)
         )
         self.db.commit()
 
