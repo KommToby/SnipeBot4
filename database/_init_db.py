@@ -70,8 +70,7 @@ class Database:
                 od varchar(16),
                 ar varchar(16),
                 cs varchar(16),
-                hp varchar(16),
-                max_combo int
+                hp varchar(16)
             )
         ''')
 
@@ -103,6 +102,12 @@ class Database:
             "SELECT * FROM snipes WHERE user_id=? AND beatmap_id=? AND second_user_id=?",
             (user1, beatmap, user2)).fetchone()
 
+    async def get_beatmap(self, beatmap_id):
+        return self.cursor.execute(
+            "SELECT * FROM beatmaps WHERE beatmap_id=?",
+            (beatmap_id,)
+        ).fetchone()
+
     async def get_score(self, user_id, beatmap_id):
         return self.cursor.execute(
             "SELECT * FROM scores WHERE user_id=? AND beatmap_id=?",
@@ -126,7 +131,8 @@ class Database:
     async def get_user_beatmap_play(self, user_id, beatmap_id):
         return self.cursor.execute(
             "SELECT * FROM scores WHERE user_id=? AND beatmap_id=?",
-        ).fetchall()
+            (user_id, beatmap_id)
+        ).fetchone()
 
     async def get_user_snipe_on_beatmap(self, user_id, beatmap_id, sniped_user_id):
         return self.cursor.execute(
@@ -149,10 +155,10 @@ class Database:
         )
         self.db.commit()        
 
-    async def add_beatmap(self, id, sr, artist, song, diff, url, len, bpm, mapper, status, bms_id, od, ar, cs, hp, max_combo):
+    async def add_beatmap(self, id, sr, artist, song, diff, url, len, bpm, mapper, status, bms_id, od, ar, cs, hp):
         self.cursor.execute(
             "INSERT INTO beatmaps VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-            (id, sr, artist, song, diff, url, len, bpm, mapper, status, bms_id, od, ar, cs, hp, max_combo)
+            (id, sr, artist, song, diff, url, len, bpm, mapper, status, bms_id, od, ar, cs, hp)
         )
         self.db.commit()
 

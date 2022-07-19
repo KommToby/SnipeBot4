@@ -5,7 +5,7 @@ from embed.snipe import *
 class SnipeTracker:
     def __init__(self, client):
         self.client = client
-        self.osu = client.osu
+        self.osu = client.auth
         self.database = client.database
 
     async def convert_datetime_to_int(self, datetime: str):
@@ -79,14 +79,14 @@ class SnipeTracker:
     async def start_loop(self):
         while True:
             try:
-                await self.tracker_loop
+                await self.tracker_loop()
             except Exception as e:
                 print(f"Error occured in tracker loop: {e}")
                 pass
 
     async def check_main_beatmap(self, play):
         if not(await self.database.get_beatmap(play['beatmap']['id'])): # checks to see if the map is already stored in the database
-            await self.database.add_beatmap(play['beatmap']['id'], play['beatmap']['difficulty_rating'], play['beatmapset']['artist'], play['beatmapset']['title'], play['beatmap']['version'], play['beatmap']['url'], play['beatmap']['total_length'], play['beatmap']['bpm'], play['beatmapset']['creator'], play['beatmap']['status'], play['beatmap']['accuracy'], play['beatmap']['ar'], play['beatmap']['cs'], play['beatmap']['drain'], play['beatmap']['max_combo'])
+            await self.database.add_beatmap(play['beatmap']['id'], play['beatmap']['difficulty_rating'], play['beatmapset']['artist'], play['beatmapset']['title'], play['beatmap']['version'], play['beatmap']['url'], play['beatmap']['total_length'], play['beatmap']['bpm'], play['beatmapset']['creator'], play['beatmap']['status'], play['beatmap']['accuracy'], play['beatmap']['beatmapset_id'], play['beatmap']['ar'], play['beatmap']['cs'], play['beatmap']['drain'])
             await self.add_snipes(play) # Checks all users in database for snipes on the new beatmap
 
     async def get_sniped_friends(self, play, main_user_discord):
@@ -114,7 +114,7 @@ class SnipeTracker:
 
     async def check_main_user_play(self, play, id, data):
         await self.check_main_beatmap(play) # first checks the map to see if it is already stored or not
-        user_play = await self.database.get_user_play(id, play['beatmap']['id']) # grabs the local score of the user on the beatmap
+        user_play = await self.database.get_user_beatmap_play(id, play['beatmap']['id']) # grabs the local score of the user on the beatmap
         online_play = await self.osu.get_score_data(play['beatmap']['id'], id) # grabs the online score to compare with the local
         if user_play: # if the local play exists first, because if the local doesnt exist we dont have to compare
             if online_play: # this shouldnt fail, but if it does we can send an error message
@@ -136,7 +136,7 @@ class SnipeTracker:
             # even if the local play doesnt exist we still need to add it as a score
             await self.database.add_score(play['user_id'], play['beatmap']['id'], play['score'], play['accuracy'], play['max_combo'], play['passed'], play['pp'], play['rank'], play['statistics']['count_300'], play['statistics']['count_100'], play['statistics']['count_50'], play['statistics']['count_miss'], play['created_at'])
             if online_play: # If they have also played online they may have got a new best thats never been scanned
-                if play['score'] >= online_play['score']['score']:
+                if play['score'] >= online_play['score']['score']:                    
                     sniped_friends = await self.get_sniped_friends(play, f"{data[0]}")
                     discord_channel = f'{data[0]}'
                     post_channel = await self.client.get_channel(int(discord_channel))
@@ -166,10 +166,10 @@ class SnipeTracker:
                     local_time = time.time() # reset the api timer
                     if recent_plays:
                         for play in recent_plays:
-                            if int(play['score']) != int(recent_score): # If these values dont match it means the user has submitted a new play. Simple
+                            if int(play['score']) != int(recent_score[0]): # If these values dont match it means the user has submitted a new play. Simple
                                 if main_user_id not in active_users: # because they have set a new score we can add them to the active users list
                                     active_users.append(main_user_id)
-                                await self.check_main_user_play(play, main_user_id, main_user_data)
+                                await self.check_main_user_play(play, main_user_id, data)
                                 await self.database.update_main_recent_score(main_user_id, recent_plays[0]['score']) # this has to always update for the 0 index
                             else:
                                 if main_user_id in active_users: # if the score is the same from the last loop we can consider removing them as an active user
