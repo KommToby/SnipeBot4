@@ -28,21 +28,21 @@ class SnipeTracker:
         value = 0
         if modarray:
             for mod in modarray:
-                value+=1 if mod == "NF" else value==value
-                value+=2 if mod == "EZ" else value==value
-                value+=4 if mod == "TD" else value==value
-                value+=8 if mod == "HD" else value==value
-                value+=16 if mod == "HR" else value==value
-                value+=32 if mod == "SD" else value==value
-                value+=64 if mod == "DT" else value==value
-                value+=128 if mod == "RX" else value==value
-                value+=256 if mod == "HT" else value==value
-                value+=512 if mod == "NC" else value==value
-                value+=1024 if mod == "FL" else value==value
-                value+=2048 if mod == "Autoplay" else value==value
-                value+=4096 if mod == "SO" else value==value
-                value+=8192 if mod == "Relax2" else value==value
-                value+=16384 if mod == "PF" else value==value
+                value*=1 if mod == "NF" else value==value
+                value*=2 if mod == "EZ" else value==value
+                value*=4 if mod == "TD" else value==value
+                value*=8 if mod == "HD" else value==value
+                value*=16 if mod == "HR" else value==value
+                value*=32 if mod == "SD" else value==value
+                value*=64 if mod == "DT" else value==value
+                value*=128 if mod == "RX" else value==value
+                value*=256 if mod == "HT" else value==value
+                value*=512 if mod == "NC" else value==value
+                value*=1024 if mod == "FL" else value==value
+                value*=2048 if mod == "Autoplay" else value==value
+                value*=4096 if mod == "SO" else value==value
+                value*=8192 if mod == "Relax2" else value==value
+                value*=16384 if mod == "PF" else value==value
         return value
 
     async def update_decode(self, modint, value, modarray, mod):
