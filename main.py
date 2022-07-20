@@ -1,6 +1,7 @@
 # pip install -U discord-py-interactions
 # pip install -u interactions-get
-import json, interactions, os
+# pip install -U git+https://github.com/interactions-py/library@unstable
+import json, interactions, os, asyncio
 from osu_auth import auth
 from database import _init_db
 from tracker import SnipeTracker
@@ -25,6 +26,8 @@ async def on_ready():
             if filename.endswith(".py"):
                 client.load(f"cogs.{filename[:-3]}")
         print("All cogs loaded successfully")
+        print("Starting main loop in 10 seconds")
+        await asyncio.sleep(10)
         await client.tracker.start_loop()
     except Exception as e:
         print(f"An Error Occured: {e}")
