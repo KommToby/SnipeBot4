@@ -188,9 +188,14 @@ class SnipeTracker:
             
             # Now we check all of the friends, the second part of the tracking loop
             all_friends = await self.database.get_all_friends()
+            check_time = time.time() # we reset the check time
             # Below is dupe removal, it also removes any main users from the list.
             all_friends = await self.check_duplicate_friends(all_friends, users)
             for friend in all_friends:
+                # active user check
+                if checked_users_count > 15:
+                    pass # TODO
+                    # tbh this doesnt need to be implemented for a while, because its pretty fast
                 friend_id = f"{friend[1]}"
                 friend_data = await self.osu.get_user_data(friend_id)
                 if friend_data:
@@ -275,8 +280,8 @@ class SnipeTracker:
                                             break
                         else: # there has been no change since last loop
                             if friend_id in active_friends:
-                                # remove them from active friends if a certain time has passed
-                                pass # TODO
+                                active_friends.remove(friend_id)
+                            pass
                     checked_users_count+=1
                     if friend_id not in checked_users:
                         checked_users.append(friend_id)
