@@ -17,7 +17,7 @@ class Osu(interactions.Extension): # must have commands.cog or this wont work
         ]
     )
     async def osu(self, ctx: interactions.CommandContext, username: str):
-        recent_plays = await self.osu.get_recent_plays("9186316")
+        recent_plays = await self.osu.get_recent_plays("7671790")
         score_data = await self.osu.get_score_data("2077721", "7671790")
         beatmap_data = await self.osu.get_beatmap("2077721")
         user_data = await self.osu.get_user_data(username)

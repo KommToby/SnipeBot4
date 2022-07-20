@@ -156,6 +156,17 @@ class Database:
             "SELECT recent_score FROM friends WHERE osu_id=?",
             (id,)).fetchone()
 
+    async def get_main_user_friends(self, id):
+        return self.cursor.execute(
+            "SELECT * FROM friends WHERE osu_id=?",
+            (id,)).fetchall()
+
+    async def get_user_score_on_beatmap(self, osu_id, beatmap_id, score):
+        return self.cursor.execute(
+            "SELECT * FROM scores WHERE osu_id=? AND beatmap_id=? AND score=?",
+            (osu_id, beatmap_id, score)
+        ).fetchone()
+
     ## ADDS
     async def add_channel(self, channel_id, user_id, user_data):
         user_data = await self.osu.get_user_data(str(user_id))
@@ -205,6 +216,13 @@ class Database:
         self.cursor.execute(
             "UPDATE users SET recent_score=? WHERE osu_id=?",
             (score, main_user_id)
+        )
+        self.db.commit()
+
+    async def update_friend_recent_score(self, friend_user_id, score):
+        self.cursor.execute(
+            "UPDATE friends SET recent_score=? WHERE osu_id=?",
+            (score, friend_user_id)
         )
         self.db.commit()
 
