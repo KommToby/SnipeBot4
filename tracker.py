@@ -285,9 +285,24 @@ class SnipeTracker:
                     checked_users_count+=1
                     if friend_id not in checked_users:
                         checked_users.append(friend_id)
-        except:                 
+            if beatmaps_to_scan != []:
+                print(f"     checking {len(beatmaps_to_scan)} new beatmaps")
+                await self.check_new_beatmaps(beatmaps_to_scan)
+        except Exception as e:     
+            print(f"Error occured during main tracking loop: {e}")            
             pass
-            # remember to check beatmaps_to_scan after the friend loop is complete
+
+    async def check_new_beatmaps(self, beatmaps_to_scan):
+        # maps that are passed in shouldnt be in the db, but we double check anyway
+        for beatmap_id in beatmaps_to_scan:
+            if not(await self.database.get_beatmap(beatmap_id)):
+                # beatmap is not in db
+                beatmap_data = await self.osu.get_beatmap_data(beatmap_id)
+                await self.database.add_beatmap(beatmap_id, beatmap_data['difficulty_rating'], beatmap_data['beatmapset']['artist'], beatmap_data['beatmapset']['title'], beatmap_data['version'], beatmap_data['url'], beatmap_data['total_length'], beatmap_data['bpm'], beatmap_data['beatmapset']['creator'], beatmap_data['status'], beatmap_data['beatmapset_id'], beatmap_data['accuracy'], beatmap_data['ar'], beatmap_data['cs'], beatmap_data['drain'])
+                await self.add_new_beatmap_snipes(beatmap_data) # should all be passive snipes
+            else: # this should not happen
+                print(f"program attempted to check new beatmap that was already stored - {beatmap_id}")
+                pass
 
     async def check_duplicate_friends(self, friends, main_users):
         for friend in friends:
