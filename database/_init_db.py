@@ -248,3 +248,9 @@ class Database:
         )
         self.db.commit()
     ## DELETES
+    async def delete_friend(self, user_id, discord_id):
+        self.cursor.execute(
+            "DELETE FROM friends WHERE osu_id=? AND discord_channel=?",
+            (user_id, discord_id)
+        )
+        self.db.commit()

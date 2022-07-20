@@ -206,6 +206,8 @@ class SnipeTracker:
                     recent_plays = await self.osu.get_recent_plays(friend_id)
                     if recent_plays:
                         recent_score = await self.database.get_friend_recent_score(friend_id)
+                        if recent_score is None:
+                            break # this is if they were removed as a friend mid loop
                         if int(recent_plays[0]['score']) != int(recent_score[0]): # checks if their most recent play is the same as last loop
                             if friend_id not in active_friends:
                                 active_friends.append(friend_id)

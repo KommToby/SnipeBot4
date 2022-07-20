@@ -1,5 +1,4 @@
 import interactions
-from embed.osu import create_osu_embed
 class Friend(interactions.Extension): # must have commands.cog or this wont work
     def __init__(self, client):
         self.client: interactions.Client = client
@@ -25,7 +24,7 @@ class Friend(interactions.Extension): # must have commands.cog or this wont work
             type=interactions.OptionType.STRING,
     )],
     )
-    async def __test(self, ctx: interactions.CommandContext, *args, **kwargs):
+    async def friend(self, ctx: interactions.CommandContext, *args, **kwargs):
         if len(kwargs)>1:
             await ctx.send("Too many arguments!")
             return
@@ -33,11 +32,11 @@ class Friend(interactions.Extension): # must have commands.cog or this wont work
             await ctx.send("Please select an argument `add`, `remove`, or `list`")
             return
         elif len(kwargs) == 1:
-            if kwargs["add"] is not None:
+            if "add" in kwargs:
                 await self.handle_add(ctx, kwargs["add"])
-            elif kwargs["remove"] is not None:
+            elif "remove" in kwargs:
                 await self.handle_remove(ctx, kwargs["remove"])
-            elif kwargs["list"] is not None:
+            elif "list" in kwargs:
                 await self.handle_list(ctx, kwargs["list"])
 
     async def handle_add(self, ctx, username: str):
@@ -53,11 +52,26 @@ class Friend(interactions.Extension): # must have commands.cog or this wont work
         else:
             await ctx.send(f"Could not find the user {username} on the osu! servers")
             return
+        
 
-    async def handle_remove(self, username: str):
-        pass
+    async def handle_remove(self, ctx, username: str):
+        if username.isupper() or username.islower(): # check if contains letters
+            user_data = await self.osu.get_user_data(username)
+            if user_data:
+                if (await self.database.get_friend_from_channel(user_data['id'], ctx.channel_id._snowflake)):
+                    await self.database.delete_friend(user_data['id'], ctx.channel_id._snowflake)
+                    await ctx.send(f"Removed {user_data['username']} from the friend list!")
+                else:
+                    await ctx.send(f"User {user_data['username']} isn't in the friend list, so cannot be removed")
+            else:
+                await ctx.send(f"Could not find the user {username} on the osu! servers, please try using their id")
+                return
+        else:
+            if (await self.database.get_friend_from_channel(username, ctx.channel_id._snowflake)):
+                await self.database.delete_friend(username, ctx.channel_id._snowflake)
+                await ctx.send(f"Removed {user_data['username']} from the friend list!")
 
-    async def handle_list(self, username: str):
+    async def handle_list(self, ctx, username: str):
         pass
 
 def setup(client):
