@@ -156,6 +156,11 @@ class Database:
             "SELECT recent_score FROM friends WHERE osu_id=?",
             (id,)).fetchone()
 
+    async def get_friend_from_channel(self, id, channel_id):
+        return self.cursor.execute(
+            "SELECT * FROM friends WHERE osu_id=? AND discord_channel=?",
+            (id, channel_id)).fetchone()
+
     async def get_main_user_friends(self, id):
         return self.cursor.execute(
             "SELECT * FROM friends WHERE osu_id=?",
@@ -200,8 +205,12 @@ class Database:
             )
             self.db.commit()
 
-    async def add_friend():
-        pass
+    async def add_friend(self, channel_id, user_data):
+        self.cursor.execute(
+            "INSERT INTO friends VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+            (channel_id, user_data['id'], user_data['username'], user_data['country_code'], user_data['avatar_url'], user_data['is_supporter'], user_data['cover_url'], user_data['playmode'], 0, False, 0)
+        )
+        self.db.commit()    
 
     ## UPDATES
     async def update_score(self, user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods):
