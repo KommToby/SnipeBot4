@@ -34,7 +34,8 @@ class Database:
                 count_100 varchar(16),
                 count_50 varchar(16),
                 count_miss varchar(16),
-                date varchar(32)
+                date varchar(32),
+                mods int(32)
             )
         ''')
 
@@ -169,25 +170,25 @@ class Database:
         )
         self.db.commit()
 
-    async def add_score(self, user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date):
+    async def add_score(self, user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods):
         self.cursor.execute(
-            "INSERT INTO scores VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",
-            (user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date)
+            "INSERT INTO scores VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            (user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods)
         )
         self.db.commit()
 
     ## UPDATES
-    async def update_score(self, user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date):
+    async def update_score(self, user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods):
         self.cursor.execute(
-            "UPDATE scores SET score=? AND accuracy=? AND max_combo=? AND passed=? AND pp=? AND rank=? AND count_300=? AND count_100=? AND count_50=? AND count_miss=? AND date=? WHERE user_id=? AND beatmap_id=?",
-            (score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, user_id, beatmap_id)
+            "UPDATE scores SET score=? AND accuracy=? AND max_combo=? AND passed=? AND pp=? AND rank=? AND count_300=? AND count_100=? AND count_50=? AND count_miss=? AND date=? WHERE user_id=? AND beatmap_id=? AND mods=?",
+            (score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, user_id, beatmap_id, mods)
         )
         self.db.commit()
 
     async def update_score_zeros(self, user_id, beatmap_id):
         self.cursor.execute(
-            "UPDATE scores SET score=? AND accuracy=? AND max_combo=? AND passed=? AND pp=? AND rank=? AND count_300=? AND count_100=? AND count_50=? AND count_miss=? AND date=? WHERE user_id=? AND beatmap_id=?",
-            (0, False, False, False, False, False, False, False, False, False, False, user_id, beatmap_id)
+            "UPDATE scores SET score=? AND accuracy=? AND max_combo=? AND passed=? AND pp=? AND rank=? AND count_300=? AND count_100=? AND count_50=? AND count_miss=? AND date=? AND mods=? WHERE user_id=? AND beatmap_id=?",
+            (0, False, False, False, False, False, False, False, False, False, False, False, user_id, beatmap_id)
         )
         self.db.commit()
 
