@@ -200,6 +200,9 @@ class Database:
             )
             self.db.commit()
 
+    async def add_friend():
+        pass
+
     ## UPDATES
     async def update_score(self, user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods):
         self.cursor.execute(
