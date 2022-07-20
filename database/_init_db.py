@@ -147,6 +147,10 @@ class Database:
             (user_id, beatmap_id)
         ).fetchall()
 
+    async def get_all_friends(self):
+        return self.cursor.execute(
+            "SELECT * FROM friends").fetchall()
+
     ## ADDS
     async def add_channel(self, channel_id, user_id, user_data):
         user_data = await self.osu.get_user_data(str(user_id))

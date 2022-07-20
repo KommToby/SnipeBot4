@@ -184,8 +184,24 @@ class SnipeTracker:
                         checked_users.append(main_user_id) # append the user to the priority tracking list
                 else:
                     print(f"An issue occured when trying to get user data for {data[2]}")
+            
+            # Now we check all of the friends, the second part of the tracking loop
+            all_friends = await self.database.get_all_friends()
+            # Below is dupe removal, it also removes any main users from the list.
+            all_friends = await self.check_duplicate_friends(all_friends, users)
+        
         except:
             pass
+
+
+    async def check_duplicate_friends(self, friends, main_users):
+        for friend in friends:
+            while friends.count(friend) > 1: # we only want 1 of a friend
+                friends.remove(friend)
+        for main_user in main_users:
+            while friends.count(main_user) > 0: # we dont want to check a main user as a friend
+                friends.remove(main_user)
+        return friends # returns altered array
 
     # When given a play, checks all users for snipes on that map.
     async def add_snipes(self, play):
