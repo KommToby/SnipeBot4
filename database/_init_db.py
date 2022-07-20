@@ -145,11 +145,16 @@ class Database:
         return self.cursor.execute(
             "SELECT * FROM scores WHERE user_id=? AND beatmap_id=?",
             (user_id, beatmap_id)
-        ).fetchall()
+        ).fetchone() 
 
     async def get_all_friends(self):
         return self.cursor.execute(
             "SELECT * FROM friends").fetchall()
+
+    async def get_friend_recent_score(self, id):
+        return self.cursor.execute(
+            "SELECT recent_score FROM friends WHERE osu_id=?",
+            (id,)).fetchone()
 
     ## ADDS
     async def add_channel(self, channel_id, user_id, user_data):
