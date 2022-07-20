@@ -163,12 +163,12 @@ class Database:
 
     async def get_main_user_friends(self, id):
         return self.cursor.execute(
-            "SELECT * FROM friends WHERE osu_id=?",
+            "SELECT * FROM friends WHERE discord_channel=?",
             (id,)).fetchall()
 
     async def get_user_score_on_beatmap(self, osu_id, beatmap_id, score):
         return self.cursor.execute(
-            "SELECT * FROM scores WHERE osu_id=? AND beatmap_id=? AND score=?",
+            "SELECT * FROM scores WHERE user_id=? AND beatmap_id=? AND score=?",
             (osu_id, beatmap_id, score)
         ).fetchone()
 
@@ -192,7 +192,7 @@ class Database:
     async def add_snipe(self, user_id, beatmap_id, second_user_id, date, first_score, second_score, first_accuracy, second_accuracy, first_mods, second_mods, first_pp, second_pp):
         if not(await self.get_snipe(user_id, beatmap_id, second_user_id)):
             self.cursor.execute(
-                "INSERT INTO snipes VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+                "INSERT INTO snipes VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
                 (user_id, beatmap_id, second_user_id, date, first_score, second_score, first_accuracy, second_accuracy, first_mods, second_mods, first_pp, second_pp)
             )
             self.db.commit()

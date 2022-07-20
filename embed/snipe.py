@@ -30,11 +30,11 @@ async def create_friend_snipe_embed(play, main_user, beatmap_data):
     # Embed Creation
     embed = interactions.Embed(
         title=title_message,
-        description=f"{play['beatmapset']['artist']} - {play['beatmapset']['title']} [{play['beatmap']['version']}]" +
+        description=f"{beatmap_data['beatmapset']['artist']} - {beatmap_data['beatmapset']['title']} [{play['beatmap']['version']}]" +
                     f" - {play['beatmap']['difficulty_rating']}:star:",
         color=327424
     )
-    embed.set_thumbnail(url=play['beatmapset']['covers']['list@2x'])
+    embed.set_thumbnail(url=beatmap_data['beatmapset']['covers']['list@2x'])
     embed.set_author(name='Snipebot by Komm', icon_url=str(image))
 
     # Score Details

@@ -212,7 +212,7 @@ class SnipeTracker:
                             # This is when the score / snipe tracking really begins
                             for main_user in users:
                                 friend_found = False # If we find the friend in the main users friend list, this will be the identifier
-                                main_user_friends_list = await self.database.get_main_user_friends(main_user[1])
+                                main_user_friends_list = await self.database.get_main_user_friends(main_user[0])
                                 if main_user_friends_list is not None:
                                     for friend in main_user_friends_list:
                                         if friend[1] == friend_id:
@@ -230,50 +230,51 @@ class SnipeTracker:
                                         if int(play['score']) != int(recent_score[0]): # Checks if its an old score, once it hits this, it doesnt need to loop anymore
                                             # Now we see if the bot has already scanned this score but it wasnt recent
                                             local_score = await self.database.get_user_score_with_zeros(friend_id, play['beatmap']['id'])
-                                            if local_score:
-                                                if str(play['score']) != local_score[2]: # the score is unique, so we can continue
-                                                    # Comparison between friend and main user begins here
-                                                    main_user_play = await self.osu.get_user_play(main_user[1], beatmap_id)
-                                                    if main_user_play: # if the main user has actually played the map
-                                                        if int(play['score']) > int(main_user_play['score']): # if it is a snipe
-                                                            if not(await self.database.get_user_score_on_beatmap(friend_id, beatmap_id, play['score'])):
-                                                                # Now we check if the friend has played the map before or not
-                                                                if not(await self.database.get_score(friend_id, beatmap_id)):
-                                                                    # this means its the friends first time playing the beatmap, so we add the score
-                                                                    await self.database.add_score(friend_id, beatmap_id, play['score'], play['accuracy'], play['max_combo'], play['passed'], play['pp'], play['rank'], play['statistics']['count_300'], play['statistics']['count_100'], play['statistics']['count_50'], play['statistics']['count_miss'], play['created_at'], await self.convert_mods_to_int(play['mods']))
-                                                                    # now we make sure the user hasnt (somehow) got a snipe on this beatmap before
+                                            if local_score is None:
+                                                local_score = [0,0,0]
+                                            if str(play['score']) != local_score[2]: # the score is unique, so we can continue
+                                                # Comparison between friend and main user begins here
+                                                main_user_play = await self.osu.get_score_data(beatmap_id, main_user[1])
+                                                if main_user_play: # if the main user has actually played the map
+                                                    if int(play['score']) > int(main_user_play['score']['score']): # if it is a snipe
+                                                        if not(await self.database.get_user_score_on_beatmap(friend_id, beatmap_id, play['score'])):
+                                                            # Now we check if the friend has played the map before or not
+                                                            if not(await self.database.get_score(friend_id, beatmap_id)):
+                                                                # this means its the friends first time playing the beatmap, so we add the score
+                                                                await self.database.add_score(friend_id, beatmap_id, play['score'], play['accuracy'], play['max_combo'], play['passed'], play['pp'], play['rank'], play['statistics']['count_300'], play['statistics']['count_100'], play['statistics']['count_50'], play['statistics']['count_miss'], play['created_at'], await self.convert_mods_to_int(play['mods']))
+                                                                # now we make sure the user hasnt (somehow) got a snipe on this beatmap before
+                                                                if not(await self.database.get_user_snipe_on_beatmap(friend_id, beatmap_id, main_user[1])):
+                                                                    # Now we can post the friend snipe
+                                                                    await self.post_friend_snipe(main_user_play['score'], play, main_user)
+                                                                    # But now we need to check if the friend is a main user in another server, and post their new best there
+                                                                    for other_main_user in users:
+                                                                        if other_main_user == play['user_id']: # They are!
+                                                                            # now we need to post the new top play in the main users server
+                                                                            sniped_friends = await self.get_sniped_friends(play, other_main_user[0])
+                                                                            post_channel = await get(self.client, interactions.Channel, channel_id=int(other_main_user[0]))
+                                                                            beatmap_data = await self.osu.get_beatmap_data(beatmap_id)
+                                                                            await post_channel.send(embeds=await create_high_score_embed(play, sniped_friends, beatmap_data))
+                                                            
+                                                            else: # the user has played the beatmap before
+                                                                # note, this cant be the main user on another server, since the main user play score would have to be identical for a new high score
+                                                                local_score = await self.database.get_score(friend_id, beatmap_id)
+                                                                if int(play['score']) > int(local_score[2]): # if its their new best
+                                                                    await self.database.update_score(friend_id, beatmap_id, play['score'], play['accuracy'], play['max_combo'], play['passed'], play['pp'], play['rank'], play['statistics']['count_300'], play['statistics']['count_100'], play['statistics']['count_50'], play['statistics']['count_miss'], play['created_at'], await self.convert_mods_to_int(play['mods']))
+                                                                    # now we check if the user has got a snipe on this beatmap before
                                                                     if not(await self.database.get_user_snipe_on_beatmap(friend_id, beatmap_id, main_user[1])):
                                                                         # Now we can post the friend snipe
                                                                         await self.post_friend_snipe(main_user_play, play, main_user)
-                                                                        # But now we need to check if the friend is a main user in another server, and post their new best there
-                                                                        for other_main_user in users:
-                                                                            if other_main_user == play['user_id']: # They are!
-                                                                                # now we need to post the new top play in the main users server
-                                                                                sniped_friends = await self.get_sniped_friends(play, other_main_user[0])
-                                                                                post_channel = await get(self.client, interactions.Channel, channel_id=int(other_main_user[0]))
-                                                                                beatmap_data = await self.osu.get_beatmap_data(beatmap_id)
-                                                                                await post_channel.send(embeds=await create_high_score_embed(play, sniped_friends, beatmap_data))
-                                                                
-                                                                else: # the user has played the beatmap before
-                                                                    # note, this cant be the main user on another server, since the main user play score would have to be identical for a new high score
-                                                                    local_score = await self.database.get_score(friend_id, beatmap_id)
-                                                                    if int(play['score']) > int(local_score[2]): # if its their new best
-                                                                        await self.database.update_score(friend_id, beatmap_id, play['score'], play['accuracy'], play['max_combo'], play['passed'], play['pp'], play['rank'], play['statistics']['count_300'], play['statistics']['count_100'], play['statistics']['count_50'], play['statistics']['count_miss'], play['created_at'], await self.convert_mods_to_int(play['mods']))
-                                                                        # now we check if the user has got a snipe on this beatmap before
-                                                                        if not(await self.database.get_user_snipe_on_beatmap(friend_id, beatmap_id, main_user[1])):
-                                                                            # Now we can post the friend snipe
-                                                                            await self.post_friend_snipe(main_user_play, play, main_user)
-                                                        elif int(play['score']) == int(main_user_play['score']):
-                                                            # this means they have the IDENTICAL score, so they might just be the main user on another server comparing against themself
-                                                            if str(play['user_id']) == main_user[1]:
-                                                                # this means that they are
-                                                                await self.check_main_user_play(play, main_user[1], main_user)
-                                                    if str(play['score']) > local_score[2]:
-                                                        await self.database.update_score(friend_id, beatmap_id, play['score'], play['accuracy'], play['max_combo'], play['passed'], play['pp'], play['rank'], play['statistics']['count_300'], play['statistics']['count_100'], play['statistics']['count_50'], play['statistics']['count_miss'], play['created_at'], await self.convert_mods_to_int(play['mods']))
-                                                    await self.database.update_friend_recent_score(friend_id, play['score'])
-                                                else:
-                                                    await self.database.update_friend_recent_score(friend_id, play['score'])
-                                                    break
+                                                    elif int(play['score']) == int(main_user_play['score']['score']):
+                                                        # this means they have the IDENTICAL score, so they might just be the main user on another server comparing against themself
+                                                        if str(play['user_id']) == main_user[1]:
+                                                            # this means that they are
+                                                            await self.check_main_user_play(play, main_user[1], main_user)
+                                                if str(play['score']) > str(local_score[2]):
+                                                    await self.database.update_score(friend_id, beatmap_id, play['score'], play['accuracy'], play['max_combo'], play['passed'], play['pp'], play['rank'], play['statistics']['count_300'], play['statistics']['count_100'], play['statistics']['count_50'], play['statistics']['count_miss'], play['created_at'], await self.convert_mods_to_int(play['mods']))
+                                                await self.database.update_friend_recent_score(friend_id, play['score'])
+                                            else:
+                                                await self.database.update_friend_recent_score(friend_id, play['score'])
+                                                pass
                                         else:
                                             # now we need to set the most recent play to their recent score, and break out of the loop
                                             await self.database.update_friend_recent_score(friend_id, recent_plays[0]['score'])
@@ -297,7 +298,7 @@ class SnipeTracker:
         for beatmap_id in beatmaps_to_scan:
             if not(await self.database.get_beatmap(beatmap_id)):
                 # beatmap is not in db
-                beatmap_data = await self.osu.get_beatmap_data(beatmap_id)
+                beatmap_data = await self.osu.get_beatmap(beatmap_id)
                 await self.database.add_beatmap(beatmap_id, beatmap_data['difficulty_rating'], beatmap_data['beatmapset']['artist'], beatmap_data['beatmapset']['title'], beatmap_data['version'], beatmap_data['url'], beatmap_data['total_length'], beatmap_data['bpm'], beatmap_data['beatmapset']['creator'], beatmap_data['status'], beatmap_data['beatmapset_id'], beatmap_data['accuracy'], beatmap_data['ar'], beatmap_data['cs'], beatmap_data['drain'])
                 await self.add_new_beatmap_snipes(beatmap_data) # should all be passive snipes
             else: # this should not happen
@@ -318,7 +319,7 @@ class SnipeTracker:
                     friend_play = await self.osu.get_score_data(data['id'], friend[1])
                     if friend_play:
                         await self.database.add_score(friend[1], data['id'], friend_play['score']['score'], friend_play['score']['accuracy'], friend_play['score']['max_combo'], friend_play['score']['passed'], friend_play['score']['pp'], friend_play['score']['rank'], friend_play['score']['statistics']['count_300'], friend_play['score']['statistics']['count_100'], friend_play['score']['statistics']['count_50'], friend_play['score']['statistics']['count_miss'], friend_play['score']['created_at'], await self.convert_mods_to_int(friend_play['score']['mods']))
-                        if self.convert_datetime_to_int(friend_play['score']['created_at']) > self.convert_datetime_to_int(main_play['score']['created_at']):
+                        if await self.convert_datetime_to_int(friend_play['score']['created_at']) > await self.convert_datetime_to_int(main_play['score']['created_at']):
                             # this means friend has sniped main play if they got higher score
                             if friend_play['score']['score'] > main_play['score']['score']:
                                 # a passive snipe, but we need to check if they have sniped before
