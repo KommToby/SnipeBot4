@@ -88,7 +88,7 @@ class SnipeTracker:
 
     async def check_main_beatmap(self, play):
         if not(await self.database.get_beatmap(play['beatmap']['id'])): # checks to see if the map is already stored in the database
-            await self.database.add_beatmap(play['beatmap']['id'], play['beatmap']['difficulty_rating'], play['beatmapset']['artist'], play['beatmapset']['title'], play['beatmap']['version'], play['beatmap']['url'], play['beatmap']['total_length'], play['beatmap']['bpm'], play['beatmapset']['creator'], play['beatmap']['status'], play['beatmap']['accuracy'], play['beatmap']['beatmapset_id'], play['beatmap']['ar'], play['beatmap']['cs'], play['beatmap']['drain'])
+            await self.database.add_beatmap(play['beatmap']['id'], play['beatmap']['difficulty_rating'], play['beatmapset']['artist'], play['beatmapset']['title'], play['beatmap']['version'], play['beatmap']['url'], play['beatmap']['total_length'], play['beatmap']['bpm'], play['beatmapset']['creator'], play['beatmap']['status'], play['beatmap']['beatmapset_id'], play['beatmap']['accuracy'], play['beatmap']['ar'], play['beatmap']['cs'], play['beatmap']['drain'])
             await self.add_snipes(play) # Checks all users in database for snipes on the new beatmap
 
     async def get_sniped_friends(self, play, main_user_discord):
