@@ -304,6 +304,40 @@ class SnipeTracker:
                 print(f"program attempted to check new beatmap that was already stored - {beatmap_id}")
                 pass
 
+    async def add_new_beatmap_snipes(self, data):
+        # data is beatmap data
+        # we need to check all users for snipes on this map - and scores too I guess
+        main_users = await self.database.get_all_users()
+        for main_user in main_users:
+            main_play = await self.osu.get_score_data(data['id'], main_user[1])
+            if main_play:
+                # first we add the score of the main user
+                await self.database.add_score(main_user[1], data['id'], main_play['score']['score'], main_play['score']['accuracy'], main_play['score']['max_combo'], main_play['score']['passed'], main_play['score']['pp'], main_play['score']['rank'], main_play['score']['statistics']['count_300'], main_play['score']['statistics']['count_100'], main_play['score']['statistics']['count_50'], main_play['score']['statistics']['count_miss'], main_play['score']['created_at'], await self.convert_mods_to_int(main_play['score']['mods']))
+                friends = await self.database.get_user_friends(main_user[0])
+                for friend in friends:
+                    friend_play = await self.osu.get_score_data(data['id'], friend[1])
+                    if friend_play:
+                        await self.database.add_score(friend[1], data['id'], friend_play['score']['score'], friend_play['score']['accuracy'], friend_play['score']['max_combo'], friend_play['score']['passed'], friend_play['score']['pp'], friend_play['score']['rank'], friend_play['score']['statistics']['count_300'], friend_play['score']['statistics']['count_100'], friend_play['score']['statistics']['count_50'], friend_play['score']['statistics']['count_miss'], friend_play['score']['created_at'], await self.convert_mods_to_int(friend_play['score']['mods']))
+                        if self.convert_datetime_to_int(friend_play['score']['created_at']) > self.convert_datetime_to_int(main_play['score']['created_at']):
+                            # this means friend has sniped main play if they got higher score
+                            if friend_play['score']['score'] > main_play['score']['score']:
+                                # a passive snipe, but we need to check if they have sniped before
+                                if not(await self.database.get_snipe(friend[1], data['id'], main_user[1])):
+                                    # now its a first-time snipe
+                                    first_mods = await self.convert_mods_to_int(friend_play['score']['mods'])
+                                    second_mods = await self.convert_mods_to_int(main_play['score']['mods'])
+                                    await self.database.add_snipe(friend[1], data['id'], main_user[1], friend_play['score']['created_at'], friend_play['score']['score'], main_play['score']['score'], friend_play['score']['accuracy'], main_play['score']['accuracy'], first_mods, second_mods, friend_play['score']['pp'], main_play['score']['pp'])
+                            else:
+                                if friend_play['score']['score'] < main_play['score']['score']:
+                                    # a passive snipe from the main user onto the friend
+                                    if not(await self.database.get_sniped(main_user[1], data['id'], friend[1])):
+                                        first_mods = await self.convert_mods_to_int(main_play['score']['mods'])
+                                        second_mods = await self.convert_mods_to_int(friend_play['score']['mods'])
+                                        await self.database.add_snipe(main_user[1], data['id'], friend[1], main_play['score']['created_at'], main_play['score']['score'], friend_play['score']['score'], main_play['score']['accuracy'], friend_play['score']['accuracy'], first_mods, second_mods, main_play['score']['pp'], friend_play['score']['pp'])
+                    else:
+                        # if the friend has never played the map we add an empty score
+                        await self.database.add_score(friend[1], data['id'], 0, False, False, False, False, False, False, False, False, False, False, False)
+
     async def check_duplicate_friends(self, friends, main_users):
         for friend in friends:
             while friends.count(friend) > 1: # we only want 1 of a friend
