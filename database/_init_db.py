@@ -177,25 +177,28 @@ class Database:
         self.db.commit()        
 
     async def add_beatmap(self, id, sr, artist, song, diff, url, len, bpm, mapper, status, bms_id, od, ar, cs, hp):
-        self.cursor.execute(
-            "INSERT INTO beatmaps VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-            (id, sr, artist, song, diff, url, len, bpm, mapper, status, bms_id, od, ar, cs, hp)
-        )
-        self.db.commit()
+        if not(await self.get_beatmap(id)):
+            self.cursor.execute(
+                "INSERT INTO beatmaps VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                (id, sr, artist, song, diff, url, len, bpm, mapper, status, bms_id, od, ar, cs, hp)
+            )
+            self.db.commit()
 
     async def add_snipe(self, user_id, beatmap_id, second_user_id, date, first_score, second_score, first_accuracy, second_accuracy, first_mods, second_mods, first_pp, second_pp):
-        self.cursor.execute(
-            "INSERT INTO snipes VALUES(?,?,?,?,?,?,?,?,?,?,?)",
-            (user_id, beatmap_id, second_user_id, date, first_score, second_score, first_accuracy, second_accuracy, first_mods, second_mods, first_pp, second_pp)
-        )
-        self.db.commit()
+        if not(await self.get_snipe(user_id, beatmap_id, second_user_id)):
+            self.cursor.execute(
+                "INSERT INTO snipes VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+                (user_id, beatmap_id, second_user_id, date, first_score, second_score, first_accuracy, second_accuracy, first_mods, second_mods, first_pp, second_pp)
+            )
+            self.db.commit()
 
     async def add_score(self, user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods):
-        self.cursor.execute(
-            "INSERT INTO scores VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-            (user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods)
-        )
-        self.db.commit()
+        if not(await self.get_score(user_id, beatmap_id)):
+            self.cursor.execute(
+                "INSERT INTO scores VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                (user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods)
+            )
+            self.db.commit()
 
     ## UPDATES
     async def update_score(self, user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods):
