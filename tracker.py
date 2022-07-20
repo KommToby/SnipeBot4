@@ -28,21 +28,21 @@ class SnipeTracker:
         value = 0
         if modarray:
             for mod in modarray:
-                value*=1 if mod == "NF" else value==value
-                value*=2 if mod == "EZ" else value==value
-                value*=4 if mod == "TD" else value==value
-                value*=8 if mod == "HD" else value==value
-                value*=16 if mod == "HR" else value==value
-                value*=32 if mod == "SD" else value==value
-                value*=64 if mod == "DT" else value==value
-                value*=128 if mod == "RX" else value==value
-                value*=256 if mod == "HT" else value==value
-                value*=512 if mod == "NC" else value==value
-                value*=1024 if mod == "FL" else value==value
-                value*=2048 if mod == "Autoplay" else value==value
-                value*=4096 if mod == "SO" else value==value
-                value*=8192 if mod == "Relax2" else value==value
-                value*=16384 if mod == "PF" else value==value
+                if mod == "NF": value+=1
+                elif mod == "EZ": value+=2
+                elif mod == "TD": value+=4
+                elif mod == "HD": value+=8
+                elif mod == "HR": value+=16
+                elif mod == "SD": value+=32
+                elif mod == "DT": value+=64
+                elif mod == "RX": value+=128
+                elif mod == "HT": value+=256
+                elif mod == "NC": value+=512
+                elif mod == "FL": value+=1024
+                elif mod == "Autoplay": value+=2048
+                elif mod == "SO": value+=4096
+                elif mod == "Relax2": value+=8192
+                elif mod == "PF": value+=16384
         return value
 
     async def update_decode(self, modint, value, modarray, mod):
@@ -71,7 +71,7 @@ class SnipeTracker:
         }
         for key in moddict:
             if modint >= key:
-                if modint%key==0:
+                if (modint-key)>=0:
                     modint, modarray = await self.update_decode(modint, key, modarray, moddict[key])
         if modint != 1:
             print("An error occured when decoding mod array")
