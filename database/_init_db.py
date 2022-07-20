@@ -202,4 +202,11 @@ class Database:
             (score, main_user_id)
         )
         self.db.commit()
+
+    async def update_friend_username(self, username, osu_id):
+        self.cursor.execute(
+            "UPDATE friends SET username=? WHERE osu_id=?",
+            (username, osu_id)
+        )
+        self.db.commit()
     ## DELETES

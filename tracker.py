@@ -189,7 +189,11 @@ class SnipeTracker:
             all_friends = await self.database.get_all_friends()
             # Below is dupe removal, it also removes any main users from the list.
             all_friends = await self.check_duplicate_friends(all_friends, users)
-        
+            for friend in all_friends:
+                friend_id = f"{friend[1]}"
+                friend_data = await self.osu.get_user_data(friend_id)
+                if friend_data:
+                    await self.database.update_friend_username(friend_data['username'], friend_id)
         except:
             pass
 
