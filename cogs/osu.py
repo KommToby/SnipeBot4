@@ -17,12 +17,13 @@ class Osu(interactions.Extension): # must have commands.cog or this wont work
         ]
     )
     async def osu(self, ctx: interactions.CommandContext, username: str):
+        message = await ctx.send(f"Getting {username}'s osu profile details")
         recent_plays = await self.osu.get_recent_plays("7671790")
         score_data = await self.osu.get_score_data("2077721", "7671790")
         beatmap_data = await self.osu.get_beatmap("2077721")
         user_data = await self.osu.get_user_data(username)
         embed = await create_osu_embed(user_data)
-        await ctx.send(embeds=embed)
+        await message.reply(embeds=embed)
 
 def setup(client):
     Osu(client)
