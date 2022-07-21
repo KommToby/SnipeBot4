@@ -41,7 +41,7 @@ class Database:
 
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS friends(
-                discord_channel varchar(32) not null primary key,
+                discord_channel varchar(32) not null,
                 osu_id varchar(32) not null,
                 username varchar(32),
                 country_code varchar(32),
