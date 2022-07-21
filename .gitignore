@@ -139,3 +139,4 @@ authdata.json
 database.db-shm
 database.db-wal
 database.db-journal
+beatmaps.txt
