@@ -227,6 +227,9 @@ class Database:
             (score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods, user_id, beatmap_id)
         )
         self.db.commit()
+        a = await self.get_score(user_id, beatmap_id)
+        if a[2] is None:
+            print("breakpoint")
 
     async def update_score_zeros(self, user_id, beatmap_id):
         self.cursor.execute(

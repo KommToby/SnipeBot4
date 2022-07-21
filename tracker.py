@@ -99,7 +99,6 @@ class SnipeTracker:
             friend_id = f'{friend[1]}'
             friend_username = f'{friend[2]}'
             if friend_play: # if the friend has a score saved on this map
-                score = friend_play['score']['score']
                 if not (await self.database.get_user_beatmap_play(friend_id, play['beatmap']['id'])):
                     await self.database.add_score(play['user_id'], play['beatmap']['id'], play['score'], play['accuracy'], play['max_combo'], play['passed'], play['pp'], play['rank'], play['statistics']['count_300'], play['statistics']['count_100'], play['statistics']['count_50'], play['statistics']['count_miss'], play['created_at'], await self.convert_mods_to_int(play['mods']))
                 if friend_play['score']['score'] < play['score']: # this is the snipe check                   # print(f"\t Adding active snipe for {friend_play['score']['user']['username]}")
@@ -232,9 +231,10 @@ class SnipeTracker:
                                         if int(play['score']) != int(recent_score[0]): # Checks if its an old score, once it hits this, it doesnt need to loop anymore
                                             # Now we see if the bot has already scanned this score but it wasnt recent
                                             local_score = await self.database.get_user_score_with_zeros(friend_id, play['beatmap']['id'])
-                                            if local_score is None:
-                                                local_score = [0,0,0]
-                                            if str(play['score']) != local_score[2]: # the score is unique, so we can continue
+                                            if local_score is None: # in case the user has never played it before and its not stored
+                                                await self.database.add_score(friend_id, play['beatmap']['id'], 0, False, False, False, False, False, False, False, False, False, False, False)
+                                                local_score = await self.database.get_user_score_with_zeros(friend_id, play['beatmap']['id'])
+                                            if str(play['score']) != local_score[2] or local_score is None: # the score is unique, so we can continue
                                                 # Comparison between friend and main user begins here
                                                 main_user_play = await self.osu.get_score_data(beatmap_id, main_user[1])
                                                 if main_user_play: # if the main user has actually played the map
@@ -265,7 +265,7 @@ class SnipeTracker:
                                                                     # now we check if the user has got a snipe on this beatmap before
                                                                     if not(await self.database.get_user_snipe_on_beatmap(friend_id, beatmap_id, main_user[1])):
                                                                         # Now we can post the friend snipe
-                                                                        await self.post_friend_snipe(main_user_play, play, main_user)
+                                                                        await self.post_friend_snipe(main_user_play['score'], play, main_user)
                                                     elif int(play['score']) == int(main_user_play['score']['score']):
                                                         # this means they have the IDENTICAL score, so they might just be the main user on another server comparing against themself
                                                         if str(play['user_id']) == main_user[1]:
@@ -320,23 +320,23 @@ class SnipeTracker:
                 for friend in friends:
                     friend_play = await self.osu.get_score_data(data['id'], friend[1])
                     if friend_play:
-                        await self.database.add_score(friend[1], data['id'], friend_play['score']['score'], friend_play['score']['accuracy'], friend_play['score']['max_combo'], friend_play['score']['passed'], friend_play['score']['pp'], friend_play['score']['rank'], friend_play['score']['statistics']['count_300'], friend_play['score']['statistics']['count_100'], friend_play['score']['statistics']['count_50'], friend_play['score']['statistics']['count_miss'], friend_play['score']['created_at'], await self.convert_mods_to_int(friend_play['score']['mods']))
+                        await self.database.add_score(friend[1], friend_play['score']['beatmap']['id'], friend_play['score']['score'], friend_play['score']['accuracy'], friend_play['score']['max_combo'], friend_play['score']['passed'], friend_play['score']['pp'], friend_play['score']['rank'], friend_play['score']['statistics']['count_300'], friend_play['score']['statistics']['count_100'], friend_play['score']['statistics']['count_50'], friend_play['score']['statistics']['count_miss'], friend_play['score']['created_at'], await self.convert_mods_to_int(friend_play['score']['mods']))
                         if await self.convert_datetime_to_int(friend_play['score']['created_at']) > await self.convert_datetime_to_int(main_play['score']['created_at']):
                             # this means friend has sniped main play if they got higher score
                             if friend_play['score']['score'] > main_play['score']['score']:
                                 # a passive snipe, but we need to check if they have sniped before
-                                if not(await self.database.get_snipe(friend[1], data['id'], main_user[1])):
+                                if not(await self.database.get_snipe(friend[1], friend_play['score']['beatmap']['id'], main_user[1])):
                                     # now its a first-time snipe
                                     first_mods = await self.convert_mods_to_int(friend_play['score']['mods'])
                                     second_mods = await self.convert_mods_to_int(main_play['score']['mods'])
-                                    await self.database.add_snipe(friend[1], data['id'], main_user[1], friend_play['score']['created_at'], friend_play['score']['score'], main_play['score']['score'], friend_play['score']['accuracy'], main_play['score']['accuracy'], first_mods, second_mods, friend_play['score']['pp'], main_play['score']['pp'])
+                                    await self.database.add_snipe(friend[1], friend_play['score']['beatmap']['id'], main_user[1], friend_play['score']['created_at'], friend_play['score']['score'], main_play['score']['score'], friend_play['score']['accuracy'], main_play['score']['accuracy'], first_mods, second_mods, friend_play['score']['pp'], main_play['score']['pp'])
                             else:
                                 if friend_play['score']['score'] < main_play['score']['score']:
                                     # a passive snipe from the main user onto the friend
-                                    if not(await self.database.get_sniped(main_user[1], data['id'], friend[1])):
+                                    if not(await self.database.get_sniped(main_user[1], friend_play['score']['beatmap']['id'], friend[1])):
                                         first_mods = await self.convert_mods_to_int(main_play['score']['mods'])
                                         second_mods = await self.convert_mods_to_int(friend_play['score']['mods'])
-                                        await self.database.add_snipe(main_user[1], data['id'], friend[1], main_play['score']['created_at'], main_play['score']['score'], friend_play['score']['score'], main_play['score']['accuracy'], friend_play['score']['accuracy'], first_mods, second_mods, main_play['score']['pp'], friend_play['score']['pp'])
+                                        await self.database.add_snipe(main_user[1], friend_play['score']['beatmap']['id'], friend[1], main_play['score']['created_at'], main_play['score']['score'], friend_play['score']['score'], main_play['score']['accuracy'], friend_play['score']['accuracy'], first_mods, second_mods, main_play['score']['pp'], friend_play['score']['pp'])
                     else:
                         # if the friend has never played the map we add an empty score
                         await self.database.add_score(friend[1], data['id'], 0, False, False, False, False, False, False, False, False, False, False, False)
@@ -368,13 +368,13 @@ class SnipeTracker:
                                     if not(await self.database.get_snipe(friend[1], play['beatmap']['id'], main_user[1])):
                                         # we can check to see if this is the snipe thats just been tracked
                                         if str(play['user']['id']) == str(friend[1]) and str(play['score']) == str(friend_play['score']['score']):
-                                            await self.post_friend_snipe(main_user_play, play, main_user)
+                                            await self.post_friend_snipe(main_user_play['score'], play, main_user)
                                         else: # if the play is not exactly the same as their global, it may be newer somehow
                                             play_date = await self.convert_datetime_to_int(play['created_at'])
                                             if play_date > await self.convert_datetime_to_int(friend_play['score']['created_at']) and str(friend[1]) == str(play['user']['id']):
                                                 # play is newer than their old play, and it is their play
                                                 if play['score'] > main_user_play['score']['score']: # this is still an active snipe
-                                                    await self.post_friend_snipe(main_user_play, play, main_user)
+                                                    await self.post_friend_snipe(main_user_play['score'], play, main_user)
                                             else: # this means their global play is better than the one they just did, but it is a passive snipe since its never been added to db
                                                 first_mods = await self.convert_mods_to_int(play['mods'])
                                                 second_mods = await self.convert_mods_to_int(main_user_play['mods'])
@@ -386,7 +386,7 @@ class SnipeTracker:
                                             # this is a passive snipe for the main user
                                             first_mods = await self.convert_mods_to_int(main_user_play['mods'])
                                             second_mods = await self.convert_mods_to_int(play['mods'])
-                                            await self.database.add_snipe(main_user[1], play['beatmap']['id'], friend[1], main_user_play['score']['created_at'], main_user_play['score']['score'], friend_play['score']['score'], main_user_play['accuracy'], friend_play['accuracy'], first_mods, second_mods, main_user_play['pp'], friend_play['pp'])
+                                            await self.database.add_snipe(main_user[1], friend_play['score']['beatmap']['id'], friend[1], main_user_play['score']['created_at'], main_user_play['score']['score'], friend_play['score']['score'], main_user_play['accuracy'], friend_play['accuracy'], first_mods, second_mods, main_user_play['pp'], friend_play['pp'])
                             if friend[1] not in friends_to_skip:
                                 friend_local_score = await self.database.get_score(friend[1], play['beatmap']['id'])
                                 if friend_local_score is not None:
@@ -430,7 +430,7 @@ class SnipeTracker:
         if not(await self.database.get_user_snipe_on_beatmap(play['user']['id'], play['beatmap']['id'], main_user_db[0])): #if the snipe doesnt exist
             first_mods = await self.convert_mods_to_int(play['mods'])
             second_mods = await self.convert_mods_to_int(main_user_play['mods'])
-            await self.database.add_snipe(play['user']['id'], play['beatmap']['id'], main_user_db[0], play['created_at'], play['score'], main_user_play['score'], play['accuracy'], main_user_play['accuracy'], first_mods, second_mods, play['pp'], main_user_play['pp'])
+            await self.database.add_snipe(play['user']['id'], play['beatmap']['id'], main_user_db[1], play['created_at'], play['score'], main_user_play['score'], play['accuracy'], main_user_play['accuracy'], first_mods, second_mods, play['pp'], main_user_play['pp'])
         discord_channel = f'{main_user_db[0]}'
         post_channel = await get(self.client, interactions.Channel, channel_id=int(discord_channel))
         beatmap_data = await self.osu.get_beatmap(play['beatmap']['id'])
