@@ -115,6 +115,10 @@ class Database:
             (beatmap_id,)
         ).fetchone()
 
+    async def get_all_beatmaps(self):
+        return self.cursor.execute(
+            "SELECT * FROM beatmaps").fetchall()
+
     async def get_score(self, user_id, beatmap_id):
         return self.cursor.execute(
             "SELECT * FROM scores WHERE user_id=? AND beatmap_id=?",
