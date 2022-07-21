@@ -297,12 +297,17 @@ class SnipeTracker:
 
     async def check_new_beatmaps(self, beatmaps_to_scan):
         # maps that are passed in shouldnt be in the db, but we double check anyway
+        counter = -1
         for beatmap_id in beatmaps_to_scan:
+            counter+=1
+            print(f"scanning {beatmap_id} - {counter}/{len(beatmaps_to_scan)}")
             if not(await self.database.get_beatmap(beatmap_id)):
                 # beatmap is not in db
                 beatmap_data = await self.osu.get_beatmap(beatmap_id)
-                await self.database.add_beatmap(beatmap_id, beatmap_data['difficulty_rating'], beatmap_data['beatmapset']['artist'], beatmap_data['beatmapset']['title'], beatmap_data['version'], beatmap_data['url'], beatmap_data['total_length'], beatmap_data['bpm'], beatmap_data['beatmapset']['creator'], beatmap_data['status'], beatmap_data['beatmapset_id'], beatmap_data['accuracy'], beatmap_data['ar'], beatmap_data['cs'], beatmap_data['drain'])
-                await self.add_new_beatmap_snipes(beatmap_data) # should all be passive snipes
+                if beatmap_data:
+                    if beatmap_data['mode'] == 'osu':
+                        await self.database.add_beatmap(beatmap_id, beatmap_data['difficulty_rating'], beatmap_data['beatmapset']['artist'], beatmap_data['beatmapset']['title'], beatmap_data['version'], beatmap_data['url'], beatmap_data['total_length'], beatmap_data['bpm'], beatmap_data['beatmapset']['creator'], beatmap_data['status'], beatmap_data['beatmapset_id'], beatmap_data['accuracy'], beatmap_data['ar'], beatmap_data['cs'], beatmap_data['drain'])
+                        await self.add_new_beatmap_snipes(beatmap_data) # should all be passive snipes
             else: # this should not happen
                 print(f"program attempted to check new beatmap that was already stored - {beatmap_id}")
                 pass
@@ -333,13 +338,16 @@ class SnipeTracker:
                             else:
                                 if friend_play['score']['score'] < main_play['score']['score']:
                                     # a passive snipe from the main user onto the friend
-                                    if not(await self.database.get_sniped(main_user[1], friend_play['score']['beatmap']['id'], friend[1])):
+                                    if not(await self.database.get_snipe(main_user[1], friend_play['score']['beatmap']['id'], friend[1])):
                                         first_mods = await self.convert_mods_to_int(main_play['score']['mods'])
                                         second_mods = await self.convert_mods_to_int(friend_play['score']['mods'])
                                         await self.database.add_snipe(main_user[1], friend_play['score']['beatmap']['id'], friend[1], main_play['score']['created_at'], main_play['score']['score'], friend_play['score']['score'], main_play['score']['accuracy'], friend_play['score']['accuracy'], first_mods, second_mods, main_play['score']['pp'], friend_play['score']['pp'])
                     else:
                         # if the friend has never played the map we add an empty score
                         await self.database.add_score(friend[1], data['id'], 0, False, False, False, False, False, False, False, False, False, False, False)
+            else:
+                # if the main users has never played we also add empty score
+                await self.database.add_score(main_user[1], data['id'], 0, False, False, False, False, False, False, False, False, False, False, False)
 
     async def check_duplicate_friends(self, friends, main_users):
         for friend in friends:
