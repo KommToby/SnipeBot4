@@ -98,6 +98,12 @@ class Database:
             "SELECT * FROM users WHERE discord_channel=?",
             (discord_id,)).fetchone()
 
+    async def get_channel_from_username(self, username):
+        username = username.lower()
+        return self.cursor.execute(
+            "SELECT * FROM users WHERE lower(username)=?",
+            (username,)).fetchone()
+
     async def get_snipe(self, user1, beatmap, user2):
         return self.cursor.execute(
             "SELECT * FROM snipes WHERE user_id=? AND beatmap_id=? AND second_user_id=?",
