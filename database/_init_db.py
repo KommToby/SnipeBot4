@@ -204,6 +204,8 @@ class Database:
             self.db.commit()
 
     async def add_score(self, user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods):
+        if score is None:
+            print("breakpoint")
         if not(await self.get_score(user_id, beatmap_id)):
             self.cursor.execute(
                 "INSERT INTO scores VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
@@ -221,8 +223,8 @@ class Database:
     ## UPDATES
     async def update_score(self, user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods):
         self.cursor.execute(
-            "UPDATE scores SET score=? AND accuracy=? AND max_combo=? AND passed=? AND pp=? AND rank=? AND count_300=? AND count_100=? AND count_50=? AND count_miss=? AND date=? WHERE user_id=? AND beatmap_id=? AND mods=?",
-            (score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, user_id, beatmap_id, mods)
+            "UPDATE scores SET score=? AND accuracy=? AND max_combo=? AND passed=? AND pp=? AND rank=? AND count_300=? AND count_100=? AND count_50=? AND count_miss=? AND date=? AND mods=? WHERE user_id=? AND beatmap_id=?",
+            (score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods, user_id, beatmap_id)
         )
         self.db.commit()
 
