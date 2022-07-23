@@ -11,7 +11,7 @@ with open("config.json") as f:
     TOKEN = DISCORD_CONFIG_DATA["token"]
 
 # Define Bot
-client = interactions.Client(TOKEN)
+client = interactions.Client(TOKEN, disable_sync=False) # set to True when not changing commands
 client.auth = auth.Auth()
 client.database  = _init_db.Database()
 client.tracker = SnipeTracker(client)
