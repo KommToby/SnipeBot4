@@ -89,6 +89,8 @@ class Friend(interactions.Extension): # must have commands.cog or this wont work
             await message.reply(f"User {username} is not a main user")
 
     async def scan_users_plays(self, ctx, username: str, message):
+        times = []
+        av_time = 0
         await message.reply(f"Scanning {username}'s top plays...")
         beatmaps = await self.database.get_all_beatmaps()
         user_data = await self.osu.get_user_data(username)
@@ -126,39 +128,46 @@ class Friend(interactions.Extension): # must have commands.cog or this wont work
                                         await self.database.add_snipe(main_user_play['score']['user_id'], beatmap_data['id'], user_data['id'], main_user_play['score']['created_at'], main_user_play['score']['score'], top_play['score'], main_user_play['score']['accuracy'], top_play['accuracy'], second_mods, first_mods, main_user_play['score']['pp'], top_play['pp'])
 
         # now we scan them on every single beatmap. Fun.
-        response = await message.reply(f"Finished scanning top plays. Now scanning user on all beatmaps. ETA {round(((len(beatmaps)*20)/3600), 2)} hours\n 0% complete")
+        response = await message.reply(f"Finished scanning top plays. Now scanning user on all beatmaps. \n`calculating...`\n 0% complete")
+        start_time = time.time()
         for i, beatmap in enumerate(beatmaps):
-            scan_timer = time.time()
-            user_play = await self.osu.get_score_data(beatmap[0], user_data['id'])
-            if user_play:
-                await self.database.add_score(user_data['id'], beatmap[0], user_play['score']['score'], user_play['score']['accuracy'], user_play['score']['max_combo'], user_play['score']['passed'], user_play['score']['pp'], user_play['score']['rank'], user_play['score']['statistics']['count_300'], user_play['score']['statistics']['count_100'], user_play['score']['statistics']['count_50'], user_play['score']['statistics']['count_miss'], user_play['score']['created_at'], await self.tracker.convert_mods_to_int(user_play['score']['mods']))
-                main_users = await self.database.get_all_users()
-                for main_user in main_users:
-                    main_user_friends = await self.database.get_user_friends(main_user[0])
-                    found_friend = False
-                    for main_user_friend in main_user_friends:
-                        if str(main_user_friend[1]) == str(user_data['id']):
-                            found_friend = True
-                    if found_friend is True:
-                        main_user_play = await self.osu.get_score_data(beatmap[0], main_user[1])
-                        if main_user_play:
-                            first_mods = await self.tracker.convert_mods_to_int(user_play['score']['mods'])
-                            second_mods = await self.tracker.convert_mods_to_int(main_user_play['score']['mods'])
-                            if await self.tracker.convert_datetime_to_int(main_user_play['score']['created_at']) < await self.tracker.convert_datetime_to_int(user_play['score']['created_at']):
-                                if int(user_play['score']['score']) > int(main_user_play['score']['score']):
-                                    # friend user gets passive snipe
-                                    await self.database.add_snipe(user_data['id'], beatmap[0], main_user_play['score']['user_id'], user_play['score']['created_at'], user_play['score']['score'], main_user_play['score']['score'], user_play['score']['accuracy'], main_user_play['score']['accuracy'], first_mods, second_mods, user_play['score']['pp'], main_user_play['score']['pp'])
+            try:
+                scan_timer = time.time()
+                if not(await self.database.get_score(user_data['id'], beatmap[0])):
+                    user_play = await self.osu.get_score_data(beatmap[0], user_data['id'])
+                    if user_play:
+                        await self.database.add_score(user_data['id'], beatmap[0], user_play['score']['score'], user_play['score']['accuracy'], user_play['score']['max_combo'], user_play['score']['passed'], user_play['score']['pp'], user_play['score']['rank'], user_play['score']['statistics']['count_300'], user_play['score']['statistics']['count_100'], user_play['score']['statistics']['count_50'], user_play['score']['statistics']['count_miss'], user_play['score']['created_at'], await self.tracker.convert_mods_to_int(user_play['score']['mods']))
+                        main_users = await self.database.get_all_users()
+                        for main_user in main_users:
+                            main_user_friends = await self.database.get_user_friends(main_user[0])
+                            found_friend = False
+                            for main_user_friend in main_user_friends:
+                                if str(main_user_friend[1]) == str(user_data['id']):
+                                    found_friend = True
+                            if found_friend is True:
+                                main_user_play = await self.osu.get_score_data(beatmap[0], main_user[1])
+                                if main_user_play:
+                                    first_mods = await self.tracker.convert_mods_to_int(user_play['score']['mods'])
+                                    second_mods = await self.tracker.convert_mods_to_int(main_user_play['score']['mods'])
+                                    if await self.tracker.convert_datetime_to_int(main_user_play['score']['created_at']) < await self.tracker.convert_datetime_to_int(user_play['score']['created_at']):
+                                        if int(user_play['score']['score']) > int(main_user_play['score']['score']):
+                                            # friend user gets passive snipe
+                                            await self.database.add_snipe(user_data['id'], beatmap[0], main_user_play['score']['user_id'], user_play['score']['created_at'], user_play['score']['score'], main_user_play['score']['score'], user_play['score']['accuracy'], main_user_play['score']['accuracy'], first_mods, second_mods, user_play['score']['pp'], main_user_play['score']['pp'])
 
-                            else:
-                                if int(user_play['score']['score']) < int(main_user_play['score']['score']):
-                                    # main user gets passive snipe
-                                    await self.database.add_snipe(main_user_play['score']['user_id'], beatmap[0], user_data['id'], main_user_play['score']['created_at'], main_user_play['score']['score'], user_play['score']['score'], main_user_play['score']['accuracy'], user_play['score']['accuracy'], second_mods, first_mods, main_user_play['score']['pp'], user_play['score']['pp'])
+                                    else:
+                                        if int(user_play['score']['score']) < int(main_user_play['score']['score']):
+                                            # main user gets passive snipe
+                                            await self.database.add_snipe(main_user_play['score']['user_id'], beatmap[0], user_data['id'], main_user_play['score']['created_at'], main_user_play['score']['score'], user_play['score']['score'], main_user_play['score']['accuracy'], user_play['score']['accuracy'], second_mods, first_mods, main_user_play['score']['pp'], user_play['score']['pp'])
 
-            else:
-                await self.database.add_score(user_data['id'], beatmap[0], 0, False, False, False, False, False, False, False, False, False, False, False)
-            await response.edit(content=f"Finished scanning top plays. Now scanning user on all beatmaps. ETA {round(((len(beatmaps)*20)/3600), 2)} hours\n {round((i/len(beatmaps)), 2)}% complete")
-            # if (scan_timer - time.time()) < 20:
-            #     await asyncio.sleep(20 - (scan_timer - time.time()))
+                    else:
+                        await self.database.add_score(user_data['id'], beatmap[0], 0, False, False, False, False, False, False, False, False, False, False, False)
+                if (time.time() - scan_timer) < 0.2:
+                    await asyncio.sleep(0.2 - (time.time() - scan_timer))
+                if i != 0:
+                    elapsed_time = time.time() - start_time
+                    await response.edit(content=f"Finished scanning top plays. Now scanning user on all beatmaps. \n{round((((len(beatmaps) * elapsed_time)/i)-elapsed_time)/3600, 2)} hours remaining\n {round(((i/len(beatmaps))*100), 2)}% complete")
+            except Exception as e:
+                pass
         else:
             await ctx.send(f"{username} couldn't be scanned. Did you write their name correctly?")
 
