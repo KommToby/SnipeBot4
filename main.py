@@ -15,6 +15,7 @@ client = interactions.Client(TOKEN, disable_sync=False) # set to True when not c
 client.auth = auth.Auth()
 client.database  = _init_db.Database()
 client.tracker = SnipeTracker(client)
+client.running = False
 
 # Bot Online
 @client.event
@@ -22,13 +23,17 @@ async def on_ready():
     print("\n\n\n\n\n\n\n\n")
     try:
         print("Bot Connected To Discord")
-        for filename in os.listdir("./cogs"):
-            if filename.endswith(".py"):
-                client.load(f"cogs.{filename[:-3]}")
-        print("All cogs loaded successfully")
-        print("Starting main loop in 10 seconds")
-        await asyncio.sleep(10)
-        await client.tracker.start_loop()
+        if client.running == False:
+            client.running = True
+            for filename in os.listdir("./cogs"):
+                if filename.endswith(".py"):
+                    client.load(f"cogs.{filename[:-3]}")
+            print("All cogs loaded successfully")
+            print("Starting main loop in 10 seconds")
+            await asyncio.sleep(10)
+            await client.tracker.start_loop()
+        else:
+            pass
     except Exception as e:
         print(f"An Error Occured: {e}")
 
