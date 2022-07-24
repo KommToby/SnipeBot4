@@ -132,6 +132,7 @@ class Friend(interactions.Extension): # must have commands.cog or this wont work
         # now we scan them on every single beatmap. Fun.
         response = await message.reply(f"Finished scanning top plays. Now scanning user on all beatmaps. \n`calculating...`\n 0% complete")
         start_time = time.time()
+        message_update_time = time.time()
         for i, beatmap in enumerate(beatmaps):
             try:
                 if not(await self.database.get_score(user_data['id'], beatmap[0])):
@@ -165,7 +166,9 @@ class Friend(interactions.Extension): # must have commands.cog or this wont work
                 if i != 0:
                     elapsed_time = time.time() - start_time
                     try:
-                        await response.edit(content=f"Finished scanning top plays. Now scanning user on all beatmaps. \n{round((((len(beatmaps) * elapsed_time)/i)-elapsed_time)/3600, 2)} hours remaining\n {round(((i/len(beatmaps))*100), 2)}% complete")
+                        if int(time.time()) - int(message_update_time) > 5:
+                            message_update_time = time.time()
+                            await response.edit(content=f"Finished scanning top plays. Now scanning user on all beatmaps. \n{round((((len(beatmaps) * elapsed_time)/i)-elapsed_time)/3600, 2)} hours remaining\n {round(((i/len(beatmaps))*100), 2)}% complete")
                     except interactions.LibraryException as l:
                         pass
             except Exception as e:
