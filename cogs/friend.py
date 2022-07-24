@@ -51,6 +51,7 @@ class Friend(interactions.Extension): # must have commands.cog or this wont work
                 await message.reply(f"Added {user_data['username']} to the friend list!")
                 # if they arent a main user or a friend you should scan their plays on all beatmaps next TODO
                 await self.scan_users_plays(ctx, username, message)
+                await ctx.send(f"Finished scanning {username}'s plays")
             else:
                 await message.reply(f"{user_data['username']} is already in the friend list!")
                 return
@@ -89,8 +90,6 @@ class Friend(interactions.Extension): # must have commands.cog or this wont work
             await message.reply(f"User {username} is not a main user")
 
     async def scan_users_plays(self, ctx, username: str, message):
-        times = []
-        av_time = 0
         await message.reply(f"Scanning {username}'s top plays...")
         beatmaps = await self.database.get_all_beatmaps()
         user_data = await self.osu.get_user_data(username)
@@ -127,12 +126,14 @@ class Friend(interactions.Extension): # must have commands.cog or this wont work
                                     if int(main_user_play['score']['score']) > int(top_play['score']):
                                         await self.database.add_snipe(main_user_play['score']['user_id'], beatmap_data['id'], user_data['id'], main_user_play['score']['created_at'], main_user_play['score']['score'], top_play['score'], main_user_play['score']['accuracy'], top_play['accuracy'], second_mods, first_mods, main_user_play['score']['pp'], top_play['pp'])
 
+        else:
+            await ctx.send(f"{username} couldn't be scanned. Did you write their name correctly?")
+            return
         # now we scan them on every single beatmap. Fun.
         response = await message.reply(f"Finished scanning top plays. Now scanning user on all beatmaps. \n`calculating...`\n 0% complete")
         start_time = time.time()
         for i, beatmap in enumerate(beatmaps):
             try:
-                scan_timer = time.time()
                 if not(await self.database.get_score(user_data['id'], beatmap[0])):
                     user_play = await self.osu.get_score_data(beatmap[0], user_data['id'])
                     if user_play:
@@ -141,7 +142,7 @@ class Friend(interactions.Extension): # must have commands.cog or this wont work
                         for main_user in main_users:
                             main_user_friends = await self.database.get_user_friends(main_user[0])
                             found_friend = False
-                            for main_user_friend in main_user_friends:
+                            for main_user_friend in main_user_friends: # can move this to before the beatmap enumeration and get a list of main users the friend is a friend of instead
                                 if str(main_user_friend[1]) == str(user_data['id']):
                                     found_friend = True
                             if found_friend is True:
@@ -161,15 +162,15 @@ class Friend(interactions.Extension): # must have commands.cog or this wont work
 
                     else:
                         await self.database.add_score(user_data['id'], beatmap[0], 0, False, False, False, False, False, False, False, False, False, False, False)
-                if (time.time() - scan_timer) < 0.2:
-                    await asyncio.sleep(0.2 - (time.time() - scan_timer))
                 if i != 0:
                     elapsed_time = time.time() - start_time
-                    await response.edit(content=f"Finished scanning top plays. Now scanning user on all beatmaps. \n{round((((len(beatmaps) * elapsed_time)/i)-elapsed_time)/3600, 2)} hours remaining\n {round(((i/len(beatmaps))*100), 2)}% complete")
+                    try:
+                        await response.edit(content=f"Finished scanning top plays. Now scanning user on all beatmaps. \n{round((((len(beatmaps) * elapsed_time)/i)-elapsed_time)/3600, 2)} hours remaining\n {round(((i/len(beatmaps))*100), 2)}% complete")
+                    except interactions.LibraryException as l:
+                        pass
             except Exception as e:
                 pass
-        else:
-            await ctx.send(f"{username} couldn't be scanned. Did you write their name correctly?")
+        await response.edit(content=f"Finished scanning top plays. Now scanning user on all beatmaps. \n0 hours remaining\n 100% complete")
 
 def setup(client):
     Friend(client)
