@@ -100,7 +100,6 @@ class Friend(interactions.Extension): # must have commands.cog or this wont work
                 # if the beatmap has never been scanned before
                 if not(await self.database.get_beatmap(top_play['beatmap']['id'])):
                     if beatmap_data:
-                        await self.database.add_beatmap(await self.database.add_beatmap(beatmap_data['id'], beatmap_data['difficulty_rating'], beatmap_data['beatmapset']['artist'], beatmap_data['beatmapset']['title'], beatmap_data['version'], beatmap_data['url'], beatmap_data['total_length'], beatmap_data['bpm'], beatmap_data['beatmapset']['creator'], beatmap_data['status'], beatmap_data['beatmapset_id'], beatmap_data['accuracy'], beatmap_data['ar'], beatmap_data['cs'], beatmap_data['drain']))
                         await self.tracker.check_new_beatmaps([str(beatmap_data['id'])])
                 else: # beatmap has been scanned before
                     # we check for snipes against the user
