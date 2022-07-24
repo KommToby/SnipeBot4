@@ -1,6 +1,7 @@
 import interactions, time, asyncio
 from embed.friend_list import create_friend_list_embed
 from tracker import SnipeTracker
+from interactions.ext.get import get
 class Friend(interactions.Extension): # must have commands.cog or this wont work
     def __init__(self, client):
         self.client: interactions.Client = client
@@ -51,7 +52,8 @@ class Friend(interactions.Extension): # must have commands.cog or this wont work
                 await message.reply(f"Added {user_data['username']} to the friend list!")
                 # if they arent a main user or a friend you should scan their plays on all beatmaps next TODO
                 await self.scan_users_plays(ctx, username, message)
-                await ctx.send(f"Finished scanning {username}'s plays")
+                newctx = get(self.client, interactions.Channel, channel_id=int(ctx.channel_id._snowflake))
+                await newctx.send(f"Finished scanning {username}'s plays")
             else:
                 await message.reply(f"{user_data['username']} is already in the friend list!")
                 return
