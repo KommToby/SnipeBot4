@@ -35,7 +35,9 @@ class Database:
                 count_50 varchar(16),
                 count_miss varchar(16),
                 date varchar(32),
-                mods int(32)
+                mods int(32),
+                converted_stars real,
+                converted_bpm real
             )
         ''')
 
