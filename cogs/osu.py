@@ -19,7 +19,8 @@ class Osu(interactions.Extension): # must have commands.cog or this wont work
     async def osu(self, ctx: interactions.CommandContext, username: str):
         await ctx.defer()
         recent_plays = await self.osu.get_recent_plays("7671790")
-        score_data = await self.osu.get_score_data("2077721", "7671790")
+        score_data = await self.osu.get_score_data("848345", "10609949")
+        score_data_mods = await self.osu.get_beatmap_mods("848345", "64")
         beatmap_data = await self.osu.get_beatmap("2077721")
         user_data = await self.osu.get_user_data(username)
         embed = await create_osu_embed(user_data)
