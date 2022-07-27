@@ -1,0 +1,52 @@
+import interactions
+
+async def frequency_check(array):
+    title = ""
+    best_occurences = 0
+    for i in array:
+        frequency = array.count(i)
+        if frequency > best_occurences:
+            best_occurences = frequency
+            title = i
+    return title, best_occurences
+
+async def create_stats_embed(user, user_score_data, top_ten_artists, scores):
+    embed = interactions.Embed(
+        title=f"osu! stats for {user['username']}",
+        color=16737962,
+    )
+    embed.set_author(name="Snipebot by Komm",
+                    icon_url=f"https://osu.ppy.sh/images/flags/{user['country_code']}.png")
+    
+    if user['avatar_url'][0] == "/":
+        embed.set_thumbnail(url=f"https://osu.ppy.sh{user['avatar_url']}")
+    else:
+        embed.set_thumbnail(url=user['avatar_url'])
+
+    artist_string = f"\n__**{user['username']}'s top 10 most popular Artists:**__\n```\n"
+    for _, artist in enumerate(top_ten_artists):
+        artist_string += f"{artist[0]} ({artist[1]})\n"
+    artist_string = artist_string + "```"
+
+    # average map length
+    average_map_length = round(sum(user_score_data['lengths'])/len(user_score_data['lengths']))
+    if average_map_length < 60:
+        average_map_length_string = f"{average_map_length} seconds"
+    else:
+        modulus = average_map_length % 60
+        if modulus < 10:
+            modulus = f"0{modulus}"
+        average_map_length_string = f"{round(average_map_length/60)}:{modulus}"
+
+    best_song, best_song_freq = await frequency_check(user_score_data['songs'])
+    best_guest, best_guest_freq = await frequency_check(user_score_data['guests'])
+    best_mapper, best_mapper_freq = await frequency_check(user_score_data['mappers'])
+
+    embed.description = artist_string
+
+    embed.add_field(name=f"Average SR of all your stored plays: `{round((sum(user_score_data['stars'])/len(user_score_data['stars'])), 2)}` ({len(scores)} stored plays!)\nAverage length of stored plays: `{average_map_length_string}`\nAverage BPM of stored plays: `{round((sum(user_score_data['bpm'])/len(user_score_data['bpm'])), 2)}`",
+                    value=f"**Most played song: `{best_song}` ({best_song_freq} instances)**\n**Favourite guest difficulty mapper: `{best_guest}` ({best_guest_freq} instances)**\n**Favourite mapper: `{best_mapper}` ({best_mapper_freq} instances)**")
+
+    embed.set_footer(text="Fact of the day: Did you know that Shii is the mapper of Lagtrain?", icon_url="https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Blue_question_mark_icon.svg/1200px-Blue_question_mark_icon.svg.png")
+
+    return embed
