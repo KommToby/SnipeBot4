@@ -1,0 +1,90 @@
+import interactions
+from embed.stats import create_stats_embed
+class Stats(interactions.Extension): # must have commands.cog or this wont work
+    def __init__(self, client):
+        self.client: interactions.Client = client
+        self.osu = client.auth
+        self.database = client.database
+
+    @interactions.extension_command(
+            name="stats", 
+            description="get a users statistics",
+            options=[interactions.Option(
+                name="username",
+                description="the username of the user",
+                type=interactions.OptionType.STRING,
+                required=True,
+            )
+        ]
+    )
+    async def stats(self, ctx: interactions.CommandContext, username: str):
+        await ctx.defer() # is thinking... message - 15 minutes timer
+        user_data = await self.osu.get_user_data(username)
+        if user_data:
+            user_id = user_data['id']
+            scores = await self.database.get_all_scores(user_id)
+            all_beatmaps = await self.database.get_all_beatmaps()
+            user_score_data = {}
+            if scores:
+                played_beatmap_ids = []
+                for score in scores: # unique beatmaps only from the score (just in case)
+                    if score[1] not in played_beatmap_ids:
+                        played_beatmap_ids.append(score[1])
+                user_score_data['beatmaps'] = played_beatmap_ids # add to dictionary
+                user_score_data['stars'] = []
+                user_score_data['lengths'] = []
+                user_score_data['artists'] = []
+                user_score_data['songs'] = []
+                user_score_data['mappers'] = []
+                user_score_data['guests'] = []
+                user_score_data['bpm'] = []
+                checked_beatmapsets = []
+                for beatmap in all_beatmaps: # loop through all stored beatmaps
+                    if int(beatmap[0]) in played_beatmap_ids:
+                        user_score_data['stars'].append(float(beatmap[1]))
+                        user_score_data['lengths'].append(beatmap[6])
+                        user_score_data['bpm'].append(beatmap[7])
+                        
+                        # unique map artist checking
+                        if beatmap[10] not in checked_beatmapsets: 
+                            user_score_data['artists'].append(beatmap[2])
+                            user_score_data['songs'].append(beatmap[3])
+                            user_score_data['mappers'].append(beatmap[8])
+                            checked_beatmapsets.append(beatmap[10])
+
+                        # guest difficulty mapper check
+                        for letter in beatmap[4]:
+                            if letter == "'": # apostrophy i.e. Komm's Insane
+                                user_score_data['guests'].append(beatmap[4].split("'")[0])
+                                user_score_data['mappers'].append(beatmap[4].split("'")[0])
+
+                        # beatmap checks done
+
+                # Frequency checks of dictionary values
+
+                # Top 10 artists
+                top_ten_artists = []
+                checked_artists = []
+                artist_frequencies = {}
+                for j in user_score_data['artists']:
+                    if j not in checked_artists:
+                        artist_frequency = user_score_data['artists'].count(j)
+                        artist_frequencies[j] = int(artist_frequency)
+
+                sorted_artist_frequencies = sorted(artist_frequencies.items(), key=lambda x: x[1], reverse=True)
+                for _ in range(0, 10):
+                    top_ten_artists.append(sorted_artist_frequencies[0])
+                    sorted_artist_frequencies.remove(sorted_artist_frequencies[0])
+
+                stats_embed = await create_stats_embed(user_data, user_score_data, top_ten_artists, scores)
+                await ctx.send(embeds=stats_embed)
+
+            else:
+                await ctx.send(f"{username} as not found in the database. Did you enter the correct name?")
+                return
+        else:
+            await ctx.send(f"{username} was not found as an osu! user. Did you enter the correct name?")
+            return
+
+def setup(client):
+    Stats(client)
