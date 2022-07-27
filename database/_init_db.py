@@ -128,6 +128,11 @@ class Database:
             "SELECT * FROM scores WHERE user_id=? AND beatmap_id=?",
             (user_id, beatmap_id)
         ).fetchone()
+
+    async def get_all_scores(self, user_id): # does not include 0s
+        return self.cursor.execute(
+            "SELECT * FROM scores WHERE user_id=? AND score!=?",
+            (user_id, 0)).fetchall()
     
     async def get_all_users(self):
         return self.cursor.execute(
