@@ -18,6 +18,7 @@ class Track(interactions.Extension): # must have commands.cog or this wont work
         ]
     )
     async def track(self, ctx: interactions.CommandContext, username: str):
+        await ctx.defer()
         if await self.database.get_channel(ctx.channel_id._snowflake):
             await ctx.send(f"<@{ctx.author.id}> channel is already being tracked! (1 tracked user per channel)")
             return

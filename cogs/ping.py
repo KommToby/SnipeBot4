@@ -6,6 +6,7 @@ class Ping(interactions.Extension): # must have commands.cog or this wont work
 
     @interactions.extension_command(name="ping", description="pong!")
     async def ping(self, ctx):
+        await ctx.defer()
         await ctx.send("Pong!")
 
 def setup(client):

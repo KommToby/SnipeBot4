@@ -29,6 +29,7 @@ class Friend(interactions.Extension): # must have commands.cog or this wont work
     )],
     )
     async def friend(self, ctx: interactions.CommandContext, *args, **kwargs):
+        await ctx.defer()
         if len(kwargs)>1:
             await ctx.send("Too many arguments!")
             return
@@ -44,21 +45,20 @@ class Friend(interactions.Extension): # must have commands.cog or this wont work
                 await self.handle_list(ctx, kwargs["list"])
 
     async def handle_add(self, ctx, username: str):
-        message = await ctx.send(f"Adding {username} to the friend list...")
         user_data = await self.osu.get_user_data(username)
         if user_data:
             if not(await self.database.get_friend_from_channel(user_data["id"], ctx.channel_id._snowflake)):
                 await self.database.add_friend(ctx.channel_id._snowflake, user_data)
-                await message.reply(f"Added {user_data['username']} to the friend list!")
+                message = await ctx.send(f"Added {user_data['username']} to the friend list!")
                 # if they arent a main user or a friend you should scan their plays on all beatmaps next TODO
                 await self.scan_users_plays(ctx, username, message)
                 newctx = get(self.client, interactions.Channel, channel_id=int(ctx.channel_id._snowflake))
                 await newctx.send(f"Finished scanning {username}'s plays")
             else:
-                await message.reply(f"{user_data['username']} is already in the friend list!")
+                await ctx.send(f"{user_data['username']} is already in the friend list!")
                 return
         else:
-            await message.reply(f"Could not find the user {username} on the osu! servers")
+            await ctx.send(f"Could not find the user {username} on the osu! servers")
             return
         
 
