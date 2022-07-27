@@ -38,22 +38,25 @@ class Auth:
 
     # General api call, where it takes in the url as a parameter
     async def get_api_v2(self, url: str, params=None):
-        if time.time() - self.api_timer < 0.05: # This is the maximum api time allowed by ppy
-            await asyncio.sleep(0.05 - (time.time() - self.api_timer)) # If the time is exceeded, tell it to wait until its available again (not very long)
-        print("Ping Time: ", "%.2f" % (time.time()-self.api_timer) + "s", end="\r") # Every time the api is called, print the ping time
-        self.api_timer = time.time()
-        if params is None:
-            params = {}
-        if not self.auth_token_valid():
-            self._get_auth_token()
-        headers = {"Authorization": f"Bearer {self.access_token}"}
-        r = requests.get(
-            f"https://osu.ppy.sh/api/v2/{url}", headers=headers, params=params, timeout=(5, 10)
-        )
-        self.api_timer = time.time()
-        if r.status_code == 200:
-            return r.json()
-        else:
+        try:
+            if time.time() - self.api_timer < 0.05: # This is the maximum api time allowed by ppy
+                await asyncio.sleep(0.05 - (time.time() - self.api_timer)) # If the time is exceeded, tell it to wait until its available again (not very long)
+            print("Ping Time: ", "%.2f" % (time.time()-self.api_timer) + "s", end="\r") # Every time the api is called, print the ping time
+            self.api_timer = time.time()
+            if params is None:
+                params = {}
+            if not self.auth_token_valid():
+                self._get_auth_token()
+            headers = {"Authorization": f"Bearer {self.access_token}"}
+            r = requests.get(
+                f"https://osu.ppy.sh/api/v2/{url}", headers=headers, params=params, timeout=(5, 10)
+            )
+            self.api_timer = time.time()
+            if r.status_code == 200:
+                return r.json()
+            else:
+                return False
+        except:
             return False
 
     ## Api call urls below
