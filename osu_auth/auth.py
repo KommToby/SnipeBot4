@@ -58,6 +58,29 @@ class Auth:
                 return False
         except:
             return False
+        
+    # POST requests (new)
+    async def get_api_v2_post_mods(self, url: str, mods, params=None):
+        try:
+            if time.time() - self.api_timer < 0.05: # This is the maximum api time allowed by ppy
+                await asyncio.sleep(0.05 - (time.time() - self.api_timer)) # If the time is exceeded, tell it to wait until its available again (not very long)
+            print("Ping Time: ", "%.2f" % (time.time()-self.api_timer) + "s", end="\r") # Every time the api is called, print the ping time
+            self.api_timer = time.time()
+            if params is None:
+                params = {}
+            if not self.auth_token_valid():
+                self._get_auth_token()
+            headers = {"Authorization": f"Bearer {self.access_token}"}
+            r = requests.post(
+                f"https://osu.ppy.sh/api/v2/{url}", headers=headers, params=params, timeout=(5, 10), data={"mods": mods}
+            )
+            self.api_timer = time.time()
+            if r.status_code == 200:
+                return r.json()
+            else:
+                return False
+        except:
+            return False
 
     ## Api call urls below
 
@@ -80,6 +103,9 @@ class Auth:
     # Gets details about a specific beatmap. The beatmap id has to be the difficulty id, not the beatmapset id
     async def get_beatmap(self, beatmap_id: str):
         return await self.get_api_v2(f"beatmaps/{beatmap_id}")
+
+    async def get_beatmap_mods(self, beatmap_id: str, mods):
+        return await self.get_api_v2_post_mods(f"beatmaps/{beatmap_id}/attributes", mods)
 
     # Users recent activity, I think this returns every single beatmap they have played in the last 24 hours, which can be used for a buffer when the api is down / slow
     async def get_user_recent_activity(self, user_id: str):
