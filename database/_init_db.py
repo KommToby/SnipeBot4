@@ -92,6 +92,10 @@ class Database:
             )
         ''')  # for storing if someone has been sniped on a specific beatmap
 
+    ## CUSTOM (WIP)
+    async def custom_get(self, query):
+        return self.cursor.execute(query).fetchall()
+
     ## GETS
     async def get_channel(self, discord_id):
         return self.cursor.execute(
