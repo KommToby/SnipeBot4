@@ -1,3 +1,4 @@
+
 import interactions
 from embed.stats import create_stats_embed
 class Stats(interactions.Extension): # must have commands.cog or this wont work
@@ -27,24 +28,29 @@ class Stats(interactions.Extension): # must have commands.cog or this wont work
             user_score_data = {}
             if scores:
                 played_beatmap_ids = []
+                user_score_data['stars'] = []
+                user_score_data['bpm'] = []
+                user_score_data['mods'] = []
                 for score in scores: # unique beatmaps only from the score (just in case)
                     if score[1] not in played_beatmap_ids:
                         played_beatmap_ids.append(score[1])
+                        if score[14] is not None:
+                            user_score_data['stars'].append(float(score[14]))
+                        if score[15] is not None:
+                            user_score_data['bpm'].append(float(score[15]))
+                        if score[13] is not None:
+                            if int(score[13]) != 0:
+                                user_score_data['mods'].append(int(score[13]))
                 user_score_data['beatmaps'] = played_beatmap_ids # add to dictionary
-                user_score_data['stars'] = []
                 user_score_data['lengths'] = []
                 user_score_data['artists'] = []
                 user_score_data['songs'] = []
                 user_score_data['mappers'] = []
                 user_score_data['guests'] = []
-                user_score_data['bpm'] = []
                 checked_beatmapsets = []
                 for beatmap in all_beatmaps: # loop through all stored beatmaps
                     if int(beatmap[0]) in played_beatmap_ids:
-                        user_score_data['stars'].append(float(beatmap[1]))
                         user_score_data['lengths'].append(beatmap[6])
-                        user_score_data['bpm'].append(beatmap[7])
-                        
                         # unique map artist checking
                         if beatmap[10] not in checked_beatmapsets: 
                             user_score_data['artists'].append(beatmap[2])
