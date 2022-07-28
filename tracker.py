@@ -3,8 +3,6 @@ from embed.new_best_score import *
 from embed.snipe import *
 from interactions.ext.get import get
 
-# TODO in every add_score database call, add the converted stars and bpm of the play if a mod is used.
-
 class SnipeTracker:
     def __init__(self, client):
         self.client = client

@@ -135,6 +135,10 @@ class Database:
         return self.cursor.execute(
             "SELECT * FROM scores WHERE user_id=? AND score!=?",
             (user_id, 0)).fetchall()
+
+    async def get_all_scores_all_users_with_zeros(self): # does not include 0s
+        return self.cursor.execute(
+            "SELECT * FROM scores").fetchall()
     
     async def get_all_users(self):
         return self.cursor.execute(
@@ -218,13 +222,13 @@ class Database:
             )
             self.db.commit()
 
-    async def add_score(self, user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods):
+    async def add_score(self, user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods, converted_score, converted_bpm):
         if score is None:
             print("breakpoint")
         if not(await self.get_score(user_id, beatmap_id)):
             self.cursor.execute(
-                "INSERT INTO scores VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                (user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods)
+                "INSERT INTO scores VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                (user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods, converted_score, converted_bpm)
             )
             self.db.commit()
 
