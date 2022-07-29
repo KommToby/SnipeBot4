@@ -139,7 +139,17 @@ class Friend(interactions.Extension): # must have interactions.Extension or this
                 if not(await self.database.get_score(user_data['id'], beatmap[0])):
                     user_play = await self.osu.get_score_data(beatmap[0], user_data['id'])
                     if user_play:
-                        await self.database.add_score(user_data['id'], beatmap[0], user_play['score']['score'], user_play['score']['accuracy'], user_play['score']['max_combo'], user_play['score']['passed'], user_play['score']['pp'], user_play['score']['rank'], user_play['score']['statistics']['count_300'], user_play['score']['statistics']['count_100'], user_play['score']['statistics']['count_50'], user_play['score']['statistics']['count_miss'], user_play['score']['created_at'], await self.tracker.convert_mods_to_int(user_play['score']['mods']))
+                        converted_stars = 0
+                        converted_bpm = 0
+                        if await self.convert_mods_to_int(user_play['score']['mods']) > 15:
+                            if "DT" in user_play['score']['mods'] or "NC" in user_play['score']['mods']:
+                                converted_bpm = int(user_play['score']['beatmap']['bpm']) * 1.5
+                            beatmap_mod_data = await self.osu.get_beatmap_mods(user_play['score']['beatmap']['id'], await self.convert_mods_to_int(user_play['score']['mods']))
+                            if beatmap_mod_data:
+                                converted_stars = beatmap_mod_data['attributes']['star_rating']
+                            else:
+                                converted_stars = beatmap[1]
+                        await self.database.add_score(user_data['id'], beatmap[0], user_play['score']['score'], user_play['score']['accuracy'], user_play['score']['max_combo'], user_play['score']['passed'], user_play['score']['pp'], user_play['score']['rank'], user_play['score']['statistics']['count_300'], user_play['score']['statistics']['count_100'], user_play['score']['statistics']['count_50'], user_play['score']['statistics']['count_miss'], user_play['score']['created_at'], await self.tracker.convert_mods_to_int(user_play['score']['mods']), converted_stars, converted_bpm)
                         main_users = await self.database.get_all_users()
                         for main_user in main_users:
                             main_user_friends = await self.database.get_user_friends(main_user[0])
@@ -163,7 +173,7 @@ class Friend(interactions.Extension): # must have interactions.Extension or this
                                             await self.database.add_snipe(main_user_play['score']['user_id'], beatmap[0], user_data['id'], main_user_play['score']['created_at'], main_user_play['score']['score'], user_play['score']['score'], main_user_play['score']['accuracy'], user_play['score']['accuracy'], second_mods, first_mods, main_user_play['score']['pp'], user_play['score']['pp'])
 
                     else:
-                        await self.database.add_score(user_data['id'], beatmap[0], 0, False, False, False, False, False, False, False, False, False, False, False)
+                        await self.database.add_score(user_data['id'], beatmap[0], 0, False, False, False, False, False, False, False, False, False, False, False, False, False)
                 if i != 0:
                     elapsed_time = time.time() - start_time
                     try:
@@ -173,7 +183,7 @@ class Friend(interactions.Extension): # must have interactions.Extension or this
                     except interactions.LibraryException as l:
                         pass
             except Exception as e:
-                pass
+                print(f"Error while scanning user: {e}")
         await response.edit(content=f"Finished scanning top plays. Now scanning user on all beatmaps. \n0 hours remaining\n 100% complete")
 
 def setup(client):
