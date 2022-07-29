@@ -7,6 +7,7 @@ async def update_decode(modint, value, modarray, mod):
 
 async def decode_mods_to_array(modint): # converts mod integer back into array of mods
     modarray = []
+    modint = int(modint)
     moddict = {
         16384: "PF",
         8192: "Relax2",

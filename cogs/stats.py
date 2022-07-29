@@ -34,9 +34,9 @@ class Stats(interactions.Extension): # must have commands.cog or this wont work
                 for score in scores: # unique beatmaps only from the score (just in case)
                     if score[1] not in played_beatmap_ids:
                         played_beatmap_ids.append(score[1])
-                        if score[14] is not None:
+                        if score[14] is not None and int(score[14]) != 0:
                             user_score_data['stars'].append(float(score[14]))
-                        if score[15] is not None:
+                        if score[15] is not None and int(score[15]) != 0:
                             user_score_data['bpm'].append(float(score[15]))
                         if score[13] is not None:
                             if int(score[13]) != 0:
