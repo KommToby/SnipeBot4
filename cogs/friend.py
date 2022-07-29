@@ -44,6 +44,42 @@ class Friend(interactions.Extension): # must have interactions.Extension or this
             elif "list" in kwargs:
                 await self.handle_list(ctx, kwargs["list"])
 
+    async def convert_mods_to_int(self, modarray):
+        value = 0
+        if modarray:
+            for mod in modarray:
+                if mod == "NF":
+                    value += 1
+                elif mod == "EZ":
+                    value += 2
+                elif mod == "TD":
+                    value += 4
+                elif mod == "HD":
+                    value += 8
+                elif mod == "HR":
+                    value += 16
+                elif mod == "SD":
+                    value += 32
+                elif mod == "DT":
+                    value += 64
+                elif mod == "RX":
+                    value += 128
+                elif mod == "HT":
+                    value += 256
+                elif mod == "NC":
+                    value += 512
+                elif mod == "FL":
+                    value += 1024
+                elif mod == "Autoplay":
+                    value += 2048
+                elif mod == "SO":
+                    value += 4096
+                elif mod == "Relax2":
+                    value += 8192
+                elif mod == "PF":
+                    value += 16384
+        return value
+
     async def handle_add(self, ctx, username: str):
         user_data = await self.osu.get_user_data(username)
         if user_data:
