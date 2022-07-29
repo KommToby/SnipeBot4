@@ -81,11 +81,12 @@ class Friend(interactions.Extension): # must have interactions.Extension or this
         return value
 
     async def handle_add(self, ctx, username: str):
+        message = await ctx.send(f"Adding {username} to the friends list...")
         user_data = await self.osu.get_user_data(username)
         if user_data:
             if not(await self.database.get_friend_from_channel(user_data["id"], ctx.channel_id._snowflake)):
                 await self.database.add_friend(ctx.channel_id._snowflake, user_data)
-                message = await ctx.send(f"Added {user_data['username']} to the friend list!")
+                await message.edit(content=f"Adding {username} to the friends list... **Done!**")
                 # if they arent a main user or a friend you should scan their plays on all beatmaps next TODO
                 await self.scan_users_plays(ctx, username, message)
                 newctx = get(self.client, interactions.Channel, channel_id=int(ctx.channel_id._snowflake))
@@ -128,7 +129,7 @@ class Friend(interactions.Extension): # must have interactions.Extension or this
             await message.reply(f"User {username} is not a main user")
 
     async def scan_users_plays(self, ctx, username: str, message):
-        await message.reply(f"Scanning {username}'s top plays...")
+        await message.edit(f"Adding {username} to the friends list... **Done!**\nScanning top plays...")
         beatmaps = await self.database.get_all_beatmaps()
         user_data = await self.osu.get_user_data(username)
         if user_data:
@@ -167,7 +168,7 @@ class Friend(interactions.Extension): # must have interactions.Extension or this
             await ctx.send(f"{username} couldn't be scanned. Did you write their name correctly?")
             return
         # now we scan them on every single beatmap. Fun.
-        response = await message.reply(f"Finished scanning top plays. Now scanning user on all beatmaps. \n`calculating...`\n 0% complete")
+        await message.edit(content=f"Adding {username} to the friends list... **Done!**\nScanning top plays... **Done!**\nScanning user on all beatmaps... 0% complete\n`calculating` hours remaining")
         start_time = time.time()
         message_update_time = time.time()
         for i, beatmap in enumerate(beatmaps):
@@ -215,12 +216,12 @@ class Friend(interactions.Extension): # must have interactions.Extension or this
                     try:
                         if int(time.time()) - int(message_update_time) > 5:
                             message_update_time = time.time()
-                            await response.edit(content=f"Finished scanning top plays. Now scanning user on all beatmaps. \n{round((((len(beatmaps) * elapsed_time)/i)-elapsed_time)/3600, 2)} hours remaining\n {round(((i/len(beatmaps))*100), 2)}% complete")
+                            await message.edit(content=f"Adding {username} to the friends list... **Done!**\nScanning top plays... **Done!**\nScanning user on all beatmaps... {round(((i/len(beatmaps))*100), 2)}% complete\n{round((((len(beatmaps) * elapsed_time)/i)-elapsed_time)/3600, 2)} hours remaining")
                     except interactions.LibraryException as l:
                         pass
             except Exception as e:
                 print(f"Error while scanning user: {e}")
-        await response.edit(content=f"Finished scanning top plays. Now scanning user on all beatmaps. \n0 hours remaining\n 100% complete")
+        await message.edit(content=f"Adding {username} to the friends list... **Done!**\nScanning top plays... **Done!**\nScanning user on all beatmaps... 100% complete\nNo hours remaining")
 
 def setup(client):
     Friend(client)
