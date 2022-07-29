@@ -1,6 +1,6 @@
 import interactions
 from embed.osu import create_osu_embed
-class Track(interactions.Extension): # must have commands.cog or this wont work
+class Track(interactions.Extension): # must have interactions.Extension or this wont work
     def __init__(self, client):
         self.client: interactions.Client = client
         self.osu = client.auth

@@ -1,6 +1,6 @@
 import interactions
 
-class Ping(interactions.Extension): # must have commands.cog or this wont work
+class Ping(interactions.Extension): # must have interactions.Extension or this wont work
     def __init__(self, client):
         self.client: interactions.Client = client
 

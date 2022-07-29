@@ -2,7 +2,7 @@ import interactions, time, asyncio
 from embed.friend_list import create_friend_list_embed
 from tracker import SnipeTracker
 from interactions.ext.get import get
-class Friend(interactions.Extension): # must have commands.cog or this wont work
+class Friend(interactions.Extension): # must have interactions.Extension or this wont work
     def __init__(self, client):
         self.client: interactions.Client = client
         self.osu = client.auth
