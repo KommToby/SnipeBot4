@@ -1,4 +1,4 @@
-import interactions, asyncio
+import interactions, asyncio, math
 from embed.leaderboard import create_leaderboard_embed
 class Leaderboard(interactions.Extension): # must have interactions.Extension or this wont work
     def __init__(self, client):
@@ -70,7 +70,28 @@ class Leaderboard(interactions.Extension): # must have interactions.Extension or
         total_scores = len(total_scores)
         if snipes < total_scores:
             multiplier = (5/100) + (0.95 * (snipes/(total_scores+1)))
-        return round((multiplier*((3*snipes + 7*not_sniped_main)/(2*not_sniped_back+(snipes/(not_sniped_main+1))*sniped+1)*4000)), 2)
+        calculated_pp = round((multiplier*((3*snipes + 7*not_sniped_main)/(2*not_sniped_back+(snipes/(not_sniped_main+1))*sniped+1)*10000)), 2)
+        weighted_pp = await self.weight_snipe_pp(calculated_pp)
+        return weighted_pp
+
+    async def weight_snipe_pp(self, pp):
+        # PP gets harder to gain every 1000pp that you have.
+        # This penalty maxes out at 5x harder to gain
+        if pp <= 1000:
+            return pp
+        new_pp = 0
+        frac = math.floor(pp/1000)
+        for i in range(0, frac+1):
+            if i > 4: # the weighting maxes out at 1/5 penalty
+                new_pp += (1/5) * pp
+                break
+            elif pp < 1000:
+                new_pp += (1/(i+1))*pp
+            else:
+                new_pp += (1/(i+1))*1000
+            pp = (pp - 1000)
+        return new_pp   
+            
 
     def sort_friend_snipes(self, friends_data):
         # NOT async because it's a local function

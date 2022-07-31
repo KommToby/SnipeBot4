@@ -3,7 +3,7 @@ import interactions
 async def create_leaderboard_embed(leaderboard, main_username, main_snipes, main_sniped):
     embed = interactions.Embed(
         title=f"Snipe Leaderboard For {main_username}: {main_snipes} | {main_sniped}",
-        color=13404313
+        color=3152180
     )
 
     for i, friend in enumerate(leaderboard):
@@ -14,6 +14,7 @@ async def create_leaderboard_embed(leaderboard, main_username, main_snipes, main
             embed.add_field(name=friend_message,
                             value=friend_description,
                             inline=False)
+    embed.set_footer(text=f"Snipe PP Penalty Maxes At ~1940pp (5 Raw Snipe PP = 1 Snipe PP)", icon_url="https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Blue_question_mark_icon.svg/1200px-Blue_question_mark_icon.svg.png")
     return embed
 
 async def calculate_snipe_pp_difference(friend):
