@@ -104,6 +104,11 @@ class Database:
             "SELECT * FROM users WHERE discord_channel=?",
             (discord_id,)).fetchone()
 
+    async def get_user_from_channel(self, channel_id):
+        return self.cursor.execute(
+            "SELECT * FROM users WHERE discord_channel=?",
+            (channel_id,)).fetchone()
+
     async def get_channel_from_username(self, username):
         username = username.lower()
         return self.cursor.execute(
@@ -197,6 +202,27 @@ class Database:
             (osu_id, beatmap_id, score)
         ).fetchone()
 
+    async def get_friend_leaderboard_score(self, friend_id):
+        return self.cursor.execute(
+            "SELECT leaderboard FROM friends WHERE osu_id=?",
+            (friend_id,)).fetchone()
+
+    async def get_user_snipes(self, user_id, second_user_id):
+        return self.cursor.execute(
+            "SELECT * FROM snipes WHERE user_id=? AND second_user_id=?",
+            (user_id, second_user_id)
+        ).fetchall()
+
+    async def get_main_user_snipes(self, main_user_id):
+        return self.cursor.execute(
+            "SELECT * FROM snipes WHERE user_id=?",
+            (main_user_id,)).fetchall()
+
+    async def get_main_user_sniped(self, main_user_id):
+        return self.cursor.execute(
+            "SELECT * FROM snipes WHERE second_user_id=?",
+            (main_user_id,)).fetchall()
+
     ## ADDS
     async def add_channel(self, channel_id, user_id, user_data):
         user_data = await self.osu.get_user_data(str(user_id))
@@ -277,6 +303,14 @@ class Database:
             (username, osu_id)
         )
         self.db.commit()
+
+    async def update_friend_leaderboard_score(self, discord_channel, friend_id, pp):
+        self.cursor.execute(
+            "UPDATE friends SET leaderboard=? WHERE discord_channel=? AND osu_id=?",
+            (pp, discord_channel, friend_id)
+        )
+        self.db.commit()
+
     ## DELETES
     async def delete_friend(self, user_id, discord_id):
         self.cursor.execute(

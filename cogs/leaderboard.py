@@ -20,7 +20,7 @@ class Leaderboard(interactions.Extension): # must have interactions.Extension or
         main_user_id = main_user_array[1]
         main_user_friends = await self.database.get_user_friends(ctx.channel_id._snowflake)
         for friend in main_user_friends:
-            leaderboard = await self.handle_friend_leaderboard(friend, main_user_id, leaderboard)
+            leaderboard = await self.handle_friend_leaderboard(friend, main_user_id, leaderboard, main_user_array)
         self.sort_friend_snipes(leaderboard)
         main_snipes_array = await self.database.get_main_user_snipes(main_user_id)
         main_sniped_array = await self.database.get_main_user_sniped(main_user_id)
@@ -29,7 +29,7 @@ class Leaderboard(interactions.Extension): # must have interactions.Extension or
         embed = await create_leaderboard_embed(leaderboard, main_user_array[2], main_snipes, main_sniped)
         await ctx.send(embeds=embed)
 
-    async def handle_friend_leaderboard(self, friend, main_user_id, leaderboard):
+    async def handle_friend_leaderboard(self, friend, main_user_id, leaderboard, main_user_array):
         friend_old_pp_array = await self.database.get_friend_leaderboard_score(friend[1])
         friend_old_pp = friend_old_pp_array[0]
         friend_snipes_array = await self.database.get_user_snipes(friend[1], main_user_id)
@@ -41,6 +41,7 @@ class Leaderboard(interactions.Extension): # must have interactions.Extension or
         held_snipes = len(held_snipes_array)
         not_sniped_back = len(not_sniped_back_array)
         snipe_pp = await self.calculate_snipe_pp(main_user_id, friend_snipes, not_sniped_back, held_snipes, friend_sniped)
+        await self.database.update_friend_leaderboard_score(main_user_array[0], friend[1], snipe_pp)
         leaderboard.append({'username': friend[2], 'not_sniped_back': not_sniped_back, 'held_snipes': held_snipes, 'snipe_pp': snipe_pp, 'old_pp': friend_old_pp})
         return leaderboard
 
@@ -49,8 +50,9 @@ class Leaderboard(interactions.Extension): # must have interactions.Extension or
         for snipe in snipes:
             add_to_array = True
             for sniped_play in sniped:
-                if sniped[1] == sniped_play[1]:
+                if snipe[1] == sniped_play[1]:
                     add_to_array = False
+                    break
             if add_to_array is True:
                 one_way_snipes.append(snipe)
         return one_way_snipes
@@ -68,7 +70,7 @@ class Leaderboard(interactions.Extension): # must have interactions.Extension or
         total_scores = len(total_scores)
         if snipes < total_scores:
             multiplier = (5/100) + (0.95 * (snipes/(total_scores+1)))
-        return round((multiplier*((3*snipes + 7*not_sniped_back)/(2*not_sniped_main+(snipes/(not_sniped_back+1))*sniped+1)*4000)), 2)
+        return round((multiplier*((3*snipes + 7*not_sniped_main)/(2*not_sniped_back+(snipes/(not_sniped_main+1))*sniped+1)*4000)), 2)
 
     def sort_friend_snipes(self, friends_data):
         # NOT async because it's a local function
