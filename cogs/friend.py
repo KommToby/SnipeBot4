@@ -211,6 +211,25 @@ class Friend(interactions.Extension): # must have interactions.Extension or this
 
                     else:
                         await self.database.add_score(user_data['id'], beatmap[0], 0, False, False, False, False, False, False, False, False, False, False, False, False, False)
+                else:
+                    # This is the case that if the score that is stored here is from SnipeBot3, it needs to update it. Painful Stuff.
+                    local_score_data = await self.database.get_score(user_data['id'], beatmap[0])
+                    if str(local_score_data[3]) == "0": # accuracy being 0 signifies old format
+                        user_play = await self.osu.get_score_data(beatmap[0], user_data['id'])
+                        if not(user_play):
+                            continue
+                        converted_stars = int(beatmap[1])
+                        converted_bpm = int(beatmap[7])
+                        if await self.convert_mods_to_int(user_play['score']['mods']) > 15:
+                            if "DT" in user_play['score']['mods'] or "NC" in user_play['score']['mods']:
+                                converted_bpm = int(user_play['score']['beatmap']['bpm']) * 1.5
+                            beatmap_mod_data = await self.osu.get_beatmap_mods(user_play['score']['beatmap']['id'], await self.convert_mods_to_int(user_play['score']['mods']))
+                            if beatmap_mod_data:
+                                converted_stars = beatmap_mod_data['attributes']['star_rating']
+                            else:
+                                converted_stars = beatmap[1]
+                        await self.database.update_score(user_data['id'], beatmap[0], user_play['score']['score'], user_play['score']['accuracy'], user_play['score']['max_combo'], user_play['score']['passed'], user_play['score']['pp'], user_play['score']['rank'], user_play['score']['statistics']['count_300'], user_play['score']['statistics']['count_100'], user_play['score']['statistics']['count_50'], user_play['score']['statistics']['count_miss'], user_play['score']['created_at'], await self.tracker.convert_mods_to_int(user_play['score']['mods']), converted_stars, converted_bpm)
+                        print(f"Converted Snipebot3 Formatted score to Snipebot4 Format")
                 if i != 0:
                     elapsed_time = time.time() - start_time
                     try:
