@@ -27,6 +27,9 @@ class Snipes(interactions.Extension): # must have interactions.Extension or this
         if not(user_data):
             await ctx.send(f"{username} is not a valid osu! username! Please try again.")
             return
+        if main_user_id_array[2] == username:
+            await ctx.send(f"{username} is the main user, and therefore cannot be sniped by themself!")
+            return
         main_user_id = main_user_id_array[1]
         user_sniped_array = await self.database.get_user_snipes(main_user_id, user_data['id'])
         user_snipes_array = await self.database.get_user_snipes(user_data['id'], main_user_id)
