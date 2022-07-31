@@ -6,8 +6,6 @@ from interactions.ext.get import get
 # TODO add type values to all methods
 # TODO map json dictionaries to classes
 # TODO make methods that dont use client, database, or osu static (dont contain self)
-# TODO convert if-in-for statments to have continues to remove indentation
-# e.n. continue ends the current index of the for loop, and moves onto the next
 # TODO for all api returns create a class object "type" to refer to
 
 
@@ -173,7 +171,8 @@ class SnipeTracker:
             if online_play:  # this shouldnt fail, but if it does we can send an error message
                 # if the recent score is larger than the local score
                 if play['score'] > int(user_play[2]):
-                    await self.database.update_score(user_play[0], user_play[1], play['score'], play['accuracy'], play['max_combo'], play['passed'], play['pp'], play['rank'], play['statistics']['count_300'], play['statistics']['count_100'], play['statistics']['count_50'], play['statistics']['count_miss'], play['created_at'], await self.convert_mods_to_int(play['mods']))
+                    conv_stars, conv_bpm = await self.convert_stars_and_bpm(play)
+                    await self.database.update_score(user_play[0], user_play[1], play['score'], play['accuracy'], play['max_combo'], play['passed'], play['pp'], play['rank'], play['statistics']['count_300'], play['statistics']['count_100'], play['statistics']['count_50'], play['statistics']['count_miss'], play['created_at'], await self.convert_mods_to_int(play['mods']), conv_stars, conv_bpm)
                     # If the recent play is the recent score, then its a new best
                     if play['score'] >= online_play['score']['score']:
                         sniped_friends = await self.get_sniped_friends(play, f"{data[0]}")
@@ -350,7 +349,8 @@ class SnipeTracker:
                                 # this means that they are
                                 await self.check_main_user_play(play, main_user[1], main_user)
                     if str(play['score']) > str(local_score[2]):
-                        await self.database.update_score(friend_id, beatmap_id, play['score'], play['accuracy'], play['max_combo'], play['passed'], play['pp'], play['rank'], play['statistics']['count_300'], play['statistics']['count_100'], play['statistics']['count_50'], play['statistics']['count_miss'], play['created_at'], await self.convert_mods_to_int(play['mods']))
+                        conv_stars, conv_bpm = await self.convert_stars_and_bpm(play)
+                        await self.database.update_score(friend_id, beatmap_id, play['score'], play['accuracy'], play['max_combo'], play['passed'], play['pp'], play['rank'], play['statistics']['count_300'], play['statistics']['count_100'], play['statistics']['count_50'], play['statistics']['count_miss'], play['created_at'], await self.convert_mods_to_int(play['mods']), conv_stars, conv_bpm)
                     await self.database.update_friend_recent_score(friend_id, play['score'])
                 else:
                     await self.database.update_friend_recent_score(friend_id, play['score'])
@@ -383,7 +383,8 @@ class SnipeTracker:
                 local_score = await self.database.get_score(friend_id, beatmap_id)
                 # if its their new best
                 if int(play['score']) > int(local_score[2]):
-                    await self.database.update_score(friend_id, beatmap_id, play['score'], play['accuracy'], play['max_combo'], play['passed'], play['pp'], play['rank'], play['statistics']['count_300'], play['statistics']['count_100'], play['statistics']['count_50'], play['statistics']['count_miss'], play['created_at'], await self.convert_mods_to_int(play['mods']))
+                    conv_stars, conv_bpm = await self.convert_stars_and_bpm(play)
+                    await self.database.update_score(friend_id, beatmap_id, play['score'], play['accuracy'], play['max_combo'], play['passed'], play['pp'], play['rank'], play['statistics']['count_300'], play['statistics']['count_100'], play['statistics']['count_50'], play['statistics']['count_miss'], play['created_at'], await self.convert_mods_to_int(play['mods']), conv_stars, conv_bpm)
                     # now we check if the user has got a snipe on this beatmap before
                     if not(await self.database.get_user_snipe_on_beatmap(friend_id, beatmap_id, main_user[1])):
                         # Now we can post the friend snipe
@@ -521,7 +522,8 @@ class SnipeTracker:
             if friend_local_score is not None:
                 if friend_play['score']['score'] > friend_local_score[2]:
                     # we need to update their local score
-                    await self.database.update_score(friend[1], play['beatmap']['id'], friend_play['score']['score'], friend_play['score']['accuracy'], friend_play['score']['max_combo'], friend_play['score']['passed'], friend_play['score']['pp'], friend_play['score']['rank'], friend_play['score']['statistics']['count_300'], friend_play['score']['statistics']['count_100'], friend_play['score']['statistics']['count_50'], friend_play['score']['statistics']['count_miss'], friend_play['score']['created_at'], await self.convert_mods_to_int(friend_play['score']['mods']))
+                    conv_stars, conv_bpm = await self.convert_stars_and_bpm(friend_play['score'])
+                    await self.database.update_score(friend[1], play['beatmap']['id'], friend_play['score']['score'], friend_play['score']['accuracy'], friend_play['score']['max_combo'], friend_play['score']['passed'], friend_play['score']['pp'], friend_play['score']['rank'], friend_play['score']['statistics']['count_300'], friend_play['score']['statistics']['count_100'], friend_play['score']['statistics']['count_50'], friend_play['score']['statistics']['count_miss'], friend_play['score']['created_at'], await self.convert_mods_to_int(friend_play['score']['mods']), conv_stars, conv_bpm)
 
 
     async def add_scores(self, main_user_friends, main_user, play, users_checked):
@@ -545,6 +547,7 @@ class SnipeTracker:
                     if local_score is not None:
                         # if the new score is better than the stored one
                         if friend_play['score']['score'] > int(local_score[2]):
+                            await self.convert_stars_and_bpm(friend_play['score'])
                             await self.database.update_score(friend[1], friend_play['score']['beatmap']['id'], friend_play['score']['score'], friend_play['score']['accuracy'], friend_play['score']['max_combo'], friend_play['score']['passed'], friend_play['score']['pp'], friend_play['score']['rank'], friend_play['score']['statistics']['count_300'], friend_play['score']['statistics']['count_100'], friend_play['score']['statistics']['count_50'], friend_play['score']['statistics']['count_miss'], friend_play['score']['created_at'], await self.convert_mods_to_int(friend_play['score']['mods']))
                 else:
                     pass  # because they already have a 0 score stored
