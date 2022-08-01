@@ -19,18 +19,10 @@ class Leaderboard(interactions.Extension): # must have interactions.Extension or
     )
     async def leaderboard(self, ctx: interactions.CommandContext, *args, **kwargs):
         await ctx.defer()
-        if len(kwargs) == 0:
-            sort = 'snipe_pp'
-        else:
-            if kwargs['sort'] == 'pp':
-                sort = 'snipe_pp'
-            elif kwargs['sort'] == 'held':
-                sort = 'held_snipes'
-            elif kwargs['sort'] == 'tosnipe':
-                sort = 'not_sniped_back'
-            else:
-                await ctx.send("Invalid sort order. Valid options are: `pp`, `held`, `tosnipe`")
-                return
+        sort = self.handle_kwargs(kwargs)
+        if sort == "":
+            await ctx.send("Invalid sort order. Valid options are: `pp`, `held`, `tosnipe`")
+            return
         leaderboard = [] # The final leaderboard
         main_user_array = await self.database.get_user_from_channel(ctx.channel_id._snowflake)
         if not main_user_array:
@@ -47,6 +39,19 @@ class Leaderboard(interactions.Extension): # must have interactions.Extension or
         main_sniped = len(main_sniped_array)
         embed = await create_leaderboard_embed(leaderboard, main_user_array[2], main_snipes, main_sniped, sort)
         await ctx.send(embeds=embed)
+
+    async def handle_kwargs(self, kwargs):
+        if len(kwargs) == 0:
+            return 'snipe_pp'
+        else:
+            if kwargs['sort'] == 'pp':
+                return 'snipe_pp'
+            elif kwargs['sort'] == 'held':
+                return 'held_snipes'
+            elif kwargs['sort'] == 'tosnipe':
+                return 'not_sniped_back'
+            else:
+                return ""
 
     async def handle_friend_leaderboard(self, friend, main_user_id, leaderboard, main_user_array):
         friend_old_pp_array = await self.database.get_friend_leaderboard_score(friend[1])
