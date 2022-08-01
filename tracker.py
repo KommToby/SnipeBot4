@@ -105,11 +105,13 @@ class SnipeTracker:
             try:
                 s = time.time()
                 await self.tracker_loop()
-                print(f"Tracker loop took {round((time.time() - s),2)} seconds")
+                print(
+                    f"Tracker loop took {round((time.time() - s),2)} seconds")
             except Exception as e:
                 print(f"Error occured in tracker loop: {e}")
                 pass
 
+    # Checking a beatmap that the main user has played
     async def check_main_beatmap(self, play):
         # checks to see if the map is already stored in the database
         if not(await self.database.get_beatmap(play['beatmap']['id'])):
@@ -117,6 +119,7 @@ class SnipeTracker:
             # Checks all users in database for snipes on the new beatmap
             await self.add_snipes(play)
 
+    # If HR or DT/NC is used, this converts the bpm and star rating of the map for stats
     async def convert_stars_and_bpm(self, play):
         converted_stars = 0
         converted_bpm = 0
@@ -132,6 +135,7 @@ class SnipeTracker:
             f"Error occured when converting stars and bpm for map {play['beatmap']['id']}")
         return converted_stars, converted_bpm
 
+    # Gets all the friends that the main user has sniped for a play
     async def get_sniped_friends(self, play, main_user_discord):
         sniped_friends = []
         # gets list of friends linked to main user
@@ -162,6 +166,7 @@ class SnipeTracker:
                         await self.post_friend_snipe(friend_play['score'], play, friend_id)
         return sniped_friends
 
+    # creates a string consisting of the user ids of linked users who want to be pinged
     async def construct_pinging_string(self, sniped_friends):
         all_friends = await self.database.get_all_friends()
         ping_string = ""
@@ -179,7 +184,6 @@ class SnipeTracker:
                     if user_link[2] == 1:
                         ping_string += f"<@{user_link[0]}> "
         return ping_string
-
 
     async def check_main_user_play(self, play, id, data):
         # first checks the map to see if it is already stored or not
@@ -554,7 +558,6 @@ class SnipeTracker:
                     # we need to update their local score
                     conv_stars, conv_bpm = await self.convert_stars_and_bpm(friend_play['score'])
                     await self.database.update_score(friend[1], play['beatmap']['id'], friend_play['score']['score'], friend_play['score']['accuracy'], friend_play['score']['max_combo'], friend_play['score']['passed'], friend_play['score']['pp'], friend_play['score']['rank'], friend_play['score']['statistics']['count_300'], friend_play['score']['statistics']['count_100'], friend_play['score']['statistics']['count_50'], friend_play['score']['statistics']['count_miss'], friend_play['score']['created_at'], await self.convert_mods_to_int(friend_play['score']['mods']), conv_stars, conv_bpm)
-
 
     async def add_scores(self, main_user_friends, main_user, play, users_checked):
         # for main users who may be friends with other main users
