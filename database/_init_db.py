@@ -112,6 +112,11 @@ class Database:
             "SELECT * FROM link WHERE discord_id=?",
             (discord_id,)).fetchone()
 
+    async def get_discord_id_from_link(self, osu_id):
+        return self.cursor.execute(
+            "SELECT * FROM link WHERE osu_id=?",
+            (osu_id,)).fetchone()
+
     async def get_channel(self, discord_id):
         return self.cursor.execute(
             "SELECT * FROM users WHERE discord_channel=?",
@@ -295,6 +300,13 @@ class Database:
         self.cursor.execute(
             "UPDATE link SET osu_id=? WHERE discord_id=?",
             (user_id, discord_id)
+        )
+        self.db.commit()
+
+    async def update_ping(self, ping, discord_id):
+        self.cursor.execute(
+            "UPDATE link SET ping=? WHERE discord_id=?",
+            (ping, discord_id)
         )
         self.db.commit()
 
