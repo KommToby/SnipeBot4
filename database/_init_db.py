@@ -55,7 +55,7 @@ class Database:
                 ping boolean,
                 leaderboard varchar(16)
             )
-        ''')
+        ''') # Ping value for this is redundant but will take time to alter so keeping it for now
 
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS beatmaps(
@@ -94,11 +94,24 @@ class Database:
             )
         ''')  # for storing if someone has been sniped on a specific beatmap
 
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS link(
+                discord_id varchar(32) not null,
+                osu_id varchar(32) not null,
+                ping boolean
+            )
+        ''')
+
     ## CUSTOM (WIP)
     async def custom_get(self, query):
         return self.cursor.execute(query).fetchall()
 
     ## GETS
+    async def get_link(self, discord_id):
+        return self.cursor.execute(
+            "SELECT * FROM link WHERE discord_id=?",
+            (discord_id,)).fetchone()
+
     async def get_channel(self, discord_id):
         return self.cursor.execute(
             "SELECT * FROM users WHERE discord_channel=?",
@@ -223,6 +236,11 @@ class Database:
             "SELECT * FROM snipes WHERE second_user_id=?",
             (main_user_id,)).fetchall()
 
+    async def get_linked_user_osu_id(self, discord_id):
+        return self.cursor.execute(
+            "SELECT osu_id FROM link WHERE discord_id=?",
+            (discord_id,)).fetchone()
+
     ## ADDS
     async def add_channel(self, channel_id, user_id, user_data):
         user_data = await self.osu.get_user_data(str(user_id))
@@ -265,7 +283,21 @@ class Database:
         )
         self.db.commit()    
 
+    async def add_link(self, discord_id, user_id):
+        self.cursor.execute(
+            "INSERT INTO link VALUES(?,?,?)",
+            (discord_id, user_id, False)
+        )
+        self.db.commit()
+
     ## UPDATES
+    async def update_link(self, discord_id, user_id):
+        self.cursor.execute(
+            "UPDATE link SET osu_id=? WHERE discord_id=?",
+            (user_id, discord_id)
+        )
+        self.db.commit()
+
     async def update_score(self, user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods, conv_stars, conv_bpm):
         self.cursor.execute(
             "UPDATE scores SET score=?, accuracy=?, max_combo=?, passed=?, pp=?, rank=?, count_300=?, count_100=?, count_50=?, count_miss=?, date=?, mods=?, converted_stars=?, converted_bpm=? WHERE user_id=? AND beatmap_id=?",

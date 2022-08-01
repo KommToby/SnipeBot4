@@ -13,12 +13,15 @@ class Snipes(interactions.Extension): # must have interactions.Extension or this
                 name="username",
                 description="the username of the user",
                 type=interactions.OptionType.STRING,
-                required=True,
+                required=False,
             )
         ]
     )
-    async def snipes(self, ctx: interactions.CommandContext, username: str):
+    async def snipes(self, ctx: interactions.CommandContext, *args, **kwargs):
         await ctx.defer()
+        username = await self.handle_linked_account(ctx, kwargs)
+        if not(username):
+            return
         main_user_id_array = await self.database.get_channel(ctx.channel_id._snowflake)
         if not(main_user_id_array):
             await ctx.send(f"Either nobody is being tracked in this channel, or you've used the command in the wrong channel!")
@@ -27,7 +30,7 @@ class Snipes(interactions.Extension): # must have interactions.Extension or this
         if not(user_data):
             await ctx.send(f"{username} is not a valid osu! username! Please try again.")
             return
-        if main_user_id_array[2] == username:
+        if main_user_id_array[2] == username or main_user_id_array[1] == username:
             await ctx.send(f"{username} is the main user, and therefore cannot be sniped by themself!")
             return
         main_user_id = main_user_id_array[1]
@@ -37,6 +40,17 @@ class Snipes(interactions.Extension): # must have interactions.Extension or this
         position, pp, not_sniped_back, held_snipes = await self.handle_user_placements(main_user_id_array, user_data)
         embed = await create_snipes_embed(position, round(pp, 2), not_sniped_back, held_snipes, user_data, len(user_snipes_array), len(user_sniped_array), len(total_snipes_array))
         await ctx.send(embeds=embed)
+
+    async def handle_linked_account(self, ctx, kwargs):
+        if len(kwargs) > 0:
+            return kwargs['username']
+        else:
+            username_array = await self.database.get_linked_user_osu_id(ctx.author.id._snowflake)
+            if not username_array:
+                await ctx.send("You are not linked to an osu! account - use `/link` to link your account\n" \
+                                "Alternatively you can do `/snipes username:username` to get a specific persons profile")
+                return False
+            return username_array[0]
 
     async def handle_user_placements(self, main_user_id_array, user_data):
         leaderboard = []

@@ -14,12 +14,15 @@ class Stats(interactions.Extension): # must have commands.cog or this wont work
                 name="username",
                 description="the username of the user",
                 type=interactions.OptionType.STRING,
-                required=True,
+                required=False,
             )
         ]
     )
-    async def stats(self, ctx: interactions.CommandContext, username: str):
+    async def stats(self, ctx: interactions.CommandContext, *args, **kwargs):
         await ctx.defer() # is thinking... message - 15 minutes timer
+        username = await self.handle_linked_account(ctx, kwargs)
+        if not(username):
+            return
         user_data = await self.osu.get_user_data(username)
         if user_data:
             user_id = user_data['id']
@@ -91,6 +94,17 @@ class Stats(interactions.Extension): # must have commands.cog or this wont work
         else:
             await ctx.send(f"{username} was not found as an osu! user. Did you enter the correct name?")
             return
+
+    async def handle_linked_account(self, ctx, kwargs):
+        if len(kwargs) > 0:
+            return kwargs['username']
+        else:
+            username_array = await self.database.get_linked_user_osu_id(ctx.author.id._snowflake)
+            if not username_array:
+                await ctx.send("You are not linked to an osu! account - use `/link` to link your account\n" \
+                                "Alternatively you can do `/stats username:username` to get a specific persons profile")
+                return False
+            return username_array[0]
 
 def setup(client):
     Stats(client)
