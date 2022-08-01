@@ -11,7 +11,10 @@ with open("config.json") as f:
     TOKEN = DISCORD_CONFIG_DATA["token"]
 
 # Define Bot
-client = interactions.Client(TOKEN, disable_sync=False) # set to True when not changing commands
+
+# IMPORTANT: IF NOT CHANGING ANY COGS - ENABLE DISABLE_SYNC BELOW
+# WHEN DISABLE_SYNC IS TRUE IT DOES NOT CALL THE DISCORD API FOR INTERACTIONS
+client = interactions.Client(TOKEN, disable_sync=True)
 client.auth = auth.Auth()
 client.database  = _init_db.Database()
 client.tracker = SnipeTracker(client)
