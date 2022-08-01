@@ -55,7 +55,7 @@ class Database:
                 ping boolean,
                 leaderboard varchar(16)
             )
-        ''')
+        ''') # Ping value for this is redundant but will take time to alter so keeping it for now
 
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS beatmaps(
@@ -93,6 +93,14 @@ class Database:
                 second_pp varchar(16)
             )
         ''')  # for storing if someone has been sniped on a specific beatmap
+
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS link(
+                discord_id varchar(32) not null,
+                osu_id varchar(32) not null,
+                ping boolean,
+            )
+        ''')
 
     ## CUSTOM (WIP)
     async def custom_get(self, query):
