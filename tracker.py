@@ -103,7 +103,9 @@ class SnipeTracker:
     async def start_loop(self):
         while True:
             try:
+                s = time.time()
                 await self.tracker_loop()
+                print(f"Tracker loop took {round((time.time() - s),2)} seconds")
             except Exception as e:
                 print(f"Error occured in tracker loop: {e}")
                 pass
