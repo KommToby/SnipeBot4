@@ -236,6 +236,11 @@ class Database:
             "SELECT * FROM snipes WHERE second_user_id=?",
             (main_user_id,)).fetchall()
 
+    async def get_linked_user_osu_id(self, discord_id):
+        return self.cursor.execute(
+            "SELECT osu_id FROM link WHERE discord_id=?",
+            (discord_id,)).fetchone()
+
     ## ADDS
     async def add_channel(self, channel_id, user_id, user_data):
         user_data = await self.osu.get_user_data(str(user_id))
