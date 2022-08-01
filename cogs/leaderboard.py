@@ -1,21 +1,25 @@
-import interactions, asyncio, math
+import interactions
+import math
 from embed.leaderboard import create_leaderboard_embed
-class Leaderboard(interactions.Extension): # must have interactions.Extension or this wont work
+
+
+# must have interactions.Extension or this wont work
+class Leaderboard(interactions.Extension):
     def __init__(self, client):
         self.client: interactions.Client = client
         self.osu = client.auth
         self.database = client.database
 
     @interactions.extension_command(
-            name="leaderboard", 
-            description="gets the snipe leaderboard for this server",
-            options=[interactions.Option(
-                name="sort",
-                description="sort order of leaderboard: pp, held, tosnipe",
-                type=interactions.OptionType.STRING,
-                required=False,
-            )
-            ]
+        name="leaderboard",
+        description="gets the snipe leaderboard for this server",
+        options=[interactions.Option(
+            name="sort",
+            description="sort order of leaderboard: pp, held, tosnipe",
+            type=interactions.OptionType.STRING,
+            required=False,
+        )
+        ]
     )
     async def leaderboard(self, ctx: interactions.CommandContext, *args, **kwargs):
         await ctx.defer()
@@ -23,7 +27,7 @@ class Leaderboard(interactions.Extension): # must have interactions.Extension or
         if sort == "":
             await ctx.send("Invalid sort order. Valid options are: `pp`, `held`, `tosnipe`")
             return
-        leaderboard = [] # The final leaderboard
+        leaderboard = []  # The final leaderboard
         main_user_array = await self.database.get_user_from_channel(ctx.channel_id._snowflake)
         if not main_user_array:
             await ctx.send(f"Nobody is being tracked in this channel, please make sure you use the command in the correct channel")
@@ -66,7 +70,8 @@ class Leaderboard(interactions.Extension): # must have interactions.Extension or
         not_sniped_back = len(not_sniped_back_array)
         snipe_pp = await self.calculate_snipe_pp(main_user_id, friend_snipes, not_sniped_back, held_snipes, friend_sniped)
         await self.database.update_friend_leaderboard_score(main_user_array[0], friend[1], snipe_pp)
-        leaderboard.append({'username': friend[2], 'not_sniped_back': not_sniped_back, 'held_snipes': held_snipes, 'snipe_pp': snipe_pp, 'old_pp': friend_old_pp})
+        leaderboard.append({'username': friend[2], 'not_sniped_back': not_sniped_back,
+                           'held_snipes': held_snipes, 'snipe_pp': snipe_pp, 'old_pp': friend_old_pp})
         return leaderboard
 
     async def calculate_one_way_snipes(self, snipes, sniped):
@@ -94,7 +99,8 @@ class Leaderboard(interactions.Extension): # must have interactions.Extension or
         total_scores = len(total_scores)
         if snipes < total_scores:
             multiplier = (5/100) + (0.95 * (snipes/(total_scores+1)))
-        calculated_pp = round((multiplier*((3*snipes + 7*not_sniped_main)/(2*not_sniped_back+(snipes/(not_sniped_main+1))*sniped+1)*10000)), 2)
+        calculated_pp = round((multiplier*((3*snipes + 7*not_sniped_main) /
+                              (2*not_sniped_back+(snipes/(not_sniped_main+1))*sniped+1)*10000)), 2)
         weighted_pp = await self.weight_snipe_pp(calculated_pp)
         return weighted_pp
 
@@ -106,7 +112,7 @@ class Leaderboard(interactions.Extension): # must have interactions.Extension or
         new_pp = 0
         frac = math.floor(pp/1000)
         for i in range(0, frac+1):
-            if i > 4: # the weighting maxes out at 1/5 penalty
+            if i > 4:  # the weighting maxes out at 1/5 penalty
                 new_pp += (1/5) * pp
                 break
             elif pp < 1000:
@@ -114,14 +120,14 @@ class Leaderboard(interactions.Extension): # must have interactions.Extension or
             else:
                 new_pp += (1/(i+1))*1000
             pp = (pp - 1000)
-        return new_pp   
-            
+        return new_pp
 
     def sort_friend_snipes(self, friends_data, sort):
         # NOT async because it's a local function
         friends_data.sort(
             reverse=True, key=lambda friends_data: friends_data[sort]
         )
+
 
 def setup(client):
     Leaderboard(client)

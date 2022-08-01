@@ -1,5 +1,4 @@
 import interactions
-import asyncio
 from embed.osu import create_osu_embed
 
 
@@ -39,8 +38,8 @@ class Osu(interactions.Extension):  # must have interactions.Extension or this w
         else:
             username_array = await self.database.get_linked_user_osu_id(ctx.author.id._snowflake)
             if not username_array:
-                await ctx.send("You are not linked to an osu! account - use `/link` to link your account\n" \
-                                "Alternatively you can do `/osu username:username` to get a specific persons profile")
+                await ctx.send("You are not linked to an osu! account - use `/link` to link your account\n"
+                               "Alternatively you can do `/osu username:username` to get a specific persons profile")
                 return False
             return username_array[0]
 

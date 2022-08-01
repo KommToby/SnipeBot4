@@ -1,25 +1,27 @@
 
 import interactions
 from embed.stats import create_stats_embed
-class Stats(interactions.Extension): # must have commands.cog or this wont work
+
+
+class Stats(interactions.Extension):  # must have commands.cog or this wont work
     def __init__(self, client):
         self.client: interactions.Client = client
         self.osu = client.auth
         self.database = client.database
 
     @interactions.extension_command(
-            name="stats", 
-            description="get a users statistics",
-            options=[interactions.Option(
-                name="username",
-                description="the username of the user",
-                type=interactions.OptionType.STRING,
-                required=False,
-            )
+        name="stats",
+        description="get a users statistics",
+        options=[interactions.Option(
+            name="username",
+            description="the username of the user",
+            type=interactions.OptionType.STRING,
+            required=False,
+        )
         ]
     )
     async def stats(self, ctx: interactions.CommandContext, *args, **kwargs):
-        await ctx.defer() # is thinking... message - 15 minutes timer
+        await ctx.defer()  # is thinking... message - 15 minutes timer
         username = await self.handle_linked_account(ctx, kwargs)
         if not(username):
             return
@@ -34,7 +36,8 @@ class Stats(interactions.Extension): # must have commands.cog or this wont work
                 user_score_data['stars'] = []
                 user_score_data['bpm'] = []
                 user_score_data['mods'] = []
-                for score in scores: # unique beatmaps only from the score (just in case)
+                # unique beatmaps only from the score (just in case)
+                for score in scores:
                     if score[1] not in played_beatmap_ids:
                         played_beatmap_ids.append(score[1])
                         if score[14] is not None and int(score[14]) != 0:
@@ -44,18 +47,19 @@ class Stats(interactions.Extension): # must have commands.cog or this wont work
                         if score[13] is not None:
                             if int(score[13]) != 0:
                                 user_score_data['mods'].append(int(score[13]))
-                user_score_data['beatmaps'] = played_beatmap_ids # add to dictionary
+                # add to dictionary
+                user_score_data['beatmaps'] = played_beatmap_ids
                 user_score_data['lengths'] = []
                 user_score_data['artists'] = []
                 user_score_data['songs'] = []
                 user_score_data['mappers'] = []
                 user_score_data['guests'] = []
                 checked_beatmapsets = []
-                for beatmap in all_beatmaps: # loop through all stored beatmaps
+                for beatmap in all_beatmaps:  # loop through all stored beatmaps
                     if int(beatmap[0]) in played_beatmap_ids:
                         user_score_data['lengths'].append(beatmap[6])
                         # unique map artist checking
-                        if beatmap[10] not in checked_beatmapsets: 
+                        if beatmap[10] not in checked_beatmapsets:
                             user_score_data['artists'].append(beatmap[2])
                             user_score_data['songs'].append(beatmap[3])
                             user_score_data['mappers'].append(beatmap[8])
@@ -63,9 +67,11 @@ class Stats(interactions.Extension): # must have commands.cog or this wont work
 
                         # guest difficulty mapper check
                         for letter in beatmap[4]:
-                            if letter == "'": # apostrophy i.e. Komm's Insane
-                                user_score_data['guests'].append(beatmap[4].split("'")[0])
-                                user_score_data['mappers'].append(beatmap[4].split("'")[0])
+                            if letter == "'":  # apostrophy i.e. Komm's Insane
+                                user_score_data['guests'].append(
+                                    beatmap[4].split("'")[0])
+                                user_score_data['mappers'].append(
+                                    beatmap[4].split("'")[0])
 
                         # beatmap checks done
 
@@ -80,10 +86,12 @@ class Stats(interactions.Extension): # must have commands.cog or this wont work
                         artist_frequency = user_score_data['artists'].count(j)
                         artist_frequencies[j] = int(artist_frequency)
 
-                sorted_artist_frequencies = sorted(artist_frequencies.items(), key=lambda x: x[1], reverse=True)
+                sorted_artist_frequencies = sorted(
+                    artist_frequencies.items(), key=lambda x: x[1], reverse=True)
                 for _ in range(0, 10):
                     top_ten_artists.append(sorted_artist_frequencies[0])
-                    sorted_artist_frequencies.remove(sorted_artist_frequencies[0])
+                    sorted_artist_frequencies.remove(
+                        sorted_artist_frequencies[0])
 
                 stats_embed = await create_stats_embed(user_data, user_score_data, top_ten_artists, scores)
                 await ctx.send(embeds=stats_embed)
@@ -101,10 +109,11 @@ class Stats(interactions.Extension): # must have commands.cog or this wont work
         else:
             username_array = await self.database.get_linked_user_osu_id(ctx.author.id._snowflake)
             if not username_array:
-                await ctx.send("You are not linked to an osu! account - use `/link` to link your account\n" \
-                                "Alternatively you can do `/stats username:username` to get a specific persons profile")
+                await ctx.send("You are not linked to an osu! account - use `/link` to link your account\n"
+                               "Alternatively you can do `/stats username:username` to get a specific persons profile")
                 return False
             return username_array[0]
+
 
 def setup(client):
     Stats(client)

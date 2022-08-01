@@ -1,20 +1,23 @@
-import interactions, asyncio, math
+import interactions
+import math
 from embed.snipes import create_snipes_embed
-class Snipes(interactions.Extension): # must have interactions.Extension or this wont work
+
+
+class Snipes(interactions.Extension):  # must have interactions.Extension or this wont work
     def __init__(self, client):
         self.client: interactions.Client = client
         self.osu = client.auth
         self.database = client.database
 
     @interactions.extension_command(
-            name="snipes", 
-            description="gets snipe details for user",
-            options=[interactions.Option(
-                name="username",
-                description="the username of the user",
-                type=interactions.OptionType.STRING,
-                required=False,
-            )
+        name="snipes",
+        description="gets snipe details for user",
+        options=[interactions.Option(
+            name="username",
+            description="the username of the user",
+            type=interactions.OptionType.STRING,
+            required=False,
+        )
         ]
     )
     async def snipes(self, ctx: interactions.CommandContext, *args, **kwargs):
@@ -47,8 +50,8 @@ class Snipes(interactions.Extension): # must have interactions.Extension or this
         else:
             username_array = await self.database.get_linked_user_osu_id(ctx.author.id._snowflake)
             if not username_array:
-                await ctx.send("You are not linked to an osu! account - use `/link` to link your account\n" \
-                                "Alternatively you can do `/snipes username:username` to get a specific persons profile")
+                await ctx.send("You are not linked to an osu! account - use `/link` to link your account\n"
+                               "Alternatively you can do `/snipes username:username` to get a specific persons profile")
                 return False
             return username_array[0]
 
@@ -85,7 +88,8 @@ class Snipes(interactions.Extension): # must have interactions.Extension or this
         not_sniped_back = len(not_sniped_back_array)
         snipe_pp = await self.calculate_snipe_pp(main_user_id, friend_snipes, not_sniped_back, held_snipes, friend_sniped)
         await self.database.update_friend_leaderboard_score(main_user_array[0], friend[1], snipe_pp)
-        leaderboard.append({'username': friend[2], 'not_sniped_back': not_sniped_back, 'held_snipes': held_snipes, 'snipe_pp': snipe_pp, 'old_pp': friend_old_pp})
+        leaderboard.append({'username': friend[2], 'not_sniped_back': not_sniped_back,
+                           'held_snipes': held_snipes, 'snipe_pp': snipe_pp, 'old_pp': friend_old_pp})
         return leaderboard
 
     async def calculate_one_way_snipes(self, snipes, sniped):
@@ -113,7 +117,8 @@ class Snipes(interactions.Extension): # must have interactions.Extension or this
         total_scores = len(total_scores)
         if snipes < total_scores:
             multiplier = (5/100) + (0.95 * (snipes/(total_scores+1)))
-        calculated_pp = round((multiplier*((3*snipes + 7*not_sniped_main)/(2*not_sniped_back+(snipes/(not_sniped_main+1))*sniped+1)*10000)), 2)
+        calculated_pp = round((multiplier*((3*snipes + 7*not_sniped_main) /
+                              (2*not_sniped_back+(snipes/(not_sniped_main+1))*sniped+1)*10000)), 2)
         weighted_pp = await self.weight_snipe_pp(calculated_pp)
         return weighted_pp
 
@@ -125,7 +130,7 @@ class Snipes(interactions.Extension): # must have interactions.Extension or this
         new_pp = 0
         frac = math.floor(pp/1000)
         for i in range(0, frac+1):
-            if i > 4: # the weighting maxes out at 1/5 penalty
+            if i > 4:  # the weighting maxes out at 1/5 penalty
                 new_pp += (1/5) * pp
                 break
             elif pp < 1000:
@@ -133,14 +138,14 @@ class Snipes(interactions.Extension): # must have interactions.Extension or this
             else:
                 new_pp += (1/(i+1))*1000
             pp = (pp - 1000)
-        return new_pp   
-            
+        return new_pp
 
     def sort_friend_snipes(self, friends_data):
         # NOT async because it's a local function
         friends_data.sort(
             reverse=True, key=lambda friends_data: friends_data['snipe_pp']
         )
+
 
 def setup(client):
     Snipes(client)
