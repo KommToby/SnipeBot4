@@ -298,6 +298,13 @@ class Database:
         )
         self.db.commit()
 
+    async def update_ping(self, ping, discord_id):
+        self.cursor.execute(
+            "UPDATE link SET ping=? WHERE discord_id=?",
+            (ping, discord_id)
+        )
+        self.db.commit()
+
     async def update_score(self, user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods, conv_stars, conv_bpm):
         self.cursor.execute(
             "UPDATE scores SET score=?, accuracy=?, max_combo=?, passed=?, pp=?, rank=?, count_300=?, count_100=?, count_50=?, count_miss=?, date=?, mods=?, converted_stars=?, converted_bpm=? WHERE user_id=? AND beatmap_id=?",
