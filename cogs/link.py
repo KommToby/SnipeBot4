@@ -26,7 +26,7 @@ class Link(interactions.Extension): # must have interactions.Extension or this w
             alter_account = True
         
         # get osu account details
-        osu_account_data = await self.osu.get_user(username)
+        osu_account_data = await self.osu.get_user_data(username)
         if not(osu_account_data):
             await ctx.send(f"User {username} was not found on osu! - did you write it correctly?")
             return

@@ -98,7 +98,7 @@ class Database:
             CREATE TABLE IF NOT EXISTS link(
                 discord_id varchar(32) not null,
                 osu_id varchar(32) not null,
-                ping boolean,
+                ping boolean
             )
         ''')
 
