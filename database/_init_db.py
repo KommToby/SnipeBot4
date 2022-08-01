@@ -112,6 +112,11 @@ class Database:
             "SELECT * FROM link WHERE discord_id=?",
             (discord_id,)).fetchone()
 
+    async def get_discord_id_from_link(self, osu_id):
+        return self.cursor.execute(
+            "SELECT * FROM link WHERE osu_id=?",
+            (osu_id,)).fetchone()
+
     async def get_channel(self, discord_id):
         return self.cursor.execute(
             "SELECT * FROM users WHERE discord_channel=?",
