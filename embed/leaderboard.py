@@ -1,8 +1,14 @@
 import interactions
 
-async def create_leaderboard_embed(leaderboard, main_username, main_snipes, main_sniped):
+async def create_leaderboard_embed(leaderboard, main_username, main_snipes, main_sniped, sort):
+    if sort == "snipe_pp":
+        sort = "Snipe PP"
+    elif sort == "held":
+        sort = "Held Snipes"
+    elif sort == "tosnipe":
+        sort = "To-snipe"
     embed = interactions.Embed(
-        title=f"Snipe Leaderboard For {main_username}: {main_snipes} | {main_sniped}",
+        title=f"Snipe Leaderboard For {main_username}: {main_snipes} | {main_sniped} | Sort by {sort}",
         color=3152180
     )
 

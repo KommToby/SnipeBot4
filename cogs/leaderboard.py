@@ -9,9 +9,28 @@ class Leaderboard(interactions.Extension): # must have interactions.Extension or
     @interactions.extension_command(
             name="leaderboard", 
             description="gets the snipe leaderboard for this server",
+            options=[interactions.Option(
+                name="sort",
+                description="sort order of leaderboard: pp, held, tosnipe",
+                type=interactions.OptionType.STRING,
+                required=False,
+            )
+            ]
     )
-    async def leaderboard(self, ctx: interactions.CommandContext):
+    async def leaderboard(self, ctx: interactions.CommandContext, *args, **kwargs):
         await ctx.defer()
+        if len(kwargs) == 0:
+            sort = 'snipe_pp'
+        else:
+            if kwargs['sort'] == 'pp':
+                sort = 'snipe_pp'
+            elif kwargs['sort'] == 'held':
+                sort = 'held_snipes'
+            elif kwargs['sort'] == 'tosnipe':
+                sort = 'not_sniped_back'
+            else:
+                await ctx.send("Invalid sort order. Valid options are: `pp`, `held`, `tosnipe`")
+                return
         leaderboard = [] # The final leaderboard
         main_user_array = await self.database.get_user_from_channel(ctx.channel_id._snowflake)
         if not main_user_array:
@@ -21,12 +40,12 @@ class Leaderboard(interactions.Extension): # must have interactions.Extension or
         main_user_friends = await self.database.get_user_friends(ctx.channel_id._snowflake)
         for friend in main_user_friends:
             leaderboard = await self.handle_friend_leaderboard(friend, main_user_id, leaderboard, main_user_array)
-        self.sort_friend_snipes(leaderboard)
+        self.sort_friend_snipes(leaderboard, sort)
         main_snipes_array = await self.database.get_main_user_snipes(main_user_id)
         main_sniped_array = await self.database.get_main_user_sniped(main_user_id)
         main_snipes = len(main_snipes_array)
         main_sniped = len(main_sniped_array)
-        embed = await create_leaderboard_embed(leaderboard, main_user_array[2], main_snipes, main_sniped)
+        embed = await create_leaderboard_embed(leaderboard, main_user_array[2], main_snipes, main_sniped, sort)
         await ctx.send(embeds=embed)
 
     async def handle_friend_leaderboard(self, friend, main_user_id, leaderboard, main_user_array):
@@ -93,10 +112,10 @@ class Leaderboard(interactions.Extension): # must have interactions.Extension or
         return new_pp   
             
 
-    def sort_friend_snipes(self, friends_data):
+    def sort_friend_snipes(self, friends_data, sort):
         # NOT async because it's a local function
         friends_data.sort(
-            reverse=True, key=lambda friends_data: friends_data['snipe_pp']
+            reverse=True, key=lambda friends_data: friends_data[sort]
         )
 
 def setup(client):
