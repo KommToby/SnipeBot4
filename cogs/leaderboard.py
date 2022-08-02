@@ -23,7 +23,7 @@ class Leaderboard(interactions.Extension):
     )
     async def leaderboard(self, ctx: interactions.CommandContext, *args, **kwargs):
         await ctx.defer()
-        sort = self.handle_kwargs(kwargs)
+        sort = await self.handle_kwargs(kwargs)
         if sort == "":
             await ctx.send("Invalid sort order. Valid options are: `pp`, `held`, `tosnipe`")
             return
