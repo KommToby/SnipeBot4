@@ -107,6 +107,23 @@ class Database:
         return self.cursor.execute(query).fetchall()
 
     ## GETS
+    async def get_converted_scores(self, user_id):
+        self.cursor.row_factory = lambda cursor, row: row[0]
+        array = self.cursor.execute(
+            "SELECT beatmap_id FROM scores WHERE user_id=? AND converted_bpm>?",
+            (user_id, 0)).fetchall()
+        self.cursor.row_factory = None
+        return array
+
+    async def get_zero_scores(self, user_id):
+        # using row factory ensures it returns an array of values not tuples
+        self.cursor.row_factory = lambda cursor, row: row[0]
+        array =  self.cursor.execute(
+            "SELECT beatmap_id FROM scores WHERE user_id=? AND score=?",
+            (user_id, 0)).fetchall()
+        self.cursor.row_factory = None
+        return array
+
     async def get_link(self, discord_id):
         return self.cursor.execute(
             "SELECT * FROM link WHERE discord_id=?",
