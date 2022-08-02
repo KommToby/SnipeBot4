@@ -3,7 +3,12 @@ import time
 from embed.friend_list import create_friend_list_embed
 from tracker import SnipeTracker
 from interactions.ext.get import get
-
+#TODO make all friend adding in the same instances of the FIRST friend add.
+#This can be done by regularly checking a value of friends that need to be added
+#And if a new friend has been added to that list, it can start scanning them.
+#This will reduce the number of "Friend" Class instances, and keep all the scanning
+#To one singular thread. Not as efficient, but more reliable, and it doesnt really matter
+#What order it goes in, since the api is limited anyway.
 
 class Friend(interactions.Extension):  # must have interactions.Extension or this wont work
     def __init__(self, client):
@@ -172,6 +177,7 @@ class Friend(interactions.Extension):  # must have interactions.Extension or thi
             return
         # now we scan them on every single beatmap. Fun.
         await message.edit(content=f"Adding {username} to the friends list... **Done!**\nScanning top plays... **Done!**\nScanning user on all beatmaps... 0% complete\n`calculating` hours remaining")
+        beatmaps = await self.handle_user_already_stored_scores(user_data['id'], beatmaps)
         start_time = time.time()
         message_update_time = time.time()
         for i, beatmap in enumerate(beatmaps):
@@ -223,6 +229,14 @@ class Friend(interactions.Extension):  # must have interactions.Extension or thi
                     if str(local_score_data[3]) == "0":
                         user_play = await self.osu.get_score_data(beatmap[0], user_data['id'])
                         if not(user_play):
+                            if i != 0:
+                                elapsed_time = time.time() - start_time
+                                try:
+                                    if int(time.time()) - int(message_update_time) > 5:
+                                        message_update_time = time.time()
+                                        await message.edit(content=f"Adding {username} to the friends list... **Done!**\nScanning top plays... **Done!**\nScanning user on all beatmaps... {round(((i/len(beatmaps))*100), 2)}% complete\n{round((((len(beatmaps) * elapsed_time)/i)-elapsed_time)/3600, 2)} hours remaining")
+                                except interactions.LibraryException as l:
+                                    pass
                             continue
                         converted_stars = int(beatmap[1])
                         converted_bpm = int(beatmap[7])
@@ -250,6 +264,17 @@ class Friend(interactions.Extension):  # must have interactions.Extension or thi
                 print(f"Error while scanning user: {e}")
         await message.edit(content=f"Adding {username} to the friends list... **Done!**\nScanning top plays... **Done!**\nScanning user on all beatmaps... 100% complete\nNo hours remaining")
 
+    async def handle_user_already_stored_scores(self, user_id, beatmaps):
+        return_beatmaps =[]
+        conv_scores = await self.database.get_converted_scores(user_id)
+        zero_scores = await self.database.get_zero_scores(user_id)
+        for beatmap in beatmaps:
+            add_beatmap = True
+            if int(beatmap[0]) in conv_scores or int(beatmap[0]) in zero_scores:
+                add_beatmap = False
+            if add_beatmap is True:
+                return_beatmaps.append(beatmap[0])
+        return return_beatmaps
 
 def setup(client):
     Friend(client)
