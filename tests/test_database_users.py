@@ -193,33 +193,37 @@ async def delete_database(db):
     db.db.close()
     os.remove("test_database.db")
 
-@pytest.mark.asyncio
-async def test_db_add_friend():
-    db = Database('test_database.db')
-    await db.add_friend(friend_channel_id, friend_data)
-    assert (await db.get_friend_username_from_username(friend_data['username'])) == ("Komm",)
-    await delete_database(db)
+def db_wrapper(func):
+    async def inner_wrapper():
+        db = Database('test_database.db')
+        await func(db)
+        await delete_database(db)
+    return inner_wrapper
 
 @pytest.mark.asyncio
-async def test_db_add_delete_friend():
-    db = Database('test_database.db')
+@db_wrapper
+async def test_db_add_friend(db):
+    await db.add_friend(friend_channel_id, friend_data)
+    assert (await db.get_friend_username_from_username(friend_data['username'])) == ("Komm",)
+
+@pytest.mark.asyncio
+@db_wrapper
+async def test_db_add_delete_friend(db):
     await db.add_friend(friend_channel_id, friend_data)
     await db.delete_friend(friend_data['id'], friend_channel_id)
     assert (await db.get_friend_username_from_username(friend_data['username'])) == None
-    await delete_database(db)
 
 @pytest.mark.asyncio
-async def test_db_add_update_friend_username():
-    db = Database('test_database.db')
+@db_wrapper
+async def test_db_add_update_friend_username(db):
     await db.add_friend(friend_channel_id, friend_data)
     friend_data['username'] = "Komm2"
     await db.update_friend_username(friend_data['username'], friend_data['id'])
     assert (await db.get_friend_username_from_username(friend_data['username'])) == ("Komm2",)
-    await delete_database(db)
 
 @pytest.mark.asyncio
-async def test_db_add_new_score():
-    db = Database('test_database.db')
+@db_wrapper
+async def test_db_add_new_score(db):
     await db.add_score(
                         score_data['score']['user_id'], 
                         score_data['score']['beatmap']['id'], 
@@ -245,10 +249,10 @@ async def test_db_add_new_score():
     assert database_score[13] == 64
     assert database_score[14] == score_data['score']['beatmap']['difficulty_rating']
     assert database_score[15] == score_data['score']['beatmap']['bpm']
-    await delete_database(db)
 
 @pytest.mark.asyncio
-async def test_db_get_converted_scores():
+@db_wrapper
+async def test_db_get_converted_scores(db):
     """
     Converted scores are scores that have been converted to the new snipebot format
     It is found by checking if the converted bpm has a value in the table
@@ -257,7 +261,6 @@ async def test_db_get_converted_scores():
 
     Returns as an array of beatmap ids as values, not tuples
     """
-    db = Database('test_database.db')
     await db.add_score(
                         score_data['score']['user_id'], 
                         score_data['score']['beatmap']['id'], 
