@@ -1,6 +1,5 @@
 import pytest, os
 from database._init_db import Database
-from cogs.friend import Friend
 
 # Mock Data
 
@@ -193,7 +192,7 @@ async def delete_database(db):
     db.db.close()
     os.remove("test_database.db")
 
-def db_wrapper(func):
+def db_handler(func):
     async def inner_wrapper():
         db = Database('test_database.db')
         await func(db)
@@ -201,20 +200,20 @@ def db_wrapper(func):
     return inner_wrapper
 
 @pytest.mark.asyncio
-@db_wrapper
+@db_handler
 async def test_db_add_friend(db):
     await db.add_friend(friend_channel_id, friend_data)
     assert (await db.get_friend_username_from_username(friend_data['username'])) == ("Komm",)
 
 @pytest.mark.asyncio
-@db_wrapper
+@db_handler
 async def test_db_add_delete_friend(db):
     await db.add_friend(friend_channel_id, friend_data)
     await db.delete_friend(friend_data['id'], friend_channel_id)
     assert (await db.get_friend_username_from_username(friend_data['username'])) == None
 
 @pytest.mark.asyncio
-@db_wrapper
+@db_handler
 async def test_db_add_update_friend_username(db):
     await db.add_friend(friend_channel_id, friend_data)
     friend_data['username'] = "Komm2"
@@ -222,7 +221,7 @@ async def test_db_add_update_friend_username(db):
     assert (await db.get_friend_username_from_username(friend_data['username'])) == ("Komm2",)
 
 @pytest.mark.asyncio
-@db_wrapper
+@db_handler
 async def test_db_add_new_score(db):
     await db.add_score(
                         score_data['score']['user_id'], 
@@ -251,7 +250,7 @@ async def test_db_add_new_score(db):
     assert database_score[15] == score_data['score']['beatmap']['bpm']
 
 @pytest.mark.asyncio
-@db_wrapper
+@db_handler
 async def test_db_get_converted_scores(db):
     """
     Converted scores are scores that have been converted to the new snipebot format
@@ -302,3 +301,8 @@ async def test_db_get_converted_scores(db):
     converted_score = await db.get_converted_scores(score_data['score']['user_id'])
     assert len(converted_score) == 1
     assert converted_score[0] == score_data['score']['beatmap']['id']
+
+@pytest.mark.asyncio
+@db_handler
+async def test_db_get_zero_scores(db):
+    pass
