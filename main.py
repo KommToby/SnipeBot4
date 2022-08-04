@@ -16,7 +16,7 @@ with open("config.json") as f:
 # WHEN DISABLE_SYNC IS TRUE IT DOES NOT CALL THE DISCORD API FOR INTERACTIONS
 client = interactions.Client(TOKEN, disable_sync=True)
 client.auth = auth.Auth()
-client.database  = _init_db.Database()
+client.database  = _init_db.Database('database.db')
 client.tracker = SnipeTracker(client)
 client.running = False
 

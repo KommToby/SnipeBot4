@@ -1,10 +1,8 @@
 import sqlite3
-from osu_auth.auth import Auth
 
 class Database:
-    def __init__(self):
-        self.osu = Auth()
-        self.db = sqlite3.connect('database.db', timeout=5)
+    def __init__(self, database_name):
+        self.db = sqlite3.connect(database_name, timeout=5)
         self.cursor = self.db.cursor()
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS users(
@@ -22,8 +20,8 @@ class Database:
 
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS scores(
-                user_id varchar(32) not null,
-                beatmap_id varchar(32),
+                user_id int not null,
+                beatmap_id int,
                 score varchar(32),
                 accuracy varchar(32),
                 max_combo varchar(32),
@@ -36,7 +34,7 @@ class Database:
                 count_miss varchar(16),
                 date varchar(32),
                 mods int(32),
-                converted_stars real,
+                converted_stars varchar(32),
                 converted_bpm real
             )
         ''')
@@ -44,7 +42,7 @@ class Database:
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS friends(
                 discord_channel varchar(32) not null,
-                osu_id varchar(32) not null,
+                osu_id int not null,
                 username varchar(32),
                 country_code varchar(32),
                 avatar_url varchar(256),
@@ -102,10 +100,6 @@ class Database:
             )
         ''')
 
-    ## CUSTOM (WIP)
-    async def custom_get(self, query):
-        return self.cursor.execute(query).fetchall()
-
     ## GETS
     async def get_converted_scores(self, user_id):
         self.cursor.row_factory = lambda cursor, row: row[0]
@@ -123,6 +117,12 @@ class Database:
             (user_id, 0)).fetchall()
         self.cursor.row_factory = None
         return array
+
+    # Only to be used in tests
+    async def get_friend_username_from_username(self, username):
+        return self.cursor.execute(
+            "SELECT username FROM friends WHERE username=?",
+            (username,)).fetchone()
 
     async def get_link(self, discord_id):
         return self.cursor.execute(
@@ -265,7 +265,6 @@ class Database:
 
     ## ADDS
     async def add_channel(self, channel_id, user_id, user_data):
-        user_data = await self.osu.get_user_data(str(user_id))
         self.cursor.execute(
             "INSERT INTO users VALUES(?,?,?,?,?,?,?,?,?)",
             (channel_id, user_data['id'], user_data['username'], user_data['country_code'], user_data['avatar_url'], user_data['is_supporter'], user_data['cover_url'], user_data['playmode'], 0)
