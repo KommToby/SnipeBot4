@@ -3,7 +3,6 @@ from osu_auth.auth import Auth
 
 class Database:
     def __init__(self, database_name):
-        self.osu = Auth()
         self.db = sqlite3.connect(database_name, timeout=5)
         self.cursor = self.db.cursor()
         self.cursor.execute('''
@@ -271,7 +270,6 @@ class Database:
 
     ## ADDS
     async def add_channel(self, channel_id, user_id, user_data):
-        user_data = await self.osu.get_user_data(str(user_id))
         self.cursor.execute(
             "INSERT INTO users VALUES(?,?,?,?,?,?,?,?,?)",
             (channel_id, user_data['id'], user_data['username'], user_data['country_code'], user_data['avatar_url'], user_data['is_supporter'], user_data['cover_url'], user_data['playmode'], 0)
