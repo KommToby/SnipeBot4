@@ -10,6 +10,12 @@ from interactions.ext.get import get
 #To one singular thread. Not as efficient, but more reliable, and it doesnt really matter
 #What order it goes in, since the api is limited anyway.
 
+#TODO make the ETR data pull from the last ~10 seconds instead of the whole instance,
+#Because it becomes more inaccurate the more friends you add.
+
+#TODO remove the live updates of friend adding, and make a new command /status that shows
+#all the users who are currently being scanned
+
 class Friend(interactions.Extension):  # must have interactions.Extension or this wont work
     def __init__(self, client):
         self.client: interactions.Client = client
