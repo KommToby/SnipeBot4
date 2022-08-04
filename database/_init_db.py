@@ -124,6 +124,12 @@ class Database:
         self.cursor.row_factory = None
         return array
 
+    # Only to be used in tests
+    async def get_friend_username_from_username(self, username):
+        return self.cursor.execute(
+            "SELECT username FROM friends WHERE username=?",
+            (username,)).fetchone()
+
     async def get_link(self, discord_id):
         return self.cursor.execute(
             "SELECT * FROM link WHERE discord_id=?",
