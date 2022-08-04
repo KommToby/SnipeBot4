@@ -1,5 +1,4 @@
 import sqlite3
-from osu_auth.auth import Auth
 
 class Database:
     def __init__(self, database_name):
@@ -21,8 +20,8 @@ class Database:
 
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS scores(
-                user_id varchar(32) not null,
-                beatmap_id varchar(32),
+                user_id int not null,
+                beatmap_id int,
                 score varchar(32),
                 accuracy varchar(32),
                 max_combo varchar(32),
@@ -35,7 +34,7 @@ class Database:
                 count_miss varchar(16),
                 date varchar(32),
                 mods int(32),
-                converted_stars real,
+                converted_stars varchar(32),
                 converted_bpm real
             )
         ''')
@@ -43,7 +42,7 @@ class Database:
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS friends(
                 discord_channel varchar(32) not null,
-                osu_id varchar(32) not null,
+                osu_id int not null,
                 username varchar(32),
                 country_code varchar(32),
                 avatar_url varchar(256),
@@ -100,10 +99,6 @@ class Database:
                 ping boolean
             )
         ''')
-
-    ## CUSTOM (WIP)
-    async def custom_get(self, query):
-        return self.cursor.execute(query).fetchall()
 
     ## GETS
     async def get_converted_scores(self, user_id):
