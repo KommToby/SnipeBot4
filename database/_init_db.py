@@ -2,9 +2,9 @@ import sqlite3
 from osu_auth.auth import Auth
 
 class Database:
-    def __init__(self):
+    def __init__(self, database_name):
         self.osu = Auth()
-        self.db = sqlite3.connect('database.db', timeout=5)
+        self.db = sqlite3.connect(database_name, timeout=5)
         self.cursor = self.db.cursor()
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS users(
