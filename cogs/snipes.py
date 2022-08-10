@@ -1,11 +1,13 @@
 import interactions
 import math
 from embed.snipes import create_snipes_embed
+from data_types.interactions import CustomInteractionsClient
+from data_types.cogs import Cog
 
 
-class Snipes(interactions.Extension):  # must have interactions.Extension or this wont work
-    def __init__(self, client):
-        self.client: interactions.Client = client
+class Snipes(Cog):  # must have interactions.Extension or this wont work
+    def __init__(self, client: CustomInteractionsClient):
+        self.client = client
         self.osu = client.auth
         self.database = client.database
 

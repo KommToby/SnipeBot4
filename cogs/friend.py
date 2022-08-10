@@ -3,22 +3,25 @@ import time
 from embed.friend_list import create_friend_list_embed
 from tracker import SnipeTracker
 from interactions.ext.get import get
-#TODO make all friend adding in the same instances of the FIRST friend add.
-#This can be done by regularly checking a value of friends that need to be added
-#And if a new friend has been added to that list, it can start scanning them.
-#This will reduce the number of "Friend" Class instances, and keep all the scanning
-#To one singular thread. Not as efficient, but more reliable, and it doesnt really matter
-#What order it goes in, since the api is limited anyway.
+from data_types.interactions import CustomInteractionsClient
+from data_types.cogs import Cog
+# TODO make all friend adding in the same instances of the FIRST friend add.
+# This can be done by regularly checking a value of friends that need to be added
+# And if a new friend has been added to that list, it can start scanning them.
+# This will reduce the number of "Friend" Class instances, and keep all the scanning
+# To one singular thread. Not as efficient, but more reliable, and it doesnt really matter
+# What order it goes in, since the api is limited anyway.
 
-#TODO make the ETR data pull from the last ~10 seconds instead of the whole instance,
-#Because it becomes more inaccurate the more friends you add.
+# TODO make the ETR data pull from the last ~10 seconds instead of the whole instance,
+# Because it becomes more inaccurate the more friends you add.
 
-#TODO remove the live updates of friend adding, and make a new command /status that shows
-#all the users who are currently being scanned
+# TODO remove the live updates of friend adding, and make a new command /status that shows
+# all the users who are currently being scanned
 
-class Friend(interactions.Extension):  # must have interactions.Extension or this wont work
-    def __init__(self, client):
-        self.client: interactions.Client = client
+
+class Friend(Cog):  # must have interactions.Extension or this wont work
+    def __init__(self, client: CustomInteractionsClient):
+        self.client = client
         self.osu = client.auth
         self.database = client.database
         self.tracker = SnipeTracker(client)
@@ -271,7 +274,7 @@ class Friend(interactions.Extension):  # must have interactions.Extension or thi
         await message.edit(content=f"Adding {username} to the friends list... **Done!**\nScanning top plays... **Done!**\nScanning user on all beatmaps... 100% complete\nNo hours remaining")
 
     async def handle_user_already_stored_scores(self, user_id, beatmaps):
-        return_beatmaps =[]
+        return_beatmaps = []
         conv_scores = await self.database.get_converted_scores(user_id)
         zero_scores = await self.database.get_zero_scores(user_id)
         for beatmap in beatmaps:
@@ -281,6 +284,7 @@ class Friend(interactions.Extension):  # must have interactions.Extension or thi
             if add_beatmap is True:
                 return_beatmaps.append(beatmap[0])
         return return_beatmaps
+
 
 def setup(client):
     Friend(client)

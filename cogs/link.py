@@ -1,9 +1,10 @@
 import interactions
+from data_types.interactions import CustomInteractionsClient
+from data_types.cogs import Cog
 
-
-class Link(interactions.Extension):  # must have interactions.Extension or this wont work
-    def __init__(self, client):
-        self.client: interactions.Client = client
+class Link(Cog):  # must have interactions.Extension or this wont work
+    def __init__(self, client: CustomInteractionsClient):
+        self.client: client
         self.osu = client.auth
         self.database = client.database
 

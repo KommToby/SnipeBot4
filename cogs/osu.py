@@ -1,10 +1,11 @@
 import interactions
 from embed.osu import create_osu_embed
+from data_types.interactions import CustomInteractionsClient
+from data_types.cogs import Cog
 
-
-class Osu(interactions.Extension):  # must have interactions.Extension or this wont work
-    def __init__(self, client):
-        self.client: interactions.Client = client
+class Osu(Cog):  # must have interactions.Extension or this wont work
+    def __init__(self, client: CustomInteractionsClient):
+        self.client = client
         self.osu = client.auth
         self.database = client.database
 
@@ -24,7 +25,7 @@ class Osu(interactions.Extension):  # must have interactions.Extension or this w
         username = await self.handle_linked_account(ctx, kwargs)
         if not username:
             return
-        recent_plays = await self.osu.get_recent_plays("3637436")
+        recent_plays = await self.osu.get_recent_plays("4934554")
         score_data = await self.osu.get_score_data("848345", "10609949")
         score_data_mods = await self.osu.get_beatmap_mods("848345", "64")
         beatmap_data = await self.osu.get_beatmap("2077721")

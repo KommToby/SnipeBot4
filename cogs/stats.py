@@ -1,11 +1,13 @@
 
 import interactions
 from embed.stats import create_stats_embed
+from data_types.interactions import CustomInteractionsClient
+from data_types.cogs import Cog
 
 
-class Stats(interactions.Extension):  # must have commands.cog or this wont work
-    def __init__(self, client):
-        self.client: interactions.Client = client
+class Stats(Cog):  # must have commands.cog or this wont work
+    def __init__(self, client: CustomInteractionsClient):
+        self.client = client
         self.osu = client.auth
         self.database = client.database
 
