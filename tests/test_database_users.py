@@ -305,4 +305,88 @@ async def test_db_get_converted_scores(db):
 @pytest.mark.asyncio
 @db_handler
 async def test_db_get_zero_scores(db):
+    await db.add_score(
+                        score_data['score']['user_id'], 
+                        score_data['score']['beatmap']['id'], 
+                        score_data['score']['score'], 
+                        score_data['score']['accuracy'], 
+                        score_data['score']['max_combo'], 
+                        score_data['score']['passed'], 
+                        score_data['score']['pp'], 
+                        score_data['score']['rank'], 
+                        score_data['score']['statistics']['count_300'], 
+                        score_data['score']['statistics']['count_100'], 
+                        score_data['score']['statistics']['count_50'], 
+                        score_data['score']['statistics']['count_miss'], 
+                        score_data['score']['created_at'], 
+                        64, # This is the mod integer value for DT
+                        score_data['score']['beatmap']['difficulty_rating'], 
+                        score_data['score']['beatmap']['bpm']
+                    )
+
+    await db.add_score(
+                        score_data['score']['user_id'], 
+                        80, 
+                        score_data['score']['score'], 
+                        score_data['score']['accuracy'], 
+                        score_data['score']['max_combo'], 
+                        score_data['score']['passed'], 
+                        score_data['score']['pp'], 
+                        score_data['score']['rank'], 
+                        score_data['score']['statistics']['count_300'], 
+                        score_data['score']['statistics']['count_100'], 
+                        score_data['score']['statistics']['count_50'], 
+                        score_data['score']['statistics']['count_miss'], 
+                        score_data['score']['created_at'], 
+                        0,
+                        0,
+                        0
+                    )
+
+    await db.add_score(
+                        score_data['score']['user_id'], 
+                        75, 
+                        0, 
+                        score_data['score']['accuracy'], 
+                        score_data['score']['max_combo'], 
+                        score_data['score']['passed'], 
+                        score_data['score']['pp'], 
+                        score_data['score']['rank'], 
+                        score_data['score']['statistics']['count_300'], 
+                        score_data['score']['statistics']['count_100'], 
+                        score_data['score']['statistics']['count_50'], 
+                        score_data['score']['statistics']['count_miss'], 
+                        score_data['score']['created_at'], 
+                        0,
+                        0,
+                        0
+                    )
+
+    await db.add_score(
+                        score_data['score']['user_id'], 
+                        69420, 
+                        0, 
+                        score_data['score']['accuracy'], 
+                        score_data['score']['max_combo'], 
+                        score_data['score']['passed'], 
+                        score_data['score']['pp'], 
+                        score_data['score']['rank'], 
+                        score_data['score']['statistics']['count_300'], 
+                        score_data['score']['statistics']['count_100'], 
+                        score_data['score']['statistics']['count_50'], 
+                        score_data['score']['statistics']['count_miss'], 
+                        score_data['score']['created_at'], 
+                        0,
+                        0,
+                        0
+                    )
+
+    zero_scores = await db.get_zero_scores(score_data['score']['user_id'])
+    assert len(zero_scores) == 2
+    assert zero_scores[0] == 75
+    assert zero_scores[1] == 69420
+
+@pytest.mark.asyncio
+@db_handler
+async def test_db_get_link(db):
     pass
