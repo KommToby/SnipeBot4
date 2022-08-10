@@ -1,5 +1,4 @@
-# Api return for recent scores
-class OsuRecentScore:
+class OsuScoreData():
     def __init__(self, recent_score_data):
         self.accuracy = recent_score_data['accuracy']
         self.best_id = recent_score_data['best_id']
@@ -20,15 +19,23 @@ class OsuRecentScore:
         self.current_user_attributes = CurrentUserAttributes(
             recent_score_data['current_user_attributes'])
         self.beatmap = RecentBeatmap(recent_score_data['beatmap'])
-        self.beatmapset = RecentBeatmapset(recent_score_data['beatmapset'])
         self.user = User(recent_score_data['user'])
 
+# Api return for recent scores
+
+
+class OsuRecentScore(OsuScoreData):
+    def __init__(self, recent_score_data):
+        super().__init__(recent_score_data)
+        self.beatmapset = RecentBeatmapset(recent_score_data['beatmapset'])
 
 # Api return for specific score on beatmap
-class OsuScore(OsuRecentScore):
+
+
+class OsuScore():
     def __init__(self, osu_score_data):
         self.position = osu_score_data['position']
-        super().__init__(self, osu_score_data['score'])
+        self.score = OsuScoreData(osu_score_data['score'])
 
 
 class OsuScoreMods():
