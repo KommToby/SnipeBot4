@@ -1,8 +1,9 @@
 import time
-import asyncio
 from embed.new_best_score import *
 from embed.snipe import *
 from interactions.ext.get import get
+from data_types.osu import *
+from data_types.interactions import CustomInteractionsClient
 # TODO add type values to all methods
 # TODO map json dictionaries to classes
 # TODO make methods that dont use client, database, or osu static (dont contain self)
@@ -10,7 +11,7 @@ from interactions.ext.get import get
 
 
 class SnipeTracker:
-    def __init__(self, client):
+    def __init__(self, client: CustomInteractionsClient):
         self.client = client
         self.osu = client.auth
         self.database = client.database
@@ -258,7 +259,7 @@ class SnipeTracker:
                     # Gets the recent score of the main user from the database to compare
                     recent_score = await self.database.get_main_recent_score(main_user_id)
                     print(
-                        f"     checking main user {main_user_data['username']} [{round((time.time() - local_time), 2)}s]")
+                        f"     checking main user {main_user_data.username} [{round((time.time() - local_time), 2)}s]")
                     local_time = time.time()  # reset the api timer
                     if recent_plays:
                         for play in recent_plays:
@@ -306,9 +307,9 @@ class SnipeTracker:
             friend_data = await self.osu.get_user_data(friend_id)
             if not(friend_data):
                 continue
-            await self.database.update_friend_username(friend_data['username'], friend_id)
+            await self.database.update_friend_username(friend_data.username, friend_id)
             print(
-                f"     checking {friend_data['username']} [{round((time.time() - local_time), 2)}s]")
+                f"     checking {friend_data.username} [{round((time.time() - local_time), 2)}s]")
             local_time = time.time()  # reset api timer
             # Below we scan every single friend, which is why we did the removals above
             recent_plays = await self.osu.get_recent_plays(friend_id)
