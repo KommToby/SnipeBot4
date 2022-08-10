@@ -14,6 +14,7 @@ class User:
 
 class Score:
     def __init__(self, score):
+        score = self.validate_score(score)
         self.user_id = score[0]
         self.beatmap_id = score[1]
         self.score = score[2]
@@ -31,8 +32,16 @@ class Score:
         self.converted_stars = score[14]
         self.converted_bpm = score[15]
 
+    def validate_score(self, score):
+        if score is None:
+            score = []
+            for _ in range(16):
+                score.append(None)
+        return score
+
 class Friend:
     def __init__(self, friend):
+        friend = self.validate_friend(friend)
         self.discord_channel = friend[0]
         self.osu_id = friend[1]
         self.username = friend[2]
@@ -44,6 +53,14 @@ class Friend:
         self.recent_score = friend[8]
         self.ping = friend[9]
         self.leaderboard = friend[10]
+
+    # Checks to see if the friend tuple returns values
+    def validate_friend(self, friend):
+        if friend is None:
+            friend = []
+            for _ in range(11):
+                friend.append(None)
+        return friend
 
 class Beatmap:
     def __init__(self, beatmap):
