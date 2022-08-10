@@ -1,4 +1,6 @@
 import sqlite3
+from data_types.database_types import *
+from data_types.osu import *
 
 class Database:
     def __init__(self, database_name):
@@ -119,10 +121,10 @@ class Database:
         return array
 
     # Only to be used in tests
-    async def get_friend_username_from_username(self, username):
-        return self.cursor.execute(
-            "SELECT username FROM friends WHERE username=?",
-            (username,)).fetchone()
+    async def get_friend_from_username(self, username) -> Friend:
+        return Friend(self.cursor.execute(
+            "SELECT * FROM friends WHERE username=?",
+            (username,)).fetchone())
 
     async def get_link(self, discord_id):
         return self.cursor.execute(
@@ -166,10 +168,10 @@ class Database:
             "SELECT * FROM beatmaps").fetchall()
 
     async def get_score(self, user_id, beatmap_id):
-        return self.cursor.execute(
+        return Score(self.cursor.execute(
             "SELECT * FROM scores WHERE user_id=? AND beatmap_id=?",
             (user_id, beatmap_id)
-        ).fetchone()
+        ).fetchone())
 
     async def get_all_scores(self, user_id): # does not include 0s
         return self.cursor.execute(
@@ -288,19 +290,18 @@ class Database:
             self.db.commit()
 
     async def add_score(self, user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods, converted_score, converted_bpm):
-        if score is None:
-            print("breakpoint")
-        if not(await self.get_score(user_id, beatmap_id)):
+        local_score = await self.get_score(user_id, beatmap_id)
+        if local_score.user_id is None:
             self.cursor.execute(
                 "INSERT INTO scores VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods, converted_score, converted_bpm)
             )
             self.db.commit()
 
-    async def add_friend(self, channel_id, user_data):
+    async def add_friend(self, channel_id, user_data: User):
         self.cursor.execute(
             "INSERT INTO friends VALUES(?,?,?,?,?,?,?,?,?,?,?)",
-            (channel_id, user_data['id'], user_data['username'], user_data['country_code'], user_data['avatar_url'], user_data['is_supporter'], user_data['cover_url'], user_data['playmode'], 0, False, 0)
+            (channel_id, user_data.id, user_data.username, user_data.country_code, user_data.avatar_url, user_data.is_supporter, user_data.cover_url, user_data.playmode, 0, False, 0)
         )
         self.db.commit()    
 

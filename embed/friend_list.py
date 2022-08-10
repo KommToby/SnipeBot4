@@ -1,8 +1,11 @@
 import interactions
+from data_types.osu import UserData
 
-async def create_friend_list_embed(user, friends):
+#TODO if friend has "_" in their name, make it "\_" to prevent messing with discord italics
+
+async def create_friend_list_embed(user: UserData, friends):
     embed = interactions.Embed(
-        title=f"Friend list for {user['username']}",
+        title=f"Friend list for {user.username}",
         color=16776960,
     )
     

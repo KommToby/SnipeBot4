@@ -29,7 +29,7 @@ class Stats(Cog):  # must have commands.cog or this wont work
             return
         user_data = await self.osu.get_user_data(username)
         if user_data:
-            user_id = user_data['id']
+            user_id = user_data.id
             scores = await self.database.get_all_scores(user_id)
             all_beatmaps = await self.database.get_all_beatmaps()
             user_score_data = {}

@@ -1,4 +1,10 @@
-import json, requests, os, asyncio, time
+import json
+import requests
+import os
+import asyncio
+import time
+from data_types.osu import UserData
+
 
 class Auth:
     def __init__(self):
@@ -39,9 +45,12 @@ class Auth:
     # General api call, where it takes in the url as a parameter
     async def get_api_v2(self, url: str, params=None):
         try:
-            if time.time() - self.api_timer < 0.05: # This is the maximum api time allowed by ppy
-                await asyncio.sleep(0.05 - (time.time() - self.api_timer)) # If the time is exceeded, tell it to wait until its available again (not very long)
-            print("Ping Time: ", "%.2f" % (time.time()-self.api_timer) + "s", end="\r") # Every time the api is called, print the ping time
+            if time.time() - self.api_timer < 0.05:  # This is the maximum api time allowed by ppy
+                # If the time is exceeded, tell it to wait until its available again (not very long)
+                await asyncio.sleep(0.05 - (time.time() - self.api_timer))
+            # Every time the api is called, print the ping time
+            print("Ping Time: ", "%.2f" %
+                  (time.time()-self.api_timer) + "s", end="\r")
             self.api_timer = time.time()
             if params is None:
                 params = {}
@@ -58,13 +67,16 @@ class Auth:
                 return False
         except:
             return False
-        
+
     # POST requests (new)
     async def get_api_v2_post_mods(self, url: str, mods, params=None):
         try:
-            if time.time() - self.api_timer < 0.05: # This is the maximum api time allowed by ppy
-                await asyncio.sleep(0.05 - (time.time() - self.api_timer)) # If the time is exceeded, tell it to wait until its available again (not very long)
-            print("Ping Time: ", "%.2f" % (time.time()-self.api_timer) + "s", end="\r") # Every time the api is called, print the ping time
+            if time.time() - self.api_timer < 0.05:  # This is the maximum api time allowed by ppy
+                # If the time is exceeded, tell it to wait until its available again (not very long)
+                await asyncio.sleep(0.05 - (time.time() - self.api_timer))
+            # Every time the api is called, print the ping time
+            print("Ping Time: ", "%.2f" %
+                  (time.time()-self.api_timer) + "s", end="\r")
             self.api_timer = time.time()
             if params is None:
                 params = {}
@@ -82,15 +94,16 @@ class Auth:
         except:
             return False
 
-    ## Api call urls below
+    # Api call urls below
 
     # User profile data, user id or username both are acceptable I believe
-    async def get_user_data(self, user_id: str):
-        return await self.get_api_v2(f"users/{user_id}")
+    async def get_user_data(self, user_id: str) -> UserData:
+        return UserData(await self.get_api_v2(f"users/{user_id}"))
 
     # Users scores on a specific beatmap, returns their best score for every mod combination they have played
     async def get_score_data(self, beatmap_id: str, user_id: str):
-        return await self.get_api_v2(f"beatmaps/{beatmap_id}/scores/users/{user_id}") # has to be user id cannot be username
+        # has to be user id cannot be username
+        return await self.get_api_v2(f"beatmaps/{beatmap_id}/scores/users/{user_id}")
 
     # Users most recent plays on osu, only returns their 5 most recent plays
     async def get_recent_plays(self, user_id: str):
