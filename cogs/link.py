@@ -34,11 +34,11 @@ class Link(Cog):  # must have interactions.Extension or this wont work
             return
 
         if alter_account is False:
-            await self.database.add_link(discord_id, osu_account_data['id'])
+            await self.database.add_link(discord_id, osu_account_data.id)
             await ctx.send(f"<@{discord_id}> has been linked to {username}!")
             return
         else:
-            await self.database.update_link(discord_id, osu_account_data['id'])
+            await self.database.update_link(discord_id, osu_account_data.id)
             await ctx.send(f"<@{discord_id}> has been linked to {username}!")
             return
 

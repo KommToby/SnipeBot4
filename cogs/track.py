@@ -28,7 +28,7 @@ class Track(Cog):  # must have interactions.Extension or this wont work
 
         user_data = await self.osu.get_user_data(str(username))
         await self.database.add_channel(ctx.channel_id._snowflake, username, user_data)
-        await ctx.send(f"Started tracking user {user_data['username']} in this channel!")
+        await ctx.send(f"Started tracking user {user_data.username} in this channel!")
 
 
 def setup(client):
