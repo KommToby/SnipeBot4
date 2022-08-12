@@ -61,7 +61,7 @@ class Friend(Cog):  # must have interactions.Extension or this wont work
             elif "list" in kwargs:
                 await self.handle_list(ctx, kwargs["list"])
 
-    async def convert_mods_to_int(self, modarray):
+    async def convert_mods_to_int(self, modarray: list):
         value = 0
         if modarray:
             for mod in modarray:
@@ -273,7 +273,7 @@ class Friend(Cog):  # must have interactions.Extension or this wont work
                 print(f"Error while scanning user: {e}")
         await message.edit(content=f"Adding {username} to the friends list... **Done!**\nScanning top plays... **Done!**\nScanning user on all beatmaps... 100% complete\nNo hours remaining")
 
-    async def handle_user_already_stored_scores(self, user_id, beatmaps):
+    async def handle_user_already_stored_scores(self, user_id, beatmaps: list):
         return_beatmaps = []
         conv_scores = await self.database.get_converted_scores(user_id)
         zero_scores = await self.database.get_zero_scores(user_id)
