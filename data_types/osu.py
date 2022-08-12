@@ -38,7 +38,7 @@ class OsuScore():
         self.score = OsuScoreData(osu_score_data['score'])
 
 
-class OsuScoreMods():
+class BeatmapMods():
     def __init__(self, score_data_mods):
         self.attributes = Attributes(score_data_mods['attributes'])
 
