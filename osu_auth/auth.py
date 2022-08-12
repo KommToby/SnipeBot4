@@ -3,7 +3,7 @@ import requests
 import os
 import asyncio
 import time
-from data_types.osu import UserData
+from data_types.osu import *
 
 
 class Auth:
@@ -103,23 +103,34 @@ class Auth:
     # Users scores on a specific beatmap, returns their best score for every mod combination they have played
     async def get_score_data(self, beatmap_id: str, user_id: str):
         # has to be user id cannot be username
-        return await self.get_api_v2(f"beatmaps/{beatmap_id}/scores/users/{user_id}")
+        osu_score = await self.get_api_v2(f"beatmaps/{beatmap_id}/scores/users/{user_id}")
+        if not osu_score:
+            return False
+        return OsuScore(await self.get_api_v2(f"beatmaps/{beatmap_id}/scores/users/{user_id}"))
 
     # Users most recent plays on osu, only returns their 5 most recent plays
     async def get_recent_plays(self, user_id: str):
-        return await self.get_api_v2(f"users/{user_id}/scores/recent?mode=osu")
+        recent = await self.get_api_v2(f"users/{user_id}/scores/recent?mode=osu")
+        if not recent:
+            return False
+        recent_plays = []
+        for recent_play in recent:
+            recent_plays.append(OsuRecentScore(recent_play))
+        return recent_plays
 
     # Users top 100 scores on osu
+    #TODO Make a class for this
     async def get_user_scores(self, user_id: str):
         return await self.get_api_v2(f"users/{user_id}/scores/best")
 
     # Gets details about a specific beatmap. The beatmap id has to be the difficulty id, not the beatmapset id
     async def get_beatmap(self, beatmap_id: str):
-        return await self.get_api_v2(f"beatmaps/{beatmap_id}")
+        return Beatmap(await self.get_api_v2(f"beatmaps/{beatmap_id}"))
 
     async def get_beatmap_mods(self, beatmap_id: str, mods):
-        return await self.get_api_v2_post_mods(f"beatmaps/{beatmap_id}/attributes", mods)
+        return BeatmapMods(await self.get_api_v2_post_mods(f"beatmaps/{beatmap_id}/attributes", mods))
 
     # Users recent activity, I think this returns every single beatmap they have played in the last 24 hours, which can be used for a buffer when the api is down / slow
+    #TODO do something with this
     async def get_user_recent_activity(self, user_id: str):
         return await self.get_api_v2(f"users/{user_id}/recent_activity")
