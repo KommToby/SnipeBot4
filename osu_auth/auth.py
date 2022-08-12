@@ -98,7 +98,10 @@ class Auth:
 
     # User profile data, user id or username both are acceptable I believe
     async def get_user_data(self, user_id: str) -> UserData:
-        return UserData(await self.get_api_v2(f"users/{user_id}"))
+        user_data = await self.get_api_v2(f"users/{user_id}")
+        if not user_data:
+            return False
+        return UserData(user_data)
 
     # Users scores on a specific beatmap, returns their best score for every mod combination they have played
     async def get_score_data(self, beatmap_id: str, user_id: str):
@@ -106,7 +109,7 @@ class Auth:
         osu_score = await self.get_api_v2(f"beatmaps/{beatmap_id}/scores/users/{user_id}")
         if not osu_score:
             return False
-        return OsuScore(await self.get_api_v2(f"beatmaps/{beatmap_id}/scores/users/{user_id}"))
+        return OsuScore(osu_score)
 
     # Users most recent plays on osu, only returns their 5 most recent plays
     async def get_recent_plays(self, user_id: str):
@@ -125,10 +128,16 @@ class Auth:
 
     # Gets details about a specific beatmap. The beatmap id has to be the difficulty id, not the beatmapset id
     async def get_beatmap(self, beatmap_id: str):
-        return Beatmap(await self.get_api_v2(f"beatmaps/{beatmap_id}"))
+        beatmap = await self.get_api_v2(f"beatmaps/{beatmap_id}")
+        if not beatmap:
+            return False
+        return Beatmap(beatmap)
 
     async def get_beatmap_mods(self, beatmap_id: str, mods):
-        return BeatmapMods(await self.get_api_v2_post_mods(f"beatmaps/{beatmap_id}/attributes", mods))
+        beatmap_mods = await self.get_api_v2_post_mods(f"beatmaps/{beatmap_id}/attributes", mods)
+        if not beatmap_mods:
+            return False
+        return BeatmapMods(beatmap_mods)
 
     # Users recent activity, I think this returns every single beatmap they have played in the last 24 hours, which can be used for a buffer when the api is down / slow
     #TODO do something with this
