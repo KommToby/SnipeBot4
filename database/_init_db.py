@@ -266,10 +266,10 @@ class Database:
             (discord_id,)).fetchone()
 
     ## ADDS
-    async def add_channel(self, channel_id, user_id, user_data):
+    async def add_channel(self, channel_id, user_id, user_data: UserData):
         self.cursor.execute(
             "INSERT INTO users VALUES(?,?,?,?,?,?,?,?,?)",
-            (channel_id, user_data['id'], user_data['username'], user_data['country_code'], user_data['avatar_url'], user_data['is_supporter'], user_data['cover_url'], user_data['playmode'], 0)
+            (channel_id, user_data.id, user_data.username, user_data.country_code, user_data.avatar_url, user_data.is_supporter, user_data.cover_url, user_data.playmode, 0)
         )
         self.db.commit()        
 
@@ -334,7 +334,7 @@ class Database:
         )
         self.db.commit()
         a = await self.get_score(user_id, beatmap_id)
-        if a[2] is None:
+        if a.score is None:
             print("breakpoint")
 
     async def update_score_zeros(self, user_id, beatmap_id):
