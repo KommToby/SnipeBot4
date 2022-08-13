@@ -168,10 +168,10 @@ class Database:
             "SELECT * FROM beatmaps").fetchall()
 
     async def get_score(self, user_id, beatmap_id):
-        return Score(self.cursor.execute(
+        return self.cursor.execute(
             "SELECT * FROM scores WHERE user_id=? AND beatmap_id=?",
             (user_id, beatmap_id)
-        ).fetchone())
+        ).fetchone()
 
     async def get_all_scores(self, user_id): # does not include 0s
         return self.cursor.execute(
@@ -291,7 +291,7 @@ class Database:
 
     async def add_score(self, user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods, converted_score, converted_bpm):
         local_score = await self.get_score(user_id, beatmap_id)
-        if local_score.user_id is None:
+        if local_score is None:
             self.cursor.execute(
                 "INSERT INTO scores VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods, converted_score, converted_bpm)
@@ -334,7 +334,7 @@ class Database:
         )
         self.db.commit()
         a = await self.get_score(user_id, beatmap_id)
-        if a.score is None:
+        if a is None:
             print("breakpoint")
 
     async def update_score_zeros(self, user_id, beatmap_id):

@@ -31,8 +31,8 @@ async def on_ready():
                 if filename.endswith(".py"):
                     client.load(f"cogs.{filename[:-3]}")
             print("All cogs loaded successfully")
-            print("Starting main loop in 10 seconds")
-            await asyncio.sleep(0)
+            print("Starting main loop in 3 seconds")
+            await asyncio.sleep(3)
             await client.tracker.start_loop()
         else:
             pass
