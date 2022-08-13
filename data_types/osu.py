@@ -29,6 +29,19 @@ class OsuRecentScore(OsuScoreData):
         super().__init__(recent_score_data)
         self.beatmapset: RecentBeatmapset = RecentBeatmapset(recent_score_data['beatmapset'])
 
+# Api return for top 100 scores
+
+class OsuBestScore(OsuScoreData):
+    def __init__(self, recent_score_data):
+        super().__init__(recent_score_data)
+        self.beatmapset: RecentBeatmapset = RecentBeatmapset(recent_score_data['beatmapset'])
+        self.weight: Weight = Weight(recent_score_data['weight'])
+
+class Weight():
+    def __init__(self, weight):
+        self.percentage = weight['percentage']
+        self.pp = weight['pp']
+
 # Api return for specific score on beatmap
 
 
