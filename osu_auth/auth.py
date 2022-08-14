@@ -116,10 +116,10 @@ class Auth:
         recent = await self.get_api_v2(f"users/{user_id}/scores/recent?mode=osu")
         if not recent:
             return False
-        recent_plays = []
-        for recent_play in recent:
-            recent_plays.append(OsuRecentScore(recent_play))
-        return recent_plays
+        # recent_plays = []
+        # for recent_play in recent:
+        #     recent_plays.append(OsuRecentScore(recent_play))
+        return [OsuRecentScore(recent_play) for recent_play in recent]
 
     # Users top 100 scores on osu
     async def get_user_scores(self, user_id: str):
