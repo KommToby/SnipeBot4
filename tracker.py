@@ -333,7 +333,7 @@ class SnipeTracker:
             await self.check_new_beatmaps(beatmaps_to_scan)
         return local_time
 
-    async def check_friend_recent_score(self, active_friends: list, friend_id: str, users: list, recent_plays: list, beatmaps_to_scan: list, recent_score):
+    async def check_friend_recent_score(self, active_friends: list, friend_id: str, users: list, recent_plays: list[OsuRecentScore], beatmaps_to_scan: list, recent_score):
         if friend_id not in active_friends:
             active_friends.append(friend_id)
         # This is when the score / snipe tracking really begins
@@ -390,7 +390,7 @@ class SnipeTracker:
                     pass
         return beatmaps_to_scan
 
-    async def handle_friend_snipe(self, friend_id: str, beatmap_id, play, main_user, main_user_play: OsuScore, users: list):
+    async def handle_friend_snipe(self, friend_id: str, beatmap_id, play: OsuRecentScore, main_user, main_user_play: OsuScore, users: list):
         if not(await self.database.get_user_score_on_beatmap(friend_id, beatmap_id, play.score)):
             # Now we check if the friend has played the map before or not
             if not(await self.database.get_score(friend_id, beatmap_id)):
@@ -408,7 +408,7 @@ class SnipeTracker:
                             # now we need to post the new top play in the main users server
                             sniped_friends = await self.get_sniped_friends(play, other_main_user[0])
                             post_channel = await get(self.client, interactions.Channel, channel_id=int(other_main_user[0]))
-                            beatmap_data = await self.osu.get_beatmap_data(beatmap_id)
+                            beatmap_data = await self.osu.get_beatmap(beatmap_id)
                             await post_channel.send(embeds=await create_high_score_embed(play, sniped_friends, beatmap_data))
                             ping_string = await self.construct_pinging_string(sniped_friends)
                             if ping_string != "":
