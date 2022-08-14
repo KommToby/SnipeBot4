@@ -1,9 +1,10 @@
 import interactions
+from data_types.interactions import CustomInteractionsClient
+from data_types.cogs import Cog
 
-
-class Link(interactions.Extension):  # must have interactions.Extension or this wont work
-    def __init__(self, client):
-        self.client: interactions.Client = client
+class Link(Cog):  # must have interactions.Extension or this wont work
+    def __init__(self, client: CustomInteractionsClient):
+        self.client: client
         self.osu = client.auth
         self.database = client.database
 
@@ -33,11 +34,11 @@ class Link(interactions.Extension):  # must have interactions.Extension or this 
             return
 
         if alter_account is False:
-            await self.database.add_link(discord_id, osu_account_data['id'])
+            await self.database.add_link(discord_id, osu_account_data.id)
             await ctx.send(f"<@{discord_id}> has been linked to {username}!")
             return
         else:
-            await self.database.update_link(discord_id, osu_account_data['id'])
+            await self.database.update_link(discord_id, osu_account_data.id)
             await ctx.send(f"<@{discord_id}> has been linked to {username}!")
             return
 

@@ -1,8 +1,9 @@
 import sqlite3
+from data_types.osu import *
 
 class Database:
     def __init__(self, database_name):
-        self.db = sqlite3.connect(database_name, timeout=5)
+        self.db = sqlite3.connect(database_name)
         self.cursor = self.db.cursor()
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS users(
@@ -23,18 +24,18 @@ class Database:
                 user_id int not null,
                 beatmap_id int,
                 score varchar(32),
-                accuracy varchar(32),
-                max_combo varchar(32),
+                accuracy real,
+                max_combo int,
                 passed boolean,
-                pp varchar(16),
+                pp real,
                 rank varchar(16),
-                count_300 varchar(16),
-                count_100 varchar(16),
-                count_50 varchar(16),
-                count_miss varchar(16),
+                count_300 int,
+                count_100 int,
+                count_50 int,
+                count_miss int,
                 date varchar(32),
                 mods int(32),
-                converted_stars varchar(32),
+                converted_stars real,
                 converted_bpm real
             )
         ''')
@@ -49,15 +50,15 @@ class Database:
                 is_supporter boolean,
                 cover_url varchar(256),
                 playmode varchar(32),
-                recent_score varchar(32),
+                recent_score int,
                 ping boolean,
-                leaderboard varchar(16)
+                leaderboard real
             )
         ''') # Ping value for this is redundant but will take time to alter so keeping it for now
 
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS beatmaps(
-                beatmap_id varchar(32) not null,
+                beatmap_id int not null,
                 stars int,
                 artist varchar(32),
                 song_name varchar(32),
@@ -67,50 +68,47 @@ class Database:
                 bpm int,
                 mapper varchar(32),
                 status varchar(16),
-                beatmapset_id varchar(32),
-                od varchar(16),
-                ar varchar(16),
-                cs varchar(16),
-                hp varchar(16)
+                beatmapset_id int,
+                od real,
+                ar real,
+                cs real,
+                hp real
             )
         ''')
 
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS snipes(
-                user_id varchar(32) not null,
-                beatmap_id varchar(32),
-                second_user_id varchar(32),
+                user_id int not null,
+                beatmap_id int,
+                second_user_id int,
                 date varchar(16),
                 first_score int,
                 second_score int,
-                first_accuracy varchar(16),
-                second_accuracy varchar(16),
+                first_accuracy real,
+                second_accuracy real,
                 first_mods int,
                 second_mods int,
-                first_pp varchar(16),
-                second_pp varchar(16)
+                first_pp real,
+                second_pp real
             )
         ''')  # for storing if someone has been sniped on a specific beatmap
 
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS link(
-                discord_id varchar(32) not null,
-                osu_id varchar(32) not null,
+                discord_id int not null,
+                osu_id int not null,
                 ping boolean
             )
         ''')
 
     ## GETS
     async def get_converted_scores(self, user_id):
-        self.cursor.row_factory = lambda cursor, row: row[0]
-        array = self.cursor.execute(
-            "SELECT beatmap_id FROM scores WHERE user_id=? AND converted_bpm>?",
+        return self.cursor.execute(
+            "SELECT * FROM scores WHERE user_id=? AND converted_bpm>?",
             (user_id, 0)).fetchall()
-        self.cursor.row_factory = None
-        return array
 
     async def get_zero_scores(self, user_id):
-        # using row factory ensures it returns an array of values not tuples
+        # using row factory ensures it returns an arr_iray of values not tuples
         self.cursor.row_factory = lambda cursor, row: row[0]
         array =  self.cursor.execute(
             "SELECT beatmap_id FROM scores WHERE user_id=? AND score=?",
@@ -119,9 +117,9 @@ class Database:
         return array
 
     # Only to be used in tests
-    async def get_friend_username_from_username(self, username):
+    async def get_friend_from_username(self, username):
         return self.cursor.execute(
-            "SELECT username FROM friends WHERE username=?",
+            "SELECT * FROM friends WHERE username=?",
             (username,)).fetchone()
 
     async def get_link(self, discord_id):
@@ -264,10 +262,10 @@ class Database:
             (discord_id,)).fetchone()
 
     ## ADDS
-    async def add_channel(self, channel_id, user_id, user_data):
+    async def add_channel(self, channel_id, user_id, user_data: UserData):
         self.cursor.execute(
             "INSERT INTO users VALUES(?,?,?,?,?,?,?,?,?)",
-            (channel_id, user_data['id'], user_data['username'], user_data['country_code'], user_data['avatar_url'], user_data['is_supporter'], user_data['cover_url'], user_data['playmode'], 0)
+            (channel_id, user_data.id, user_data.username, user_data.country_code, user_data.avatar_url, user_data.is_supporter, user_data.cover_url, user_data.playmode, 0)
         )
         self.db.commit()        
 
@@ -288,19 +286,18 @@ class Database:
             self.db.commit()
 
     async def add_score(self, user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods, converted_score, converted_bpm):
-        if score is None:
-            print("breakpoint")
-        if not(await self.get_score(user_id, beatmap_id)):
-            self.cursor.execute(
-                "INSERT INTO scores VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                (user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods, converted_score, converted_bpm)
-            )
-            self.db.commit()
+        # local_score = await self.get_score(user_id, beatmap_id)
+        # if local_score is None:
+        self.cursor.execute(
+            "INSERT INTO scores VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            (user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods, converted_score, converted_bpm)
+        )
+        self.db.commit()
 
-    async def add_friend(self, channel_id, user_data):
+    async def add_friend(self, channel_id, user_data: User):
         self.cursor.execute(
             "INSERT INTO friends VALUES(?,?,?,?,?,?,?,?,?,?,?)",
-            (channel_id, user_data['id'], user_data['username'], user_data['country_code'], user_data['avatar_url'], user_data['is_supporter'], user_data['cover_url'], user_data['playmode'], 0, False, 0)
+            (channel_id, user_data.id, user_data.username, user_data.country_code, user_data.avatar_url, user_data.is_supporter, user_data.cover_url, user_data.playmode, 0, False, 0)
         )
         self.db.commit()    
 
@@ -333,7 +330,7 @@ class Database:
         )
         self.db.commit()
         a = await self.get_score(user_id, beatmap_id)
-        if a[2] is None:
+        if a is None:
             print("breakpoint")
 
     async def update_score_zeros(self, user_id, beatmap_id):

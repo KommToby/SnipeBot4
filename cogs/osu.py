@@ -1,11 +1,12 @@
 import interactions
 from embed.osu import create_osu_embed
+from data_types.interactions import CustomInteractionsClient
+from data_types.cogs import Cog
 
-
-class Osu(interactions.Extension):  # must have interactions.Extension or this wont work
-    def __init__(self, client):
-        self.client: interactions.Client = client
-        self.osu = client.auth
+class Osu(Cog):  # must have interactions.Extension or this wont work
+    def __init__(self, client: CustomInteractionsClient):
+        self.client = client
+        self.osuauth = client.auth # has to be osuauth since the command is called osu and it clashes
         self.database = client.database
 
     @interactions.extension_command(
@@ -24,11 +25,12 @@ class Osu(interactions.Extension):  # must have interactions.Extension or this w
         username = await self.handle_linked_account(ctx, kwargs)
         if not username:
             return
-        recent_plays = await self.osu.get_recent_plays("3637436")
-        score_data = await self.osu.get_score_data("848345", "10609949")
-        score_data_mods = await self.osu.get_beatmap_mods("848345", "64")
-        beatmap_data = await self.osu.get_beatmap("2077721")
-        user_data = await self.osu.get_user_data(username)
+        recent_plays = await self.osuauth.get_recent_plays("4934554")
+        score_data = await self.osuauth.get_score_data("848345", "10609949")
+        score_data_mods = await self.osuauth.get_beatmap_mods("848345", "64")
+        beatmap_data = await self.osuauth.get_beatmap("2077721")
+        user_data = await self.osuauth.get_user_data(username)
+        user_scores = await self.osuauth.get_user_scores("4934554")
         embed = await create_osu_embed(user_data)
         await ctx.send(embeds=embed)
 

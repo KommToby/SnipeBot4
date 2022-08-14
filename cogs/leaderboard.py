@@ -1,12 +1,13 @@
 import interactions
 import math
 from embed.leaderboard import create_leaderboard_embed
-
+from data_types.interactions import CustomInteractionsClient
+from data_types.cogs import Cog
 
 # must have interactions.Extension or this wont work
-class Leaderboard(interactions.Extension):
-    def __init__(self, client):
-        self.client: interactions.Client = client
+class Leaderboard(Cog):
+    def __init__(self, client: CustomInteractionsClient):
+        self.client = client
         self.osu = client.auth
         self.database = client.database
 

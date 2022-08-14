@@ -1,9 +1,11 @@
 import interactions
+from data_types.interactions import CustomInteractionsClient
+from data_types.cogs import Cog
 
 
-class Track(interactions.Extension):  # must have interactions.Extension or this wont work
-    def __init__(self, client):
-        self.client: interactions.Client = client
+class Track(Cog):  # must have interactions.Extension or this wont work
+    def __init__(self, client: CustomInteractionsClient):
+        self.client = client
         self.osu = client.auth
         self.database = client.database
 
@@ -26,7 +28,7 @@ class Track(interactions.Extension):  # must have interactions.Extension or this
 
         user_data = await self.osu.get_user_data(str(username))
         await self.database.add_channel(ctx.channel_id._snowflake, username, user_data)
-        await ctx.send(f"Started tracking user {user_data['username']} in this channel!")
+        await ctx.send(f"Started tracking user {user_data.username} in this channel!")
 
 
 def setup(client):
