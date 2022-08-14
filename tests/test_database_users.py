@@ -361,12 +361,12 @@ async def test_db_add_new_score(db: Database):
         score_data.score.beatmap.bpm
     )
     database_score = await db.get_score(score_data.score.user_id, score_data.score.beatmap.id)
-    assert type(database_score.user_id) == int
-    assert database_score.user_id == score_data.score.user_id
-    assert database_score.beatmap_id == score_data.score.beatmap.id
-    assert database_score.mods == 64
-    assert database_score.converted_stars == score_data.score.beatmap.difficulty_rating
-    assert database_score.converted_bpm == score_data.score.beatmap.bpm
+    assert type(database_score[0]) == int
+    assert database_score[0] == score_data.score.user_id
+    assert database_score[1] == score_data.score.beatmap.id
+    assert database_score[13] == 64
+    assert database_score[14] == score_data.score.beatmap.difficulty_rating
+    assert database_score[15] == score_data.score.beatmap.bpm
 
 
 @pytest.mark.asyncio

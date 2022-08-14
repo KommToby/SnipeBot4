@@ -122,7 +122,6 @@ class Auth:
         return recent_plays
 
     # Users top 100 scores on osu
-    #TODO Make a class for this
     async def get_user_scores(self, user_id: str):
         best_score = await self.get_api_v2(f"users/{user_id}/scores/best")
         if not best_score:
