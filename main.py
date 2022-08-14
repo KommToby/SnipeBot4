@@ -2,8 +2,6 @@
 # pip install -u interactions-get
 # pip install -U git+https://github.com/interactions-py/library@unstable
 import json, os, asyncio
-from osu_auth.auth import Auth
-from database._init_db import Database
 from tracker import SnipeTracker
 from data_types.interactions import CustomInteractionsClient
 
@@ -16,8 +14,8 @@ with open("config.json") as f:
 # IMPORTANT: IF NOT CHANGING ANY COGS - ENABLE DISABLE_SYNC BELOW
 # WHEN DISABLE_SYNC IS TRUE IT DOES NOT CALL THE DISCORD API FOR INTERACTIONS
 client = CustomInteractionsClient(TOKEN, disable_sync=True)
-client.tracker = SnipeTracker(client)
-client.running = False
+client.tracker: SnipeTracker = SnipeTracker(client)
+client.running: bool = False
 
 # Bot Online
 @client.event

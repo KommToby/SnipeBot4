@@ -1,7 +1,6 @@
 import pytest
 import os
 from database._init_db import Database
-from data_types.database_types import *
 from data_types.osu import *
 
 # Mock Data
@@ -156,7 +155,7 @@ score_data = OsuScore({
         },
         'beatmap': {
             'beatmapset_id': '993619',
-            'difficulty_rating': '3.89',
+            'difficulty_rating': 3.89,
             'id': 2077721,
             'mode': 'osu',
             'status': 'ranked',
@@ -299,16 +298,11 @@ beatmap_data = {
 }
 
 
-async def delete_database(db):
-    db.db.close()
-    os.remove("test_database.db")
-
-
 def db_handler(func):
     async def inner_wrapper():
-        db = Database('test_database.db')
+        db_name = ":memory:"
+        db = Database(db_name)
         await func(db)
-        await delete_database(db)
     return inner_wrapper
 
 
@@ -317,7 +311,7 @@ def db_handler(func):
 async def test_db_add_friend(db: Database):
     await db.add_friend(friend_channel_id, friend_data)
     friend_from_username = await db.get_friend_from_username(friend_data.username)
-    assert (friend_from_username.username == "Komm")
+    assert (friend_from_username[2] == "Komm")
 
 
 @pytest.mark.asyncio
@@ -326,7 +320,7 @@ async def test_db_add_delete_friend(db: Database):
     await db.add_friend(friend_channel_id, friend_data)
     await db.delete_friend(friend_data.id, friend_channel_id)
     friend_database_data = await db.get_friend_from_username(friend_data.username)
-    assert (friend_database_data.username) == None
+    assert friend_database_data is None
 
 
 @pytest.mark.asyncio
@@ -336,7 +330,7 @@ async def test_db_add_update_friend_username(db: Database):
     friend_data.username = "Komm2"
     await db.update_friend_username(friend_data.username, friend_data.id)
     friend_database_data = await db.get_friend_from_username(friend_data.username)
-    assert (friend_database_data.username) == "Komm2"
+    assert (friend_database_data[2]) == "Komm2"
 
 
 @pytest.mark.asyncio
@@ -418,9 +412,10 @@ async def test_db_get_converted_scores(db: Database):
         0
     )
 
+    # this wont work with dictionary return because its fetchall
     converted_score = await db.get_converted_scores(score_data.score.user_id)
     assert len(converted_score) == 1
-    assert converted_score[0] == score_data.score.beatmap.id
+    assert converted_score[0][1] == score_data.score.beatmap.id
 
 
 @pytest.mark.asyncio

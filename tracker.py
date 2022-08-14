@@ -390,7 +390,7 @@ class SnipeTracker:
                     pass
         return beatmaps_to_scan
 
-    async def handle_friend_snipe(self, friend_id: str, beatmap_id, play, main_user, main_user_play, users):
+    async def handle_friend_snipe(self, friend_id: str, beatmap_id, play, main_user, main_user_play: OsuScore, users: list):
         if not(await self.database.get_user_score_on_beatmap(friend_id, beatmap_id, play.score)):
             # Now we check if the friend has played the map before or not
             if not(await self.database.get_score(friend_id, beatmap_id)):
@@ -418,7 +418,7 @@ class SnipeTracker:
                 # note, this cant be the main user on another server, since the main user play score would have to be identical for a new high score
                 local_score = await self.database.get_score(friend_id, beatmap_id)
                 # if its their new best
-                if int(play.score) > int(local_score[2]):
+                if int(play[2]) > int(local_score.score):
                     conv_stars, conv_bpm = await self.convert_stars_and_bpm(play)
                     await self.database.update_score(friend_id, beatmap_id, play.score, play.accuracy, play.max_combo, play.passed, play.pp, play.rank, play.statistics.count_300, play.statistics.count_300, play.statistics.count_50, play.statistics.count_miss, play.created_at, await self.convert_mods_to_int(play.mods), conv_stars, conv_bpm)
                     # now we check if the user has got a snipe on this beatmap before
