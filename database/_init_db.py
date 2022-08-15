@@ -262,7 +262,7 @@ class Database:
             (discord_id,)).fetchone()
 
     ## ADDS
-    async def add_channel(self, channel_id, user_id, user_data: UserData):
+    async def add_channel(self, channel_id, user_data: UserData):
         self.cursor.execute(
             "INSERT INTO users VALUES(?,?,?,?,?,?,?,?,?)",
             (channel_id, user_data.id, user_data.username, user_data.country_code, user_data.avatar_url, user_data.is_supporter, user_data.cover_url, user_data.playmode, 0)

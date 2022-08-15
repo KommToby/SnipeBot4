@@ -1,5 +1,4 @@
 import pytest
-import os
 from database._init_db import Database
 from data_types.osu import *
 
@@ -210,7 +209,7 @@ score_data = OsuScore({
 })
 
 # osu api get beatmap response
-beatmap_data = {
+beatmap_data = Beatmap({
     'beatmapset_id': '993619',
     'difficulty_rating': '3.89',
     'id': 2077721,
@@ -267,7 +266,7 @@ beatmap_data = {
         'title_unicode': 'Love Story',
         'track_id': None,
         'user_id': '5364763',
-        'vide': False,
+        'video': False,
         'availability': {
             'download_disabled': False,
             'more_information': None
@@ -289,13 +288,13 @@ beatmap_data = {
         'submitted_date': '2019-06-26T01:12:44+00:00',
         'tags': 'country english pop guitar fearless',
         'ratings': [0, 5, 3, 3, 0, 2, 3, 14, 26, 42, 260],
-        'failtimes': {
+    },
+    'failtimes': {
             'fail': ['not adding this into tests rn'],
             'exit': ['not adding this into tests rn']
         },
-        'max_combo': 781
-    }
-}
+    'max_combo': 781
+})
 
 
 
@@ -514,12 +513,12 @@ async def test_db_get_zero_scores(db: Database):
 async def test_db_add_get_link(db):
     await db.add_link(
         191602759504625674,
-        score_data['score']['user_id']
+        score_data.score.user_id
     )
 
     link = await db.get_link(191602759504625674)
     assert link[0] == 191602759504625674
-    assert link[1] == score_data['score']['user_id']
+    assert link[1] == score_data.score.user_id
     assert link[2] == False
 
 
@@ -528,12 +527,12 @@ async def test_db_add_get_link(db):
 async def test_db_get_discord_id_from_link(db):
     await db.add_link(
         191602759504625674,
-        score_data['score']['user_id']
+        score_data.score.user_id
     )
 
-    link = await db.get_discord_id_from_link(score_data['score']['user_id'])
+    link = await db.get_discord_id_from_link(score_data.score.user_id)
     assert link[0] == 191602759504625674
-    assert link[1] == score_data['score']['user_id']
+    assert link[1] == score_data.score.user_id
     assert link[2] == False
 
 
@@ -542,42 +541,33 @@ async def test_db_get_discord_id_from_link(db):
 async def test_db_add_get_channel(db):
     await db.add_channel(
         843020728773378070,
-        score_data['score']['user_id'],
-        {
-            'id': score_data['score']['user_id'],
-            'username': 'Komm',
-            'country_code': score_data['score']['user']['country_code'],
-            'avatar_url': score_data['score']['user']['avatar_url'],
-            'is_supporter': score_data['score']['user']['is_supporter'],
-            'cover_url': score_data['score']['user']['cover']['url'],
-            'playmode': friend_data['playmode']
-        }
+        friend_data
     )
     channel = await db.get_channel(843020728773378070)
     assert channel[0] == 843020728773378070
-    assert channel[2] == score_data['score']['user']['username']
+    assert channel[2] == friend_data.username
     assert channel[8] == 0
 
 @pytest.mark.asyncio
 @db_handler
 async def test_db_add_get_beatmap(db):
     await db.add_beatmap(
-        beatmap_data['id'],
-        beatmap_data['difficulty_rating'],
-        beatmap_data['beatmapset']['artist'],
-        beatmap_data['beatmapset']['title'],
-        beatmap_data['version'],
-        beatmap_data['url'],
-        beatmap_data['total_length'],
-        beatmap_data['bpm'],
-        beatmap_data['beatmapset']['creator'],
-        beatmap_data['status'],
-        beatmap_data['beatmapset_id'],
-        beatmap_data['accuracy'],
-        beatmap_data['ar'],
-        beatmap_data['cs'],
-        beatmap_data['drain']
+        beatmap_data.id,
+        beatmap_data.difficulty_rating,
+        beatmap_data.beatmapset.artist,
+        beatmap_data.beatmapset.title,
+        beatmap_data.version,
+        beatmap_data.url,
+        beatmap_data.total_length,
+        beatmap_data.bpm,
+        beatmap_data.beatmapset.creator,
+        beatmap_data.status,
+        beatmap_data.beatmapset.id,
+        beatmap_data.accuracy,
+        beatmap_data.ar,
+        beatmap_data.cs,
+        beatmap_data.drain
     )
-    beatmap = await db.get_beatmap(beatmap_data['id'])
-    assert beatmap[0] == beatmap_data['id']
-    assert beatmap[14] == beatmap_data['drain']
+    beatmap = await db.get_beatmap(beatmap_data.id)
+    assert beatmap[0] == beatmap_data.id
+    assert beatmap[14] == beatmap_data.drain
