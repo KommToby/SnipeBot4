@@ -1,6 +1,6 @@
 import interactions
 
-async def create_leaderboard_embed(leaderboard, main_username, main_snipes, main_sniped, sort):
+async def create_leaderboard_embed(leaderboard: list, main_username, main_snipes: int, main_sniped: int, sort: str):
     if sort == "snipe_pp":
         sort = "Snipe PP"
     elif sort == "held":

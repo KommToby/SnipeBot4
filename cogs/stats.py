@@ -1,11 +1,13 @@
 
 import interactions
 from embed.stats import create_stats_embed
+from data_types.interactions import CustomInteractionsClient
+from data_types.cogs import Cog
 
 
-class Stats(interactions.Extension):  # must have commands.cog or this wont work
-    def __init__(self, client):
-        self.client: interactions.Client = client
+class Stats(Cog):  # must have commands.cog or this wont work
+    def __init__(self, client: CustomInteractionsClient):
+        self.client = client
         self.osu = client.auth
         self.database = client.database
 
@@ -27,7 +29,7 @@ class Stats(interactions.Extension):  # must have commands.cog or this wont work
             return
         user_data = await self.osu.get_user_data(username)
         if user_data:
-            user_id = user_data['id']
+            user_id = user_data.id
             scores = await self.database.get_all_scores(user_id)
             all_beatmaps = await self.database.get_all_beatmaps()
             user_score_data = {}

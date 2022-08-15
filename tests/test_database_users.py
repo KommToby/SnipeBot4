@@ -1,27 +1,134 @@
 import pytest
 import os
 from database._init_db import Database
+from data_types.osu import *
 
 # Mock Data
 
 # osu api get user response
-friend_data = {
+friend_data = UserData({
     "id": 1,
     "username": "Komm",
     "country_code": "GB",
+    "country": {
+        "code": "GB",
+        "name": "United Kingdom"
+    },
+    "cover": {
+        "custom_url": 'https://assets.ppy.sh/user-profile-covers/7671790/10e75039cd0ee3e30b50877f90d3a8be4e324f8c8e0e79144d3a63481387f565.png',
+        "id": None,
+        "url": 'https://assets.ppy.sh/user-profile-covers/7671790/10e75039cd0ee3e30b50877f90d3a8be4e324f8c8e0e79144d3a63481387f565.png'
+    },
+    "account_history": [],
+    "active_tournament_banner": None,
+    "badges": [],
+    "beatmap_playcounts_count": 9894,
+    "comments_count": 62,
     "avatar_url": "https://a.ppy.sh/7671790?1650659121.jpeg",
     "is_supporter": 1,
     "cover_url": "https://assets.ppy.sh/user-profile-covers/7671790/10e75039cd0ee3e30b50877f90d3a8be4e324f8c8e0e79144d3a63481387f565.png",
-    "playmode": "osu"
-}
+    "playmode": "osu",
+    "favourite_beatmapset_count": 32,
+    "default_group": "",
+    "is_active": 1,
+    "is_bot": 0,
+    "is_deleted": 0,
+    "is_online": 1,
+    "last_visit": None,
+    "pm_friends_only": 0,
+    "profile_colour": None,
+    "discord": "Kommsu#4701",
+    "favourite_beatmap_count": 32,
+    "follower_count": 273,
+    "graveyard_beatmapset_count": 24,
+    "groups": [],
+    "guest_beatmapset_count": 0,
+    "has_supported": True,
+    "interests": "Clarz",
+    "join_date": '2015-12-31T22:29:55+00:00',
+    "kudosu": {
+        "available": 44,
+        "total": 44
+    },
+    "last_visit": '2022-08-10T19:23:54+00:00',
+    "location": "Scotland",
+    "loved_beatmapset_count": 0,
+    "mapping_follower_count": 6,
+    "max_blocks": 100,
+    "max_friends": 500,
+    "monthly_playcounts": [],
+    "occupation": "University Student",
+    "page": {
+        "html": "dummyhtml",
+        "raw": "dummymarkdown"
+    },
+    "pending_beatmapset_count": 1,
+    "playmode": "osu",
+    "playstyle": ["Keyboard", "Tablet"],
+    "pm_friends_only": False,
+    "post_count": 97,
+    "previous_usernames": ["TobyCharles", "Komm107"],
+    "profile_order": ['me', 'top_ranks', 'beatmaps', 'medals', 'recent_activity', 'historical', 'kudosu'],
+    "rankHistory": {
+        "mode": "osu",
+        "data": [1, 2, 3, 4]
+    },
+    "rank_history": {
+        "mode": "osu",
+        "data": [1, 2, 3, 4]
+    },
+    "ranked_and_approved_beatmapset_count": 0,
+    "ranked_beatmapset_count": 0,
+    "replays_watched_counts": [],
+    "scores_best_count": 100,
+    "scores_first_count": 0,
+    "scores_pinned_count": 13,
+    "scores_recent_count": 0,
+    "statistics": {
+        "country_rank": 399,
+        "global_rank": 11026,
+        "grade_counts": {
+            "a": 1187,
+            "s": 1909,
+            "sh": 1261,
+            "ss": 277,
+            "ssh": 415
+        },
+        "hit_accuracy": 99.1405,
+        "is_ranked": True,
+        "level": {
+            "current": 101,
+            "progress": 13
+        },
+        "maximum_combo": 3938,
+        "play_count": 52558,
+        "play_time": 3405118,
+        "pp": 7478.83,
+        "rank": {
+            "country": 399
+        },
+        "ranked_score": 43718434279,
+        "replays_watched_by_others": 233,
+        "total_score": 140797732815
+    },
+    "support_level": 3,
+    "title": None,
+    "title_url": None,
+    "twitter": "tobykomm",
+    "unranked_beatmapset_count": 1,
+    "user_achievements": [],
+    "website": "https://www.google.com"
+
+})
 friend_channel_id = 10
 
 # osu api get score response
-score_data = {
+score_data = OsuScore({
     'position': 959,
     'score': {
         'accuracy': 1,
         'created_at': '2021-10-09T20:13:54+00:00',
+        'best_id': None,
         'id': '3901735030',
         'max_combo': '533',
         'mode': 'osu',
@@ -42,12 +149,13 @@ score_data = {
             'count_miss': 0,
             'user_id': 1,
         },
+        'mode_int': 0,
         'current_user_attributes': {
             'pin': None
         },
         'beatmap': {
             'beatmapset_id': '993619',
-            'difficulty_rating': '3.89',
+            'difficulty_rating': 3.89,
             'id': 2077721,
             'mode': 'osu',
             'status': 'ranked',
@@ -99,7 +207,7 @@ score_data = {
             }
         }
     }
-}
+})
 
 # osu api get beatmap response
 beatmap_data = {
@@ -190,76 +298,79 @@ beatmap_data = {
 }
 
 
-async def delete_database(db):
-    db.db.close()
-    os.remove("test_database.db")
-
 
 def db_handler(func):
     async def inner_wrapper():
-        db = Database('test_database.db')
+        db_name = ":memory:"
+        db = Database(db_name)
         await func(db)
-        await delete_database(db)
     return inner_wrapper
 
 
 @pytest.mark.asyncio
 @db_handler
-async def test_db_add_friend(db):
+async def test_db_add_friend(db: Database):
     await db.add_friend(friend_channel_id, friend_data)
-    assert (await db.get_friend_username_from_username(friend_data['username'])) == ("Komm",)
+    friend_from_username = await db.get_friend_from_username(friend_data.username)
+    assert (friend_from_username[2] == "Komm")
+
 
 
 @pytest.mark.asyncio
 @db_handler
-async def test_db_add_delete_friend(db):
+async def test_db_add_delete_friend(db: Database):
     await db.add_friend(friend_channel_id, friend_data)
-    await db.delete_friend(friend_data['id'], friend_channel_id)
-    assert (await db.get_friend_username_from_username(friend_data['username'])) == None
+    await db.delete_friend(friend_data.id, friend_channel_id)
+    friend_database_data = await db.get_friend_from_username(friend_data.username)
+    assert friend_database_data is None
+
 
 
 @pytest.mark.asyncio
 @db_handler
-async def test_db_add_update_friend_username(db):
+async def test_db_add_update_friend_username(db: Database):
     await db.add_friend(friend_channel_id, friend_data)
-    friend_data['username'] = "Komm2"
-    await db.update_friend_username(friend_data['username'], friend_data['id'])
-    assert (await db.get_friend_username_from_username(friend_data['username'])) == ("Komm2",)
+    friend_data.username = "Komm2"
+    await db.update_friend_username(friend_data.username, friend_data.id)
+    friend_database_data = await db.get_friend_from_username(friend_data.username)
+    assert (friend_database_data[2]) == "Komm2"
+
 
 
 @pytest.mark.asyncio
 @db_handler
-async def test_db_add_new_score(db):
+async def test_db_add_new_score(db: Database):
     await db.add_score(
-        score_data['score']['user_id'],
-        score_data['score']['beatmap']['id'],
-        score_data['score']['score'],
-        score_data['score']['accuracy'],
-        score_data['score']['max_combo'],
-        score_data['score']['passed'],
-        score_data['score']['pp'],
-        score_data['score']['rank'],
-        score_data['score']['statistics']['count_300'],
-        score_data['score']['statistics']['count_100'],
-        score_data['score']['statistics']['count_50'],
-        score_data['score']['statistics']['count_miss'],
-        score_data['score']['created_at'],
+        score_data.score.user_id,
+        score_data.score.beatmap.id,
+        score_data.score.score,
+        score_data.score.accuracy,
+        score_data.score.max_combo,
+        score_data.score.passed,
+        score_data.score.pp,
+        score_data.score.rank,
+        score_data.score.statistics.count_300,
+        score_data.score.statistics.count_100,
+        score_data.score.statistics.count_50,
+        score_data.score.statistics.count_miss,
+        score_data.score.created_at,
         64,  # This is the mod integer value for DT
-        score_data['score']['beatmap']['difficulty_rating'],
-        score_data['score']['beatmap']['bpm']
+        score_data.score.beatmap.difficulty_rating,
+        score_data.score.beatmap.bpm
     )
-    database_score = await db.get_score(score_data['score']['user_id'], score_data['score']['beatmap']['id'])
+    database_score = await db.get_score(score_data.score.user_id, score_data.score.beatmap.id)
     assert type(database_score[0]) == int
-    assert database_score[0] == score_data['score']['user_id']
-    assert database_score[1] == score_data['score']['beatmap']['id']
+    assert database_score[0] == score_data.score.user_id
+    assert database_score[1] == score_data.score.beatmap.id
     assert database_score[13] == 64
-    assert database_score[14] == score_data['score']['beatmap']['difficulty_rating']
-    assert database_score[15] == score_data['score']['beatmap']['bpm']
+    assert database_score[14] == score_data.score.beatmap.difficulty_rating
+    assert database_score[15] == score_data.score.beatmap.bpm
+
 
 
 @pytest.mark.asyncio
 @db_handler
-async def test_db_get_converted_scores(db):
+async def test_db_get_converted_scores(db: Database):
     """
     Converted scores are scores that have been converted to the new snipebot format
     It is found by checking if the converted bpm has a value in the table
@@ -269,128 +380,130 @@ async def test_db_get_converted_scores(db):
     Returns as an array of beatmap ids as values, not tuples
     """
     await db.add_score(
-        score_data['score']['user_id'],
-        score_data['score']['beatmap']['id'],
-        score_data['score']['score'],
-        score_data['score']['accuracy'],
-        score_data['score']['max_combo'],
-        score_data['score']['passed'],
-        score_data['score']['pp'],
-        score_data['score']['rank'],
-        score_data['score']['statistics']['count_300'],
-        score_data['score']['statistics']['count_100'],
-        score_data['score']['statistics']['count_50'],
-        score_data['score']['statistics']['count_miss'],
-        score_data['score']['created_at'],
+        score_data.score.user_id,
+        score_data.score.beatmap.id,
+        score_data.score.score,
+        score_data.score.accuracy,
+        score_data.score.max_combo,
+        score_data.score.passed,
+        score_data.score.pp,
+        score_data.score.rank,
+        score_data.score.statistics.count_300,
+        score_data.score.statistics.count_100,
+        score_data.score.statistics.count_50,
+        score_data.score.statistics.count_miss,
+        score_data.score.created_at,
         64,  # This is the mod integer value for DT
-        score_data['score']['beatmap']['difficulty_rating'],
-        score_data['score']['beatmap']['bpm']
+        score_data.score.beatmap.difficulty_rating,
+        score_data.score.beatmap.bpm
     )
 
     await db.add_score(
-        score_data['score']['user_id'],
+        score_data.score.user_id,
         80,
-        score_data['score']['score'],
-        score_data['score']['accuracy'],
-        score_data['score']['max_combo'],
-        score_data['score']['passed'],
-        score_data['score']['pp'],
-        score_data['score']['rank'],
-        score_data['score']['statistics']['count_300'],
-        score_data['score']['statistics']['count_100'],
-        score_data['score']['statistics']['count_50'],
-        score_data['score']['statistics']['count_miss'],
-        score_data['score']['created_at'],
+        score_data.score.score,
+        score_data.score.accuracy,
+        score_data.score.max_combo,
+        score_data.score.passed,
+        score_data.score.pp,
+        score_data.score.rank,
+        score_data.score.statistics.count_300,
+        score_data.score.statistics.count_100,
+        score_data.score.statistics.count_50,
+        score_data.score.statistics.count_miss,
+        score_data.score.created_at,
         0,
         0,
         0
     )
 
-    converted_score = await db.get_converted_scores(score_data['score']['user_id'])
+    # this wont work with dictionary return because its fetchall
+    converted_score = await db.get_converted_scores(score_data.score.user_id)
     assert len(converted_score) == 1
-    assert converted_score[0] == score_data['score']['beatmap']['id']
+    assert converted_score[0][1] == score_data.score.beatmap.id
+
 
 
 @pytest.mark.asyncio
 @db_handler
-async def test_db_get_zero_scores(db):
+async def test_db_get_zero_scores(db: Database):
     await db.add_score(
-        score_data['score']['user_id'],
-        score_data['score']['beatmap']['id'],
-        score_data['score']['score'],
-        score_data['score']['accuracy'],
-        score_data['score']['max_combo'],
-        score_data['score']['passed'],
-        score_data['score']['pp'],
-        score_data['score']['rank'],
-        score_data['score']['statistics']['count_300'],
-        score_data['score']['statistics']['count_100'],
-        score_data['score']['statistics']['count_50'],
-        score_data['score']['statistics']['count_miss'],
-        score_data['score']['created_at'],
+        score_data.score.user_id,
+        score_data.score.beatmap.id,
+        score_data.score.score,
+        score_data.score.accuracy,
+        score_data.score.max_combo,
+        score_data.score.passed,
+        score_data.score.pp,
+        score_data.score.rank,
+        score_data.score.statistics.count_300,
+        score_data.score.statistics.count_100,
+        score_data.score.statistics.count_50,
+        score_data.score.statistics.count_miss,
+        score_data.score.created_at,
         64,  # This is the mod integer value for DT
-        score_data['score']['beatmap']['difficulty_rating'],
-        score_data['score']['beatmap']['bpm']
+        score_data.score.beatmap.difficulty_rating,
+        score_data.score.beatmap.bpm
     )
 
     await db.add_score(
-        score_data['score']['user_id'],
+        score_data.score.user_id,
         80,
-        score_data['score']['score'],
-        score_data['score']['accuracy'],
-        score_data['score']['max_combo'],
-        score_data['score']['passed'],
-        score_data['score']['pp'],
-        score_data['score']['rank'],
-        score_data['score']['statistics']['count_300'],
-        score_data['score']['statistics']['count_100'],
-        score_data['score']['statistics']['count_50'],
-        score_data['score']['statistics']['count_miss'],
-        score_data['score']['created_at'],
+        score_data.score.score,
+        score_data.score.accuracy,
+        score_data.score.max_combo,
+        score_data.score.passed,
+        score_data.score.pp,
+        score_data.score.rank,
+        score_data.score.statistics.count_300,
+        score_data.score.statistics.count_100,
+        score_data.score.statistics.count_50,
+        score_data.score.statistics.count_miss,
+        score_data.score.created_at,
         0,
         0,
         0
     )
 
     await db.add_score(
-        score_data['score']['user_id'],
+        score_data.score.user_id,
         75,
         0,
-        score_data['score']['accuracy'],
-        score_data['score']['max_combo'],
-        score_data['score']['passed'],
-        score_data['score']['pp'],
-        score_data['score']['rank'],
-        score_data['score']['statistics']['count_300'],
-        score_data['score']['statistics']['count_100'],
-        score_data['score']['statistics']['count_50'],
-        score_data['score']['statistics']['count_miss'],
-        score_data['score']['created_at'],
+        score_data.score.accuracy,
+        score_data.score.max_combo,
+        score_data.score.passed,
+        score_data.score.pp,
+        score_data.score.rank,
+        score_data.score.statistics.count_300,
+        score_data.score.statistics.count_100,
+        score_data.score.statistics.count_50,
+        score_data.score.statistics.count_miss,
+        score_data.score.created_at,
         0,
         0,
         0
     )
 
     await db.add_score(
-        score_data['score']['user_id'],
+        score_data.score.user_id,
         69420,
         0,
-        score_data['score']['accuracy'],
-        score_data['score']['max_combo'],
-        score_data['score']['passed'],
-        score_data['score']['pp'],
-        score_data['score']['rank'],
-        score_data['score']['statistics']['count_300'],
-        score_data['score']['statistics']['count_100'],
-        score_data['score']['statistics']['count_50'],
-        score_data['score']['statistics']['count_miss'],
-        score_data['score']['created_at'],
+        score_data.score.accuracy,
+        score_data.score.max_combo,
+        score_data.score.passed,
+        score_data.score.pp,
+        score_data.score.rank,
+        score_data.score.statistics.count_300,
+        score_data.score.statistics.count_100,
+        score_data.score.statistics.count_50,
+        score_data.score.statistics.count_miss,
+        score_data.score.created_at,
         0,
         0,
         0
     )
 
-    zero_scores = await db.get_zero_scores(score_data['score']['user_id'])
+    zero_scores = await db.get_zero_scores(score_data.score.user_id)
     assert len(zero_scores) == 2
     assert zero_scores[0] == 75
     assert zero_scores[1] == 69420

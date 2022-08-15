@@ -1,11 +1,14 @@
 import interactions
 import math
+from data_types.osu import UserData
 from embed.snipes import create_snipes_embed
+from data_types.interactions import CustomInteractionsClient
+from data_types.cogs import Cog
 
 
-class Snipes(interactions.Extension):  # must have interactions.Extension or this wont work
-    def __init__(self, client):
-        self.client: interactions.Client = client
+class Snipes(Cog):  # must have interactions.Extension or this wont work
+    def __init__(self, client: CustomInteractionsClient):
+        self.client = client
         self.osu = client.auth
         self.database = client.database
 
@@ -37,8 +40,8 @@ class Snipes(interactions.Extension):  # must have interactions.Extension or thi
             await ctx.send(f"{username} is the main user, and therefore cannot be sniped by themself!")
             return
         main_user_id = main_user_id_array[1]
-        user_sniped_array = await self.database.get_user_snipes(main_user_id, user_data['id'])
-        user_snipes_array = await self.database.get_user_snipes(user_data['id'], main_user_id)
+        user_sniped_array = await self.database.get_user_snipes(main_user_id, user_data.id)
+        user_snipes_array = await self.database.get_user_snipes(user_data.id, main_user_id)
         total_snipes_array = await self.database.get_main_user_snipes(main_user_id)
         position, pp, not_sniped_back, held_snipes = await self.handle_user_placements(main_user_id_array, user_data)
         embed = await create_snipes_embed(position, round(pp, 2), not_sniped_back, held_snipes, user_data, len(user_snipes_array), len(user_sniped_array), len(total_snipes_array))
@@ -55,7 +58,7 @@ class Snipes(interactions.Extension):  # must have interactions.Extension or thi
                 return False
             return username_array[0]
 
-    async def handle_user_placements(self, main_user_id_array, user_data):
+    async def handle_user_placements(self, main_user_id_array, user_data: UserData):
         leaderboard = []
         discord_channel = main_user_id_array[0]
         all_friends = await self.database.get_user_friends(discord_channel)
