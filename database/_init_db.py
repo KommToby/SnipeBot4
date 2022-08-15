@@ -6,15 +6,15 @@ class Database:
         self.cursor = self.db.cursor()
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS users(
-                discord_channel varchar(32) not null primary key,
-                osu_id varchar(32) not null,
+                discord_channel int not null primary key,
+                osu_id int not null,
                 username varchar(32),
                 country_code varchar(32),
                 avatar_url varchar(256),
                 is_supporter boolean,
                 cover_url varchar(256),
                 playmode varchar(32),
-                recent_score varchar(32)
+                recent_score int
             )
         ''')
 
@@ -22,11 +22,11 @@ class Database:
             CREATE TABLE IF NOT EXISTS scores(
                 user_id int not null,
                 beatmap_id int,
-                score varchar(32),
-                accuracy varchar(32),
-                max_combo varchar(32),
+                score int,
+                accuracy real,
+                max_combo int,
                 passed boolean,
-                pp varchar(16),
+                pp real,
                 rank varchar(16),
                 count_300 varchar(16),
                 count_100 varchar(16),
@@ -57,7 +57,7 @@ class Database:
 
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS beatmaps(
-                beatmap_id varchar(32) not null,
+                beatmap_id int not null,
                 stars int,
                 artist varchar(32),
                 song_name varchar(32),
@@ -68,10 +68,10 @@ class Database:
                 mapper varchar(32),
                 status varchar(16),
                 beatmapset_id varchar(32),
-                od varchar(16),
-                ar varchar(16),
-                cs varchar(16),
-                hp varchar(16)
+                od real,
+                ar real,
+                cs real,
+                hp real
             )
         ''')
 
@@ -94,8 +94,8 @@ class Database:
 
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS link(
-                discord_id varchar(32) not null,
-                osu_id varchar(32) not null,
+                discord_id int not null,
+                osu_id int not null,
                 ping boolean
             )
         ''')
