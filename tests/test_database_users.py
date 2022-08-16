@@ -129,7 +129,7 @@ score_data = OsuScore({
         'created_at': '2021-10-09T20:13:54+00:00',
         'best_id': None,
         'id': '3901735030',
-        'max_combo': '533',
+        'max_combo': 533,
         'mode': 'osu',
         'mods': ['DT'],
         'passed': True,
@@ -290,12 +290,11 @@ beatmap_data = Beatmap({
         'ratings': [0, 5, 3, 3, 0, 2, 3, 14, 26, 42, 260],
     },
     'failtimes': {
-            'fail': ['not adding this into tests rn'],
-            'exit': ['not adding this into tests rn']
-        },
+        'fail': ['not adding this into tests rn'],
+        'exit': ['not adding this into tests rn']
+    },
     'max_combo': 781
 })
-
 
 
 def db_handler(func):
@@ -308,11 +307,38 @@ def db_handler(func):
 
 @pytest.mark.asyncio
 @db_handler
-async def test_db_add_friend(db: Database):
+async def test_db_add_get_friend_from_username(db: Database):
     await db.add_friend(friend_channel_id, friend_data)
     friend_from_username = await db.get_friend_from_username(friend_data.username)
     assert (friend_from_username[2] == "Komm")
 
+@pytest.mark.asyncio
+@db_handler
+async def test_db_add_update_get_friend_recent_score(db: Database):
+    await db.add_friend(friend_channel_id, friend_data)
+    await db.update_friend_recent_score(friend_data.id, 69420)
+    friend_from_username = await db.get_friend_from_username(friend_data.username)
+    assert (friend_from_username[2] == "Komm")
+    assert friend_from_username[8] == 69420
+
+@pytest.mark.asyncio
+@db_handler
+async def test_db_add_update_get_friend_username(db: Database):
+    await db.add_friend(friend_channel_id, friend_data)
+    await db.update_friend_username("Jam", friend_data.id)
+    friend_from_username = await db.get_friend_from_username("Jam")
+    assert (friend_from_username[2] == "Jam")
+    assert friend_from_username[8] == 0
+
+@pytest.mark.asyncio
+@db_handler
+async def test_db_add_update_get_friend_leaderboard(db: Database):
+    await db.add_friend(friend_channel_id, friend_data)
+    await db.update_friend_leaderboard_score(friend_channel_id, friend_data.id, 727)
+    friend_from_username = await db.get_friend_from_username(friend_data.username)
+    assert (friend_from_username[2] == friend_data.username)
+    assert friend_from_username[8] == 0
+    assert friend_from_username[10] == 727
 
 
 @pytest.mark.asyncio
@@ -324,21 +350,9 @@ async def test_db_add_delete_friend(db: Database):
     assert friend_database_data is None
 
 
-
 @pytest.mark.asyncio
 @db_handler
-async def test_db_add_update_friend_username(db: Database):
-    await db.add_friend(friend_channel_id, friend_data)
-    friend_data.username = "Komm2"
-    await db.update_friend_username(friend_data.username, friend_data.id)
-    friend_database_data = await db.get_friend_from_username(friend_data.username)
-    assert (friend_database_data[2]) == "Komm2"
-
-
-
-@pytest.mark.asyncio
-@db_handler
-async def test_db_add_new_score(db: Database):
+async def test_db_add_get_score(db: Database):
     await db.add_score(
         score_data.score.user_id,
         score_data.score.beatmap.id,
@@ -365,6 +379,186 @@ async def test_db_add_new_score(db: Database):
     assert database_score[14] == score_data.score.beatmap.difficulty_rating
     assert database_score[15] == score_data.score.beatmap.bpm
 
+
+@pytest.mark.asyncio
+@db_handler
+async def test_db_add_update_get_score(db: Database):
+    await db.add_score(
+        score_data.score.user_id,
+        score_data.score.beatmap.id,
+        score_data.score.score,
+        score_data.score.accuracy,
+        score_data.score.max_combo,
+        score_data.score.passed,
+        score_data.score.pp,
+        score_data.score.rank,
+        score_data.score.statistics.count_300,
+        score_data.score.statistics.count_100,
+        score_data.score.statistics.count_50,
+        score_data.score.statistics.count_miss,
+        score_data.score.created_at,
+        64,  # This is the mod integer value for DT
+        score_data.score.beatmap.difficulty_rating,
+        score_data.score.beatmap.bpm
+    )
+    await db.update_score(
+        score_data.score.user_id,
+        score_data.score.beatmap.id,
+        score_data.score.score + 1,
+        score_data.score.accuracy + 0.5,
+        score_data.score.max_combo + 1,
+        score_data.score.passed,
+        score_data.score.pp + 5,
+        score_data.score.rank,
+        score_data.score.statistics.count_300,
+        score_data.score.statistics.count_100,
+        score_data.score.statistics.count_50,
+        score_data.score.statistics.count_miss,
+        score_data.score.created_at,
+        68,  # This is the mod integer value for DT
+        score_data.score.beatmap.difficulty_rating + 0.5,
+        score_data.score.beatmap.bpm + 100
+    )
+    database_score = await db.get_score(score_data.score.user_id, score_data.score.beatmap.id)
+    assert type(database_score[0]) == int
+    assert database_score[0] == score_data.score.user_id
+    assert database_score[1] == score_data.score.beatmap.id
+    assert database_score[13] == 68
+    assert database_score[14] == score_data.score.beatmap.difficulty_rating + 0.5
+    assert database_score[15] == score_data.score.beatmap.bpm + 100
+
+@pytest.mark.asyncio
+@db_handler
+async def test_db_add_update_get_score_zeros(db: Database):
+    await db.add_score(
+        score_data.score.user_id,
+        score_data.score.beatmap.id,
+        score_data.score.score,
+        score_data.score.accuracy,
+        score_data.score.max_combo,
+        score_data.score.passed,
+        score_data.score.pp,
+        score_data.score.rank,
+        score_data.score.statistics.count_300,
+        score_data.score.statistics.count_100,
+        score_data.score.statistics.count_50,
+        score_data.score.statistics.count_miss,
+        score_data.score.created_at,
+        64,  # This is the mod integer value for DT
+        score_data.score.beatmap.difficulty_rating,
+        score_data.score.beatmap.bpm
+    )
+    await db.update_score_zeros(
+        score_data.score.user_id,
+        score_data.score.beatmap.id,
+    )
+    database_score = await db.get_score(score_data.score.user_id, score_data.score.beatmap.id)
+    assert type(database_score[0]) == int
+    assert database_score[0] == score_data.score.user_id
+    assert database_score[1] == score_data.score.beatmap.id
+    assert database_score[13] == False
+    assert database_score[14] == False
+    assert database_score[15] == False
+
+
+@pytest.mark.asyncio
+@db_handler
+async def test_db_add_get_all_scores(db: Database):
+    for i in range(10):
+        await db.add_score(
+            score_data.score.user_id,
+            score_data.score.beatmap.id+i,
+            score_data.score.score,
+            score_data.score.accuracy,
+            score_data.score.max_combo,
+            score_data.score.passed,
+            score_data.score.pp,
+            score_data.score.rank,
+            score_data.score.statistics.count_300,
+            score_data.score.statistics.count_100,
+            score_data.score.statistics.count_50,
+            score_data.score.statistics.count_miss,
+            score_data.score.created_at,
+            64,  # This is the mod integer value for DT
+            score_data.score.beatmap.difficulty_rating,
+            score_data.score.beatmap.bpm
+        )
+    await db.add_score(
+        score_data.score.user_id,
+        score_data.score.beatmap.id+i,
+        0,
+        score_data.score.accuracy,
+        score_data.score.max_combo,
+        score_data.score.passed,
+        score_data.score.pp,
+        score_data.score.rank,
+        score_data.score.statistics.count_300,
+        score_data.score.statistics.count_100,
+        score_data.score.statistics.count_50,
+        score_data.score.statistics.count_miss,
+        score_data.score.created_at,
+        64,  # This is the mod integer value for DT
+        score_data.score.beatmap.difficulty_rating,
+        score_data.score.beatmap.bpm
+    )
+    database_score = await db.get_all_scores(score_data.score.user_id)
+    assert len(database_score) == 10
+    assert type(database_score[0][0]) == int
+    assert database_score[0][0] == score_data.score.user_id
+    assert database_score[0][1] == score_data.score.beatmap.id
+    assert database_score[0][13] == 64
+    assert database_score[0][14] == score_data.score.beatmap.difficulty_rating
+    assert database_score[0][15] == score_data.score.beatmap.bpm
+
+
+@pytest.mark.asyncio
+@db_handler
+async def test_db_add_get_all_scores_all_users_with_zeros(db: Database):
+    for i in range(10):
+        await db.add_score(
+            score_data.score.user_id,
+            score_data.score.beatmap.id+i,
+            score_data.score.score,
+            score_data.score.accuracy,
+            score_data.score.max_combo,
+            score_data.score.passed,
+            score_data.score.pp,
+            score_data.score.rank,
+            score_data.score.statistics.count_300,
+            score_data.score.statistics.count_100,
+            score_data.score.statistics.count_50,
+            score_data.score.statistics.count_miss,
+            score_data.score.created_at,
+            64,  # This is the mod integer value for DT
+            score_data.score.beatmap.difficulty_rating,
+            score_data.score.beatmap.bpm
+        )
+    await db.add_score(
+        score_data.score.user_id,
+        score_data.score.beatmap.id+i,
+        0,
+        score_data.score.accuracy,
+        score_data.score.max_combo,
+        score_data.score.passed,
+        score_data.score.pp,
+        score_data.score.rank,
+        score_data.score.statistics.count_300,
+        score_data.score.statistics.count_100,
+        score_data.score.statistics.count_50,
+        score_data.score.statistics.count_miss,
+        score_data.score.created_at,
+        64,  # This is the mod integer value for DT
+        score_data.score.beatmap.difficulty_rating,
+        score_data.score.beatmap.bpm
+    )
+    database_score = await db.get_all_scores_all_users_with_zeros()
+    assert len(database_score) == 11
+    assert type(database_score[0][0]) == int
+    assert database_score[0][0] == score_data.score.user_id
+    assert database_score[0][1] == score_data.score.beatmap.id
+    assert database_score[0][13] == 64
+    assert database_score[0][14] == score_data.score.beatmap.difficulty_rating
+    assert database_score[0][15] == score_data.score.beatmap.bpm
 
 
 @pytest.mark.asyncio
@@ -420,7 +614,6 @@ async def test_db_get_converted_scores(db: Database):
     converted_score = await db.get_converted_scores(score_data.score.user_id)
     assert len(converted_score) == 1
     assert converted_score[0][1] == score_data.score.beatmap.id
-
 
 
 @pytest.mark.asyncio
@@ -510,7 +703,7 @@ async def test_db_get_zero_scores(db: Database):
 
 @pytest.mark.asyncio
 @db_handler
-async def test_db_add_get_link(db):
+async def test_db_add_get_link(db: Database):
     await db.add_link(
         191602759504625674,
         score_data.score.user_id
@@ -524,7 +717,44 @@ async def test_db_add_get_link(db):
 
 @pytest.mark.asyncio
 @db_handler
-async def test_db_get_discord_id_from_link(db):
+async def test_db_add_update_get_link(db: Database):
+    await db.add_link(
+        191602759504625674,
+        score_data.score.user_id
+    )
+
+    await db.update_link(
+        191602759504625674,
+        1234
+    )
+
+    link = await db.get_link(191602759504625674)
+    assert link[0] == 191602759504625674
+    assert link[1] == 1234
+    assert link[2] == False
+
+@pytest.mark.asyncio
+@db_handler
+async def test_db_add_update_get_link_ping(db: Database):
+    await db.add_link(
+        191602759504625674,
+        score_data.score.user_id
+    )
+
+    await db.update_ping(
+        True,
+        191602759504625674,
+    )
+
+    link = await db.get_link(191602759504625674)
+    assert link[0] == 191602759504625674
+    assert link[1] == score_data.score.user_id
+    assert link[2] == True
+
+
+@pytest.mark.asyncio
+@db_handler
+async def test_db_get_discord_id_from_link(db: Database):
     await db.add_link(
         191602759504625674,
         score_data.score.user_id
@@ -538,7 +768,7 @@ async def test_db_get_discord_id_from_link(db):
 
 @pytest.mark.asyncio
 @db_handler
-async def test_db_add_get_channel(db):
+async def test_db_add_get_channel(db: Database):
     await db.add_channel(
         843020728773378070,
         friend_data
@@ -550,7 +780,54 @@ async def test_db_add_get_channel(db):
 
 @pytest.mark.asyncio
 @db_handler
-async def test_db_add_get_beatmap(db):
+async def test_db_add_update_get_channel_user_recent_score(db: Database):
+    await db.add_channel(
+        843020728773378070,
+        friend_data
+    )
+    await db.update_main_recent_score(
+        friend_data.id,
+        69420
+    )
+    channel = await db.get_channel(843020728773378070)
+    assert channel[0] == 843020728773378070
+    assert channel[2] == friend_data.username
+    assert channel[8] == 69420
+
+
+@pytest.mark.asyncio
+@db_handler
+async def test_db_add_get_all_users(db: Database):
+    await db.add_channel(
+        843020728773378070,
+        friend_data
+    )
+    await db.add_channel(
+        843020728773378071,
+        friend_data
+    )
+    users = await db.get_all_users()
+    assert len(users) == 2
+    assert users[0][0] == 843020728773378070
+    assert users[0][2] == friend_data.username
+    assert users[0][8] == 0
+    assert users[1][0] == 843020728773378071
+
+
+@pytest.mark.asyncio
+@db_handler
+async def test_db_add_get_main_recent_score(db: Database):
+    await db.add_channel(
+        843020728773378070,
+        friend_data
+    )
+    recent_score = await db.get_main_recent_score(friend_data.id)
+    assert recent_score[0] == 0
+
+
+@pytest.mark.asyncio
+@db_handler
+async def test_db_add_get_beatmap(db: Database):
     await db.add_beatmap(
         beatmap_data.id,
         beatmap_data.difficulty_rating,
@@ -571,3 +848,349 @@ async def test_db_add_get_beatmap(db):
     beatmap = await db.get_beatmap(beatmap_data.id)
     assert beatmap[0] == beatmap_data.id
     assert beatmap[14] == beatmap_data.drain
+
+
+@pytest.mark.asyncio
+@db_handler
+async def test_db_add_get_all_beatmaps(db: Database):
+    for i in range(10):
+        await db.add_beatmap(
+            beatmap_data.id+i,
+            beatmap_data.difficulty_rating,
+            beatmap_data.beatmapset.artist,
+            beatmap_data.beatmapset.title,
+            beatmap_data.version,
+            beatmap_data.url,
+            beatmap_data.total_length,
+            beatmap_data.bpm,
+            beatmap_data.beatmapset.creator,
+            beatmap_data.status,
+            beatmap_data.beatmapset.id,
+            beatmap_data.accuracy,
+            beatmap_data.ar,
+            beatmap_data.cs,
+            beatmap_data.drain
+        )
+    beatmaps = await db.get_all_beatmaps()
+    assert len(beatmaps) == 10
+    assert beatmaps[0][0] == beatmap_data.id
+    assert beatmaps[5][14] == beatmap_data.drain
+
+
+@pytest.mark.asyncio
+@db_handler
+async def test_db_get_user_from_channel(db: Database):
+    await db.add_channel(
+        843020728773378070,
+        friend_data
+    )
+    user = await db.get_user_from_channel(843020728773378070)
+    assert user[0] == 843020728773378070
+    assert user[2] == friend_data.username
+
+
+@pytest.mark.asyncio
+@db_handler
+async def test_db_get_channel_from_username(db: Database):
+    await db.add_channel(
+        843020728773378070,
+        friend_data
+    )
+    user = await db.get_channel_from_username(friend_data.username)
+    assert user[0] == 843020728773378070
+    assert user[2] == friend_data.username
+
+
+@pytest.mark.asyncio
+@db_handler
+async def test_db_add_get_snipe(db: Database):
+    await db.add_snipe(
+        7671790,
+        3601629,
+        7562902,
+        score_data.score.created_at,
+        score_data.score.score,
+        score_data.score.score + 1,
+        score_data.score.accuracy,
+        score_data.score.accuracy + 1,
+        64,
+        16,
+        score_data.score.pp,
+        score_data.score.pp + 1
+    )
+    snipe = await db.get_snipe(7671790, 3601629, 7562902)
+    assert snipe[0] == 7671790
+    assert snipe[3] == score_data.score.created_at
+    assert snipe[5] == score_data.score.score + 1
+    assert snipe[8] == 64
+
+
+@pytest.mark.asyncio
+@db_handler
+async def test_db_get_user_friends(db: Database):
+    await db.add_friend(friend_channel_id, friend_data)
+    await db.add_friend(friend_channel_id, friend_data)
+    await db.add_friend(friend_channel_id, friend_data)
+    friends = await db.get_user_friends(friend_channel_id)
+    assert len(friends) == 3
+    assert friends[0][0] == friend_channel_id
+
+
+@pytest.mark.asyncio
+@db_handler
+async def test_db_get_user_beatmap_play(db: Database):
+    await db.add_score(
+        score_data.score.user_id,
+        score_data.score.beatmap.id,
+        score_data.score.score,
+        score_data.score.accuracy,
+        score_data.score.max_combo,
+        score_data.score.passed,
+        score_data.score.pp,
+        score_data.score.rank,
+        score_data.score.statistics.count_300,
+        score_data.score.statistics.count_100,
+        score_data.score.statistics.count_50,
+        score_data.score.statistics.count_miss,
+        score_data.score.created_at,
+        64,  # This is the mod integer value for DT
+        score_data.score.beatmap.difficulty_rating,
+        score_data.score.beatmap.bpm
+    )
+    beatmap_play = await db.get_user_beatmap_play(score_data.score.user_id, score_data.score.beatmap.id)
+    assert beatmap_play[0] == score_data.score.user.id
+    assert beatmap_play[1] == score_data.score.beatmap.id
+    assert beatmap_play[6] == score_data.score.pp
+
+
+
+
+@pytest.mark.asyncio
+@db_handler
+async def test_db_get_user_snipe_on_beatmap(db: Database):
+    await db.add_snipe(
+        7671790,
+        3601629,
+        7562902,
+        score_data.score.created_at,
+        score_data.score.score,
+        score_data.score.score + 1,
+        score_data.score.accuracy,
+        score_data.score.accuracy + 1,
+        64,
+        16,
+        score_data.score.pp,
+        score_data.score.pp + 1
+    )
+    snipe = await db.get_user_snipe_on_beatmap(7671790, 3601629, 7562902)
+    assert snipe[0] == 7671790
+
+
+@pytest.mark.asyncio
+@db_handler
+async def test_db_get_user_score_with_zeros(db: Database):
+    await db.add_score(
+        score_data.score.user_id,
+        score_data.score.beatmap.id,
+        0,
+        score_data.score.accuracy,
+        score_data.score.max_combo,
+        score_data.score.passed,
+        score_data.score.pp,
+        score_data.score.rank,
+        score_data.score.statistics.count_300,
+        score_data.score.statistics.count_100,
+        score_data.score.statistics.count_50,
+        score_data.score.statistics.count_miss,
+        score_data.score.created_at,
+        64,  # This is the mod integer value for DT
+        score_data.score.beatmap.difficulty_rating,
+        score_data.score.beatmap.bpm
+    )
+    scores = await db.get_user_score_with_zeros(score_data.score.user_id, score_data.score.beatmap.id)
+    assert scores[0] == score_data.score.user.id
+    assert scores[1] == score_data.score.beatmap.id
+    assert scores[2] == 0
+    assert scores[3] == score_data.score.accuracy
+
+
+@pytest.mark.asyncio
+@db_handler
+async def test_db_get_all_friends(db: Database):
+    await db.add_friend(friend_channel_id, friend_data)
+    await db.add_friend(friend_channel_id, friend_data)
+    await db.add_friend(friend_channel_id, friend_data)
+    friends = await db.get_all_friends()
+    assert len(friends) == 3
+    assert friends[0][0] == friend_channel_id
+
+
+@pytest.mark.asyncio
+@db_handler
+async def test_db_get_friend_recent_score(db: Database):
+    await db.add_friend(friend_channel_id, friend_data)
+    friend_recent_score = await db.get_friend_recent_score(friend_data.id)
+    assert friend_recent_score[0] == 0
+
+
+@pytest.mark.asyncio
+@db_handler
+async def test_db_get_friend_from_channel(db: Database):
+    await db.add_friend(friend_channel_id, friend_data)
+    friend = await db.get_friend_from_channel(friend_data.id, friend_channel_id)
+    assert friend[0] == friend_channel_id
+    assert friend[3] == friend_data.country_code
+
+
+@pytest.mark.asyncio
+@db_handler
+async def test_db_get_main_user_friends(db: Database):
+    await db.add_friend(friend_channel_id, friend_data)
+    await db.add_friend(friend_channel_id, friend_data)
+    await db.add_friend(friend_channel_id, friend_data)
+    friends = await db.get_main_user_friends(friend_channel_id)
+    assert len(friends) == 3
+    assert friends[0][0] == friend_channel_id
+
+@pytest.mark.asyncio
+@db_handler
+async def test_db_get_main_user_score_on_beatmap(db: Database):
+    await db.add_score(
+        score_data.score.user_id,
+        score_data.score.beatmap.id,
+        score_data.score.score,
+        score_data.score.accuracy,
+        score_data.score.max_combo,
+        score_data.score.passed,
+        score_data.score.pp,
+        score_data.score.rank,
+        score_data.score.statistics.count_300,
+        score_data.score.statistics.count_100,
+        score_data.score.statistics.count_50,
+        score_data.score.statistics.count_miss,
+        score_data.score.created_at,
+        64,  # This is the mod integer value for DT
+        score_data.score.beatmap.difficulty_rating,
+        score_data.score.beatmap.bpm
+    )
+    score = await db.get_user_score_on_beatmap(score_data.score.user_id, score_data.score.beatmap.id, score_data.score.score)
+    assert score[0] == score_data.score.user.id
+    assert score[1] == score_data.score.beatmap.id
+    assert score[6] == score_data.score.pp
+
+
+@pytest.mark.asyncio
+@db_handler
+async def test_db_get_friend_leaderboard_score(db: Database):
+    await db.add_friend(friend_channel_id, friend_data)
+    lb = await db.get_friend_leaderboard_score(friend_data.id)
+    assert lb[0] == 0
+
+@pytest.mark.asyncio
+@db_handler
+async def test_db_get_user_snipes(db: Database):
+    await db.add_snipe(
+        7671790,
+        3601629,
+        7562902,
+        score_data.score.created_at,
+        score_data.score.score,
+        score_data.score.score + 1,
+        score_data.score.accuracy,
+        score_data.score.accuracy + 1,
+        64,
+        16,
+        score_data.score.pp,
+        score_data.score.pp + 1
+    )
+    snipes = await db.get_user_snipes(7671790, 7562902)
+    assert len(snipes) == 1
+    assert snipes[0][0] == 7671790
+    assert snipes[0][3] == score_data.score.created_at
+    assert snipes[0][11] == score_data.score.pp + 1
+
+@pytest.mark.asyncio
+@db_handler
+async def test_db_get_main_user_snipes(db: Database):
+    await db.add_snipe(
+        7671790,
+        3601629,
+        7562902,
+        score_data.score.created_at,
+        score_data.score.score,
+        score_data.score.score + 1,
+        score_data.score.accuracy,
+        score_data.score.accuracy + 1,
+        64,
+        16,
+        score_data.score.pp,
+        score_data.score.pp + 1
+    )
+    await db.add_snipe(
+        12345,
+        3601629,
+        7671790,
+        score_data.score.created_at,
+        score_data.score.score,
+        score_data.score.score + 1,
+        score_data.score.accuracy,
+        score_data.score.accuracy + 1,
+        64,
+        16,
+        score_data.score.pp,
+        score_data.score.pp + 1
+    )
+    main_user_snipes = await db.get_main_user_snipes(7671790)
+    assert len(main_user_snipes) == 1
+    assert main_user_snipes[0][0] == 7671790
+    assert main_user_snipes[0][3] == score_data.score.created_at
+    assert main_user_snipes[0][11] == score_data.score.pp + 1
+
+@pytest.mark.asyncio
+@db_handler
+async def test_db_get_main_user_sniped(db: Database):
+    await db.add_snipe(
+        7671790,
+        3601629,
+        7562902,
+        score_data.score.created_at,
+        score_data.score.score,
+        score_data.score.score + 1,
+        score_data.score.accuracy,
+        score_data.score.accuracy + 1,
+        64,
+        16,
+        score_data.score.pp,
+        score_data.score.pp + 1
+    )
+    await db.add_snipe(
+        12345,
+        3601629,
+        7671790,
+        score_data.score.created_at,
+        score_data.score.score,
+        score_data.score.score + 1,
+        score_data.score.accuracy,
+        score_data.score.accuracy + 1,
+        64,
+        16,
+        score_data.score.pp,
+        score_data.score.pp + 1
+    )
+    main_user_snipes = await db.get_main_user_sniped(7671790)
+    assert len(main_user_snipes) == 1
+    assert main_user_snipes[0][0] == 12345
+    assert main_user_snipes[0][3] == score_data.score.created_at
+    assert main_user_snipes[0][11] == score_data.score.pp + 1
+
+@pytest.mark.asyncio
+@db_handler
+async def test_db_get_linked_user_osu_id(db: Database):
+    await db.add_link(
+        191602759504625674,
+        score_data.score.user_id
+    )
+    linked_user_osu_id = await db.get_linked_user_osu_id(191602759504625674)
+    assert linked_user_osu_id[0] == score_data.score.user_id
+
+

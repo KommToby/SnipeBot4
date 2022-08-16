@@ -418,7 +418,7 @@ class SnipeTracker:
                 # note, this cant be the main user on another server, since the main user play score would have to be identical for a new high score
                 local_score = await self.database.get_score(friend_id, beatmap_id)
                 # if its their new best
-                if int(play[2]) > int(local_score.score):
+                if int(play.score) > int(local_score[2]):
                     conv_stars, conv_bpm = await self.convert_stars_and_bpm(play)
                     await self.database.update_score(friend_id, beatmap_id, play.score, play.accuracy, play.max_combo, play.passed, play.pp, play.rank, play.statistics.count_300, play.statistics.count_300, play.statistics.count_50, play.statistics.count_miss, play.created_at, await self.convert_mods_to_int(play.mods), conv_stars, conv_bpm)
                     # now we check if the user has got a snipe on this beatmap before
@@ -462,33 +462,34 @@ class SnipeTracker:
                 friend_play = await self.osu.get_score_data(data.id, friend[1])
                 if friend_play:
                     converted_stars = 0
-                converted_bpm = 0
-                if not(await self.convert_mods_to_int(friend_play.score.mods) > 15):
-                    await self.database.add_score(friend[1], data.id, 0, False, False, False, False, False, False, False, False, False, False, False, 0, 0)
-                    continue
-                if "DT" in friend_play.score.mods or "NC" in friend_play.score.mods:
-                    converted_bpm = int(
-                        friend_play.score.beatmap.bpm) * 1.5
-                beatmap_mod_data = await self.osu.get_beatmap_mods(friend_play.score.beatmap.id, await self.convert_mods_to_int(friend_play.score.mods))
-                if beatmap_mod_data:
-                    converted_stars = beatmap_mod_data.attributes.star_rating
-                await self.database.add_score(friend[1], friend_play.score.beatmap.id, friend_play.score.score, friend_play.score.accuracy, friend_play.score.max_combo, friend_play.score.passed, friend_play.score.pp, friend_play.score.rank, friend_play.score.statistics.count_300, friend_play.score.statistics.count_100, friend_play.score.statistics.count_50, friend_play.score.statistics.count_miss, friend_play.score.created_at, await self.convert_mods_to_int(friend_play.score.mods))
-                if await self.convert_datetime_to_int(friend_play.score.created_at) > await self.convert_datetime_to_int(main_play.score.created_at):
-                    # this means friend has sniped main play if they got higher score
-                    if friend_play.score.score > main_play.score.score:
-                        # a passive snipe, but we need to check if they have sniped before
-                        if not(await self.database.get_snipe(friend[1], friend_play.score.beatmap.id, main_user[1])):
-                            # now its a first-time snipe
-                            first_mods = await self.convert_mods_to_int(friend_play.score.mods)
-                            second_mods = await self.convert_mods_to_int(main_play.score.mods)
-                            await self.database.add_snipe(friend[1], friend_play.score.beatmap.id, main_user[1], friend_play.score.created_at, friend_play.score.score, main_play.score.score, friend_play.score.accuracy, main_play.score.accuracy, first_mods, second_mods, friend_play.score.pp, main_play.score.pp)
-                    else:
-                        if friend_play.score.score < main_play.score.score:
-                            # a passive snipe from the main user onto the friend
-                            if not(await self.database.get_snipe(main_user[1], friend_play.score.beatmap.id, friend[1])):
-                                first_mods = await self.convert_mods_to_int(main_play.score.mods)
-                                second_mods = await self.convert_mods_to_int(friend_play.score.mods)
-                                await self.database.add_snipe(main_user[1], friend_play.score.beatmap.id, friend[1], main_play.score.created_at, main_play.score.score, friend_play.score.score, main_play.score.accuracy, friend_play.score.accuracy, first_mods, second_mods, main_play.score.pp, friend_play.score.pp)
+                    friend_play.score.mods = 0
+                    converted_bpm = 0
+                    if not(await self.convert_mods_to_int(friend_play.score.mods) > 15):
+                        await self.database.add_score(friend[1], data.id, 0, False, False, False, False, False, False, False, False, False, False, False, 0, 0)
+                        continue
+                    if "DT" in friend_play.score.mods or "NC" in friend_play.score.mods:
+                        converted_bpm = int(
+                            friend_play.score.beatmap.bpm) * 1.5
+                    beatmap_mod_data = await self.osu.get_beatmap_mods(friend_play.score.beatmap.id, await self.convert_mods_to_int(friend_play.score.mods))
+                    if beatmap_mod_data:
+                        converted_stars = beatmap_mod_data.attributes.star_rating
+                    await self.database.add_score(friend[1], friend_play.score.beatmap.id, friend_play.score.score, friend_play.score.accuracy, friend_play.score.max_combo, friend_play.score.passed, friend_play.score.pp, friend_play.score.rank, friend_play.score.statistics.count_300, friend_play.score.statistics.count_100, friend_play.score.statistics.count_50, friend_play.score.statistics.count_miss, friend_play.score.created_at, await self.convert_mods_to_int(friend_play.score.mods))
+                    if await self.convert_datetime_to_int(friend_play.score.created_at) > await self.convert_datetime_to_int(main_play.score.created_at):
+                        # this means friend has sniped main play if they got higher score
+                        if friend_play.score.score > main_play.score.score:
+                            # a passive snipe, but we need to check if they have sniped before
+                            if not(await self.database.get_snipe(friend[1], friend_play.score.beatmap.id, main_user[1])):
+                                # now its a first-time snipe
+                                first_mods = await self.convert_mods_to_int(friend_play.score.mods)
+                                second_mods = await self.convert_mods_to_int(main_play.score.mods)
+                                await self.database.add_snipe(friend[1], friend_play.score.beatmap.id, main_user[1], friend_play.score.created_at, friend_play.score.score, main_play.score.score, friend_play.score.accuracy, main_play.score.accuracy, first_mods, second_mods, friend_play.score.pp, main_play.score.pp)
+                        else:
+                            if friend_play.score.score < main_play.score.score:
+                                # a passive snipe from the main user onto the friend
+                                if not(await self.database.get_snipe(main_user[1], friend_play.score.beatmap.id, friend[1])):
+                                    first_mods = await self.convert_mods_to_int(main_play.score.mods)
+                                    second_mods = await self.convert_mods_to_int(friend_play.score.mods)
+                                    await self.database.add_snipe(main_user[1], friend_play.score.beatmap.id, friend[1], main_play.score.created_at, main_play.score.score, friend_play.score.score, main_play.score.accuracy, friend_play.score.accuracy, first_mods, second_mods, main_play.score.pp, friend_play.score.pp)
 
     async def check_duplicate_friends(self, friends: list, main_users: list):
         for friend in friends:

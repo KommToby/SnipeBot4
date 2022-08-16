@@ -42,7 +42,7 @@ class Database:
 
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS friends(
-                discord_channel varchar(32) not null,
+                discord_channel int not null,
                 osu_id int not null,
                 username varchar(32),
                 country_code varchar(32),
@@ -174,7 +174,7 @@ class Database:
             "SELECT * FROM scores WHERE user_id=? AND score!=?",
             (user_id, 0)).fetchall()
 
-    async def get_all_scores_all_users_with_zeros(self): # does not include 0s
+    async def get_all_scores_all_users_with_zeros(self): # does include 0s
         return self.cursor.execute(
             "SELECT * FROM scores").fetchall()
     
@@ -316,7 +316,7 @@ class Database:
         )
         self.db.commit()
 
-    async def update_ping(self, ping, discord_id):
+    async def update_ping(self, ping: bool, discord_id):
         self.cursor.execute(
             "UPDATE link SET ping=? WHERE discord_id=?",
             (ping, discord_id)
