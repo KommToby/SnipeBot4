@@ -3,6 +3,7 @@ import interactions
 from embed.stats import create_stats_embed
 from data_types.interactions import CustomInteractionsClient
 from data_types.cogs import Cog
+from data_types.osu import *
 
 
 class Stats(Cog):  # must have commands.cog or this wont work

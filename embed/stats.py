@@ -1,4 +1,5 @@
 import interactions, random
+from data_types.osu import *
 
 async def update_decode(modint, value, modarray, mod):
     modarray.append(mod)
@@ -7,6 +8,8 @@ async def update_decode(modint, value, modarray, mod):
 
 async def decode_mods_to_array(modint): # converts mod integer back into array of mods
     modarray = []
+    if modint == '':
+        return modarray
     modint = int(modint)
     moddict = {
         16384: "PF",
@@ -43,20 +46,20 @@ async def frequency_check(array):
             title = i
     return title, best_occurences
 
-async def create_stats_embed(user, user_score_data, top_ten_artists, scores):
+async def create_stats_embed(user: UserData, user_score_data, top_ten_artists, scores):
     embed = interactions.Embed(
-        title=f"osu! stats for {user['username']}",
+        title=f"osu! stats for {user.username}",
         color=16737962,
     )
     embed.set_author(name="Snipebot by Komm",
-                    icon_url=f"https://osu.ppy.sh/images/flags/{user['country_code']}.png")
+                    icon_url=f"https://osu.ppy.sh/images/flags/{user.country_code}.png")
     
-    if user['avatar_url'][0] == "/":
-        embed.set_thumbnail(url=f"https://osu.ppy.sh{user['avatar_url']}")
+    if user.avatar_url[0] == "/":
+        embed.set_thumbnail(url=f"https://osu.ppy.sh{user.avatar_url}")
     else:
-        embed.set_thumbnail(url=user['avatar_url'])
+        embed.set_thumbnail(url=user.avatar_url)
 
-    artist_string = f"\n__**{user['username']}'s top 10 most popular Artists:**__\n```\n"
+    artist_string = f"\n__**{user.username}'s top 10 most popular Artists:**__\n```\n"
     for _, artist in enumerate(top_ten_artists):
         artist_string += f"{artist[0]} ({artist[1]})\n"
     artist_string = artist_string + "```"
@@ -82,8 +85,13 @@ async def create_stats_embed(user, user_score_data, top_ten_artists, scores):
     best_mod_string = best_mod_string
 
     embed.description = artist_string
-
-    embed.add_field(name=f"Average SR of all your stored plays: `{round((sum(user_score_data['stars'])/len(user_score_data['stars'])), 2)}` ({len(scores)} stored plays!)\nAverage length of stored plays: `{average_map_length_string}`\nAverage BPM of stored plays: `{round((sum(user_score_data['bpm'])/len(user_score_data['bpm'])), 2)}`",
+    average_sr = round(sum(user_score_data['stars'])/len(user_score_data['stars']), 2)
+    # check to see if bpm values exist
+    if user_score_data['bpm'] == []:
+        average_bpm = "N/A"
+    else:
+        average_bpm = round(sum(user_score_data['bpm'])/len(user_score_data['bpm']))
+    embed.add_field(name=f"Average SR of all your stored plays: `{average_sr}` ({len(scores)} stored plays!)\nAverage length of stored plays: `{average_map_length_string}`\nAverage BPM of stored plays: `{average_bpm}`",
                     value=f"**Most played song: `{best_song}` ({best_song_freq} instances)**\n**Favourite guest difficulty mapper: `{best_guest}` ({best_guest_freq} instances)**\n**Favourite mapper: `{best_mapper}` ({best_mapper_freq} instances)**\n**Favourite mod combination: `{best_mod_string}` ({best_mod_freq} instances)**")
 
     ## I got bullied into this
