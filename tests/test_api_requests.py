@@ -1,5 +1,6 @@
 import pytest
 from osu_auth.auth import Auth
+from os.path import exists
 
 # Note that most of these will FAIL the pipeline because there will be no api key
 # Stored on the github repo, so they will fail to authenticate.
@@ -7,7 +8,7 @@ from osu_auth.auth import Auth
 
 def auth_handler(func):
     # skip the test if there is no api key
-    @pytest.mark.skipif(Auth().api_key == None, reason="No api key")
+    @pytest.mark.skipif(not exists("config.json"), reason="No config.json file")
     async def inner_wrapper():
         auth = Auth()
         await func(auth)
