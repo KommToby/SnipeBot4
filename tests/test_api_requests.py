@@ -16,6 +16,7 @@ def auth_handler(func):
 
 
 @pytest.mark.asyncio
+@pytest.mark.skipif(not exists("config.json"), reason="No config.json file")
 async def test_create_auth():
     auth = Auth()
 
