@@ -12,6 +12,13 @@ This is in a seperate repo as it is a major update, the whole of SnipeBot3 was b
 - **interactions-py**: The framework of the bot - `pip install -U discord-py-interactions`  
 - **interactions-get**: An extension that allows additional api requests from discord - `pip install -u interactions-get`  
 
+<!-- mention contributors -->
+## Contributors
+- [KommToby](https://github.com/KommToby) - Creator & Bot Maintainer
+- [Wimble](https://github.com/macha-dev) - Website Maintainer
+- [Jamgyo](https://github.com/jamiegyoung) - Contributor
+- [ito](https://github.com/largereptile) - Contributor
+
 ## FAQ
 **Will my data from SnipeBot3 be moved over?**  
 Yes. The old data should all be compatable with the new version
