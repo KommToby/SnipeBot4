@@ -28,6 +28,7 @@ class SnipeTracker:
         hour = date[0]
         minute = date[1]
         date = date[2].split("+")
+        date = date[0].split("z")
         second = date[0]
         return int(second)+60*int(minute)+3600*int(hour)+86400*int(day)+2678400*int(month)+31536000*int(year)
 
