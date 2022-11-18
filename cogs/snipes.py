@@ -44,6 +44,9 @@ class Snipes(Cog):  # must have interactions.Extension or this wont work
         user_snipes_array = await self.database.get_user_snipes(user_data.id, main_user_id)
         total_snipes_array = await self.database.get_main_user_snipes(main_user_id)
         position, pp, not_sniped_back, held_snipes = await self.handle_user_placements(main_user_id_array, user_data)
+        if position == -1:
+            await ctx.send(f"{username} is not a friend of the main user!")
+            return
         embed = await create_snipes_embed(position, round(pp, 2), not_sniped_back, held_snipes, user_data, len(user_snipes_array), len(user_sniped_array), len(total_snipes_array))
         await ctx.send(embeds=embed)
 
@@ -69,13 +72,16 @@ class Snipes(Cog):  # must have interactions.Extension or this wont work
         leaderboard.sort(
             reverse=True, key=lambda friends_data: friends_data['snipe_pp']
         )
+        friend_dict = [] # Initialisation for a check later
         for _, friend_leaderboard_data in enumerate(leaderboard):
-            if friend_leaderboard_data['username'] == user_data['username']:
+            if friend_leaderboard_data['username'] == user_data.username:
                 friend_dict = friend_leaderboard_data
                 snipe_pp = friend_leaderboard_data['snipe_pp']
                 not_sniped_back = friend_leaderboard_data['not_sniped_back']
                 held_snipes = friend_leaderboard_data['held_snipes']
                 break
+        if friend_dict == []:
+            return -1, 0, 0, 0
         return leaderboard.index(friend_dict), snipe_pp, not_sniped_back, held_snipes
 
     async def handle_friend_leaderboard(self, friend, main_user_id, leaderboard, main_user_array):
