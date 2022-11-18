@@ -6,6 +6,8 @@ from osu_auth.auth import Auth
 # These tests are purely to be used LOCALLY. If you want to run them, you will need to add your own api key (and oauth2 details) to the config.json file
 
 def auth_handler(func):
+    # skip the test if there is no api key
+    @pytest.mark.skipif(Auth().api_key == None, reason="No api key")
     async def inner_wrapper():
         auth = Auth()
         await func(auth)
