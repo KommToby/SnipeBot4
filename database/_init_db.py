@@ -7,15 +7,15 @@ class Database:
         self.cursor = self.db.cursor()
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS users(
-                discord_channel varchar(32) not null primary key,
-                osu_id varchar(32) not null,
+                discord_channel int not null primary key,
+                osu_id int not null,
                 username varchar(32),
                 country_code varchar(32),
                 avatar_url varchar(256),
                 is_supporter boolean,
                 cover_url varchar(256),
                 playmode varchar(32),
-                recent_score varchar(32)
+                recent_score int
             )
         ''')
 
@@ -23,7 +23,7 @@ class Database:
             CREATE TABLE IF NOT EXISTS scores(
                 user_id int not null,
                 beatmap_id int,
-                score varchar(32),
+                score int,
                 accuracy real,
                 max_combo int,
                 passed boolean,
@@ -42,7 +42,7 @@ class Database:
 
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS friends(
-                discord_channel varchar(32) not null,
+                discord_channel int not null,
                 osu_id int not null,
                 username varchar(32),
                 country_code varchar(32),
@@ -174,7 +174,7 @@ class Database:
             "SELECT * FROM scores WHERE user_id=? AND score!=?",
             (user_id, 0)).fetchall()
 
-    async def get_all_scores_all_users_with_zeros(self): # does not include 0s
+    async def get_all_scores_all_users_with_zeros(self): # does include 0s
         return self.cursor.execute(
             "SELECT * FROM scores").fetchall()
     
@@ -262,7 +262,7 @@ class Database:
             (discord_id,)).fetchone()
 
     ## ADDS
-    async def add_channel(self, channel_id, user_id, user_data: UserData):
+    async def add_channel(self, channel_id, user_data: UserData):
         self.cursor.execute(
             "INSERT INTO users VALUES(?,?,?,?,?,?,?,?,?)",
             (channel_id, user_data.id, user_data.username, user_data.country_code, user_data.avatar_url, user_data.is_supporter, user_data.cover_url, user_data.playmode, 0)
@@ -316,7 +316,7 @@ class Database:
         )
         self.db.commit()
 
-    async def update_ping(self, ping, discord_id):
+    async def update_ping(self, ping: bool, discord_id):
         self.cursor.execute(
             "UPDATE link SET ping=? WHERE discord_id=?",
             (ping, discord_id)
@@ -329,9 +329,6 @@ class Database:
             (score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods, conv_stars, conv_bpm, user_id, beatmap_id)
         )
         self.db.commit()
-        a = await self.get_score(user_id, beatmap_id)
-        if a is None:
-            print("breakpoint")
 
     async def update_score_zeros(self, user_id, beatmap_id):
         self.cursor.execute(

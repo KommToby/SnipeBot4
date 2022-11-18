@@ -126,7 +126,7 @@ class Auth:
         best_score = await self.get_api_v2(f"users/{user_id}/scores/best")
         if not best_score:
             return False
-        return OsuBestScore(best_score)
+        return [OsuBestScore(score) for score in best_score]
 
     # Gets details about a specific beatmap. The beatmap id has to be the difficulty id, not the beatmapset id
     async def get_beatmap(self, beatmap_id: str):

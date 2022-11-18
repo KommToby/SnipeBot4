@@ -3,6 +3,7 @@ import interactions
 from embed.stats import create_stats_embed
 from data_types.interactions import CustomInteractionsClient
 from data_types.cogs import Cog
+from data_types.osu import *
 
 
 class Stats(Cog):  # must have commands.cog or this wont work
@@ -91,6 +92,8 @@ class Stats(Cog):  # must have commands.cog or this wont work
                 sorted_artist_frequencies = sorted(
                     artist_frequencies.items(), key=lambda x: x[1], reverse=True)
                 for _ in range(0, 10):
+                    if sorted_artist_frequencies != []:
+                        break
                     top_ten_artists.append(sorted_artist_frequencies[0])
                     sorted_artist_frequencies.remove(
                         sorted_artist_frequencies[0])
