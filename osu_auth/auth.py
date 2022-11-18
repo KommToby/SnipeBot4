@@ -123,7 +123,7 @@ class Auth:
 
     # Users top 100 scores on osu
     async def get_user_scores(self, user_id: str):
-        best_score = await self.get_api_v2(f"users/{user_id}/scores/best")
+        best_score = await self.get_api_v2(f"users/{user_id}/scores/best?mode=osu")
         if not best_score:
             return False
         return [OsuBestScore(score) for score in best_score]
