@@ -295,13 +295,16 @@ class Database:
             self.db.commit()
 
     async def add_score(self, user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods, converted_score, converted_bpm):
-        # local_score = await self.get_score(user_id, beatmap_id)
-        # if local_score is None:
-        self.cursor.execute(
-            "INSERT INTO scores VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-            (user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods, converted_score, converted_bpm)
-        )
-        self.db.commit()
+        # if score already exists throw an error
+        if not(await self.get_score(user_id, beatmap_id)):
+            self.cursor.execute(
+                "INSERT INTO scores VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                (user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods, converted_score, converted_bpm)
+            )
+            self.db.commit()
+            return
+        else:
+            raise Exception("Duplicate Score Error")
 
     async def add_friend(self, channel_id, user_data: User):
         self.cursor.execute(
