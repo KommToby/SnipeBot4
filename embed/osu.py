@@ -12,7 +12,7 @@ async def create_osu_embed(user: UserData):
 **Country Rank**: #{user.statistics.country_rank:,}
 **Accuracy**: {round(user.statistics.hit_accuracy, 2)}%
 """
-    embed.set_author(name="Snipebot 3 by Komm",
+    embed.set_author(name="Snipebot by Komm",
                     icon_url=f"https://osu.ppy.sh/images/flags/{user.country_code}.png")
     if user.avatar_url[0] == "/":
         embed.set_thumbnail(url=f"https://osu.ppy.sh{user.avatar_url}")
