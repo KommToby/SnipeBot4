@@ -1,20 +1,20 @@
 import interactions
 import math
 from data_types.osu import UserData
-from embed.snipeback import create_snipeback_embed
+from embed.snipelist import create_snipelist_embed
 from data_types.interactions import CustomInteractionsClient
 from data_types.cogs import Cog
 
 
-class Snipeback(Cog):  # must have interactions.Extension or this wont work
+class Snipelist(Cog):  # must have interactions.Extension or this wont work
     def __init__(self, client: CustomInteractionsClient):
         self.client = client
         self.osu = client.auth
         self.database = client.database
 
     @interactions.extension_command(
-        name="snipeback",
-        description="shows some maps that the main user needs to play to snipe a friend",
+        name="snipelist",
+        description="shows some maps that the friend needs to play to snipe the main user",
         options=[interactions.Option(
             name="username",
             description="the username of the friend of the main user",
@@ -23,7 +23,7 @@ class Snipeback(Cog):  # must have interactions.Extension or this wont work
         )
         ]
     )
-    async def snipeback(self, ctx: interactions.CommandContext, *args, **kwargs):
+    async def snipelist(self, ctx: interactions.CommandContext, *args, **kwargs):
         await ctx.defer()
         username = await self.handle_linked_account(ctx, kwargs)
         if not(username):
@@ -44,7 +44,7 @@ class Snipeback(Cog):  # must have interactions.Extension or this wont work
         if beatmaps == []:
             await ctx.send(f"Main user has no scores on any maps that {user_data.username} has")
             return
-        embed = await create_snipeback_embed(user_data.username, beatmaps, links)
+        embed = await create_snipelist_embed(user_data.username, beatmaps, links)
         await ctx.send(embeds=embed)
         
     async def get_scores(self, main_id: int, friend_id: int):
@@ -75,9 +75,9 @@ class Snipeback(Cog):  # must have interactions.Extension or this wont work
             username_array = await self.database.get_linked_user_osu_id(ctx.author.id._snowflake)
             if not username_array:
                 await ctx.send("You are not linked to an osu! account - use `/link` to link your account\n"
-                               "Alternatively you can do `/snipeback username:username` to get a specific persons profile")
+                               "Alternatively you can do `/snipelist username:username` to get a specific persons profile")
                 return False
             return username_array[0]
 
 def setup(client):
-    Snipeback(client)
+    Snipelist(client)

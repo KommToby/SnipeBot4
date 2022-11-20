@@ -2,7 +2,7 @@ import interactions
 import random
 from data_types.osu import UserData
 
-async def create_snipeback_embed(friend_username: str, beatmaps: list, links: list):
+async def create_snipelist_embed(friend_username: str, beatmaps: list, links: list):
     embed = interactions.Embed(
         title=f"10 random maps the main user should snipe {friend_username} back on",
         color=16753920,
