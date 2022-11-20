@@ -1,6 +1,7 @@
 import pytest
 from database._init_db import Database
 from data_types.osu import *
+import datetime
 
 # Mock Data
 
@@ -1192,5 +1193,52 @@ async def test_db_get_linked_user_osu_id(db: Database):
     )
     linked_user_osu_id = await db.get_linked_user_osu_id(191602759504625674)
     assert linked_user_osu_id[0] == score_data.score.user_id
+
+@pytest.mark.asyncio
+@db_handler
+async def test_db_get_week_old_score(db: Database):
+    six_days_ago_datetime = datetime.datetime.utcnow() - datetime.timedelta(days=6)
+    eight_days_ago_datetime = datetime.datetime.utcnow() - datetime.timedelta(days=8)
+    await db.add_score(
+        score_data.score.user_id,
+        score_data.score.beatmap.id,
+        score_data.score.score,
+        score_data.score.accuracy,
+        score_data.score.max_combo,
+        score_data.score.passed,
+        score_data.score.pp,
+        score_data.score.rank,
+        score_data.score.statistics.count_300,
+        score_data.score.statistics.count_100,
+        score_data.score.statistics.count_50,
+        score_data.score.statistics.count_miss,
+        # date one week ago,
+        six_days_ago_datetime.strftime("%Y%m%dT%H%M%SZ"),
+        64,  # This is the mod integer value for DT
+        score_data.score.beatmap.difficulty_rating,
+        score_data.score.beatmap.bpm
+    )
+    await db.add_score(
+        score_data.score.user_id,
+        score_data.score.beatmap.id,
+        score_data.score.score,
+        score_data.score.accuracy,
+        score_data.score.max_combo,
+        score_data.score.passed,
+        score_data.score.pp,
+        score_data.score.rank,
+        score_data.score.statistics.count_300,
+        score_data.score.statistics.count_100,
+        score_data.score.statistics.count_50,
+        score_data.score.statistics.count_miss,
+        # date one week ago,
+        eight_days_ago_datetime.strftime("%Y%m%dT%H%M%SZ"),
+        32,  # This is the mod integer value for not DT
+        score_data.score.beatmap.difficulty_rating,
+        score_data.score.beatmap.bpm
+    )
+    last_weeks_scores = await db.get_last_weeks_scores(score_data.score.user_id)
+    assert len(last_weeks_scores) == 1
+
 
 
