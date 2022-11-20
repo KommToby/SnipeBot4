@@ -482,11 +482,11 @@ async def test_db_add_get_all_scores(db: Database):
             score_data.score.created_at,
             64,  # This is the mod integer value for DT
             score_data.score.beatmap.difficulty_rating,
-            score_data.score.beatmap.bpm
+            i
         )
     await db.add_score(
         score_data.score.user_id,
-        score_data.score.beatmap.id+i,
+        score_data.score.beatmap.id+i+1,
         0,
         score_data.score.accuracy,
         score_data.score.max_combo,
@@ -500,7 +500,7 @@ async def test_db_add_get_all_scores(db: Database):
         score_data.score.created_at,
         64,  # This is the mod integer value for DT
         score_data.score.beatmap.difficulty_rating,
-        score_data.score.beatmap.bpm
+        i
     )
     database_score = await db.get_all_scores(score_data.score.user_id)
     assert len(database_score) == 10
@@ -509,7 +509,6 @@ async def test_db_add_get_all_scores(db: Database):
     assert database_score[0][1] == score_data.score.beatmap.id
     assert database_score[0][13] == 64
     assert database_score[0][14] == score_data.score.beatmap.difficulty_rating
-    assert database_score[0][15] == score_data.score.beatmap.bpm
 
 
 @pytest.mark.asyncio
@@ -536,7 +535,7 @@ async def test_db_add_get_all_scores_all_users_with_zeros(db: Database):
         )
     await db.add_score(
         score_data.score.user_id,
-        score_data.score.beatmap.id+i,
+        score_data.score.beatmap.id+i+1,
         0,
         score_data.score.accuracy,
         score_data.score.max_combo,
@@ -1220,7 +1219,7 @@ async def test_db_get_week_old_score(db: Database):
     )
     await db.add_score(
         score_data.score.user_id,
-        score_data.score.beatmap.id,
+        score_data.score.beatmap.id+1,
         score_data.score.score,
         score_data.score.accuracy,
         score_data.score.max_combo,
