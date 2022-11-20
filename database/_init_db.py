@@ -154,6 +154,18 @@ class Database:
             "SELECT * FROM snipes WHERE user_id=? AND beatmap_id=? AND second_user_id=?",
             (user1, beatmap, user2)).fetchone()
 
+    async def get_single_user_snipes(self, friend_user_id, main_user_id):
+        return self.cursor.execute(
+            "SELECT * FROM snipes WHERE user_id=? AND second_user_id=?",
+            (friend_user_id, main_user_id)).fetchall()
+
+    async def get_single_user_snipes_ids(self, friend_user_id, main_user_id): # beatmap ids only
+        a = self.cursor.execute(
+            "SELECT beatmap_id FROM snipes WHERE user_id=? AND second_user_id=?",
+            (friend_user_id, main_user_id)).fetchall()
+        # convert to array of beatmap ids
+        return [x[0] for x in a]
+
     async def get_beatmap(self, beatmap_id):
         return self.cursor.execute(
             "SELECT * FROM beatmaps WHERE beatmap_id=?",
