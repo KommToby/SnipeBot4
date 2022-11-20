@@ -1,5 +1,6 @@
 import sqlite3
 from data_types.osu import *
+import datetime
 
 class Database:
     def __init__(self, database_name):
@@ -260,6 +261,14 @@ class Database:
         return self.cursor.execute(
             "SELECT osu_id FROM link WHERE discord_id=?",
             (discord_id,)).fetchone()
+
+    async def get_last_weeks_scores(self, user_id):
+        one_week_ago_datetime = datetime.datetime.now() - datetime.timedelta(days=7)
+        one_week_ago_utc = one_week_ago_datetime.strftime("%Y-%m-%dT%H:%M:%SZ")
+        return self.cursor.execute(
+            "SELECT * FROM scores WHERE user_id=? AND date>=?",
+            (user_id, one_week_ago_utc)).fetchall()
+
 
     ## ADDS
     async def add_channel(self, channel_id, user_data: UserData):
