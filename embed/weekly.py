@@ -20,5 +20,4 @@ async def convert_datetime_to_timestamp(dateandtime: str):
     dateandtime = datetime.datetime.strptime(dateandtime, "%Y-%m-%dT%H:%M:%SZ")
     # convert the datetime object to an epoch timestamp
     timestamp = datetime.datetime.timestamp(dateandtime)
-    # return how many seconds since jan 1 1970 using python mathematics
     return int(timestamp)
