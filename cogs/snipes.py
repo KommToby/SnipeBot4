@@ -127,7 +127,7 @@ class Snipes(Cog):  # must have interactions.Extension or this wont work
         if snipes < total_scores:
             multiplier = (5/100) + (0.95 * (snipes/(total_scores+1)))
         calculated_pp = round((multiplier*((3*snipes + 7*not_sniped_main) /
-                              (2*not_sniped_back+(snipes/(not_sniped_main+1))*sniped+1)*10000)), 2)
+                              (10*not_sniped_back+(snipes/(not_sniped_main+1))*sniped+1)*30000)), 2)
         weighted_pp = await self.weight_snipe_pp(calculated_pp)
         return weighted_pp
 
