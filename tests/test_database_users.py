@@ -1239,5 +1239,41 @@ async def test_db_get_week_old_score(db: Database):
     last_weeks_scores = await db.get_last_weeks_scores(score_data.score.user_id)
     assert len(last_weeks_scores) == 1
 
+@pytest.mark.asyncio
+@db_handler
+async def test_db_get_single_user_snipes(db: Database):
+    await db.add_snipe(
+        7671790,
+        3601629,
+        7562902,
+        score_data.score.created_at,
+        score_data.score.score,
+        score_data.score.score + 1,
+        score_data.score.accuracy,
+        score_data.score.accuracy + 1,
+        64,
+        16,
+        score_data.score.pp,
+        score_data.score.pp + 1
+    )
+    await db.add_snipe(
+        12345,
+        3601629,
+        7671790,
+        score_data.score.created_at,
+        score_data.score.score,
+        score_data.score.score + 1,
+        score_data.score.accuracy,
+        score_data.score.accuracy + 1,
+        64,
+        16,
+        score_data.score.pp,
+        score_data.score.pp + 1
+    )
+    main_user_snipes = await db.get_single_user_snipes(7671790, 7562902)
+    assert len(main_user_snipes) == 1
+    main_user_snipes = await db.get_single_user_snipes(12345, 7671790)
+    assert len(main_user_snipes) == 1
+
 
 
