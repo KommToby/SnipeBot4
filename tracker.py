@@ -224,7 +224,6 @@ class SnipeTracker:
             return
         # even if the local play doesnt exist we still need to add it as a score
         converted_stars, converted_bpm = await self.convert_stars_and_bpm(play)
-        await self.database.add_score(play.user_id, play.beatmap.id, play.score, play.accuracy, play.max_combo, play.passed, play.pp, play.rank, play.statistics.count_300, play.statistics.count_100, play.statistics.count_50, play.statistics.count_miss, play.created_at, await self.convert_mods_to_int(play.mods), converted_stars, converted_bpm)
         if online_play:  # If they have also played online they may have got a new best thats never been scanned
             if play.score >= online_play.score.score:
                 sniped_friends = await self.get_sniped_friends(play, f"{data[0]}")
@@ -235,6 +234,10 @@ class SnipeTracker:
                 ping_string = await self.construct_pinging_string(sniped_friends)
                 if ping_string != "":
                     await post_channel.send(f"{ping_string}")
+            else:
+                await self.database.add_score(play.user_id, play.beatmap.id, play.score, play.accuracy, play.max_combo, play.passed, play.pp, play.rank, play.statistics.count_300, play.statistics.count_100, play.statistics.count_50, play.statistics.count_miss, play.created_at, await self.convert_mods_to_int(play.mods), converted_stars, converted_bpm)
+        else:
+            await self.database.add_score(play.user_id, play.beatmap.id, play.score, play.accuracy, play.max_combo, play.passed, play.pp, play.rank, play.statistics.count_300, play.statistics.count_100, play.statistics.count_50, play.statistics.count_miss, play.created_at, await self.convert_mods_to_int(play.mods), converted_stars, converted_bpm)
 
     # The main infinite loop tracker
     async def tracker_loop(self, plays):
@@ -424,7 +427,7 @@ class SnipeTracker:
                             sniped_friends = await self.get_sniped_friends(play, other_main_user[0])
                             post_channel = await get(self.client, interactions.Channel, channel_id=int(other_main_user[0]))
                             beatmap_data = await self.osu.get_beatmap(beatmap_id)
-                            await post_channel.send(embeds=await create_high_score_embed(play, sniped_friends, beatmap_data))
+                            await post_channel.send(embeds=await create_high_score_embed(play, sniped_friends, beatmap_data ))
                             ping_string = await self.construct_pinging_string(sniped_friends)
                             if ping_string != "":
                                 await post_channel.send(f"{ping_string}")
@@ -616,4 +619,4 @@ class SnipeTracker:
         discord_channel = f'{main_user_db[0]}'
         post_channel = await get(self.client, interactions.Channel, channel_id=int(discord_channel))
         beatmap_data = await self.osu.get_beatmap(play.beatmap.id)
-        await post_channel.send(embeds=await create_friend_snipe_embed(play, main_username, beatmap_data))
+        await post_channel.send(embeds=await create_friend_snipe_embed(play, main_username, beatmap_data, main_user_play.score))
