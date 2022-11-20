@@ -104,10 +104,11 @@ class SnipeTracker:
 
     # Start point of the infinite loop
     async def start_loop(self):
+        plays = {}
         while True:
             try:
                 s = time.time()
-                await self.tracker_loop()
+                plays = await self.tracker_loop(plays)
                 print(
                     f"Tracker loop took {round((time.time() - s),2)} seconds")
             except Exception as e:
@@ -236,7 +237,7 @@ class SnipeTracker:
                     await post_channel.send(f"{ping_string}")
 
     # The main infinite loop tracker
-    async def tracker_loop(self):
+    async def tracker_loop(self, plays):
         # Constructor for the loop
         local_time = time.time()
         check_time = time.time()
@@ -248,6 +249,8 @@ class SnipeTracker:
         checked_users_count = 0
         # Beginning of the loop
         try:
+            # plays = {} # this is used to store the plays we get from the api, and check for duplicates to prevent api pinging :D
+            # above line is now introduced in the loop beginning since we need to store the previous loops data
             start_time = time.time()
             users = await self.database.get_all_users()
             for data in users:
@@ -258,6 +261,11 @@ class SnipeTracker:
                 if main_user_data:
                     # Gets the recent plays of the main user
                     recent_plays = await self.osu.get_recent_plays(main_user_id)
+                    if not main_user_data.id in plays:
+                        plays[main_user_data.id] = []
+                    if plays[main_user_data.id] == recent_plays:
+                        continue # No need to do anything if the plays are the same
+                    plays[main_user_data.id] = recent_plays
                     # Gets the recent score of the main user from the database to compare
                     recent_score = await self.database.get_main_recent_score(main_user_id)
                     print(
@@ -290,13 +298,14 @@ class SnipeTracker:
                         f"An issue occured when trying to get user data for {data[2]}")
 
             # Now after all the main users have been scanned, we can move on to check the friend users
-            local_time = await self.tracker_loop_friends(users, active_friends, checked_users, checked_users_count, beatmaps_to_scan, local_time)
+            local_time, plays = await self.tracker_loop_friends(users, active_friends, checked_users, checked_users_count, beatmaps_to_scan, local_time, plays)
+            return plays
 
         except Exception as e:
             print(f"Error occured during main tracking loop: {e}")
             pass
 
-    async def tracker_loop_friends(self, users: list, active_friends: list, checked_users: list, checked_users_count: int, beatmaps_to_scan: list, local_time: float):
+    async def tracker_loop_friends(self, users: list, active_friends: list, checked_users: list, checked_users_count: int, beatmaps_to_scan: list, local_time: float, plays: dict):
         # Now we check all of the friends, the second part of the tracking loop
         all_friends = await self.database.get_all_friends()
         # Below is dupe removal, it also removes any main users from the list.
@@ -315,6 +324,11 @@ class SnipeTracker:
             local_time = time.time()  # reset api timer
             # Below we scan every single friend, which is why we did the removals above
             recent_plays = await self.osu.get_recent_plays(friend_id)
+            if not friend_data.id in plays:
+                plays[friend_data.id] = []
+            if plays[friend_data.id] == recent_plays:
+                continue
+            plays[friend_data.id] = recent_plays
             if recent_plays:
                 recent_score = await self.database.get_friend_recent_score(friend_id)
                 if recent_score is None:
@@ -332,7 +346,7 @@ class SnipeTracker:
         if beatmaps_to_scan != []:
             print(f"     checking {len(beatmaps_to_scan)} new beatmaps")
             await self.check_new_beatmaps(beatmaps_to_scan)
-        return local_time
+        return local_time, plays
 
     async def check_friend_recent_score(self, active_friends: list, friend_id: str, users: list, recent_plays: list[OsuRecentScore], beatmaps_to_scan: list, recent_score):
         if friend_id not in active_friends:
