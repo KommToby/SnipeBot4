@@ -1317,3 +1317,44 @@ async def test_db_get_all_scores_beatmap_ids(db: Database):
     beatmap_ids = await db.get_all_scores_beatmap_ids(score_data.score.user_id)
     assert len(beatmap_ids) == 2
     assert beatmap_ids[0] == score_data.score.beatmap.id
+
+@pytest.mark.asyncio
+@db_handler
+async def test_db_get_all_beatmaps_mapper(db: Database):
+    await db.add_beatmap(
+        beatmap_data.id,
+        beatmap_data.difficulty_rating,
+        beatmap_data.beatmapset.artist,
+        beatmap_data.beatmapset.title,
+        beatmap_data.version,
+        beatmap_data.url,
+        beatmap_data.total_length,
+        beatmap_data.bpm,
+        beatmap_data.beatmapset.creator,
+        beatmap_data.status,
+        beatmap_data.beatmapset.id,
+        beatmap_data.accuracy,
+        beatmap_data.ar,
+        beatmap_data.cs,
+        beatmap_data.drain
+    )
+    await db.add_beatmap(
+        beatmap_data.id+1,
+        beatmap_data.difficulty_rating,
+        beatmap_data.beatmapset.artist,
+        beatmap_data.beatmapset.title,
+        beatmap_data.version,
+        beatmap_data.url,
+        beatmap_data.total_length,
+        beatmap_data.bpm,
+        "Kommothy",
+        beatmap_data.status,
+        beatmap_data.beatmapset.id,
+        beatmap_data.accuracy,
+        beatmap_data.ar,
+        beatmap_data.cs,
+        beatmap_data.drain
+    )
+    beatmaps = await db.get_all_beatmaps_mapper("Kommothy")
+    assert len(beatmaps) == 1
+    assert beatmaps[0] == beatmap_data.id+1
