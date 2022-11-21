@@ -172,6 +172,13 @@ class Database:
             (beatmap_id,)
         ).fetchone()
 
+    async def get_all_beatmaps_mapper(self, mapper_username):
+        a = self.cursor.execute(
+            "SELECT beatmap_id FROM beatmaps WHERE mapper=?",
+            (mapper_username,)
+        ).fetchall()
+        return [x[0] for x in a]
+
     async def get_all_beatmaps(self):
         return self.cursor.execute(
             "SELECT * FROM beatmaps").fetchall()
