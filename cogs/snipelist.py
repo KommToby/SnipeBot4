@@ -53,12 +53,9 @@ class Snipelist(Cog):  # must have interactions.Extension or this wont work
         beatmaps = []
         beatmaps_data = []
         links = []
-        # elements that are in snipes but not in sniped or vice versa should be stored in beatmaps array
+        # elements that are in snipes but not in sniped
         for snipe in snipes:
             if snipe not in sniped:
-                beatmaps.append(snipe)
-        for snipe in sniped:
-            if snipe not in snipes:
                 beatmaps.append(snipe)
         for beatmap in beatmaps:
             beatmap_data = await self.database.get_beatmap(beatmap)
