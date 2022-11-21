@@ -107,6 +107,8 @@ class SnipeTracker:
         plays = {}
         while True:
             try:
+                if plays is None:
+                    plays = {}
                 s = time.time()
                 plays = await self.tracker_loop(plays)
                 print(
