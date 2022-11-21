@@ -191,8 +191,8 @@ class Friend(Cog):  # must have interactions.Extension or this wont work
         message_update_time = time.time()
         for i, beatmap in enumerate(beatmaps):
             try:
-                if not(await self.database.get_score(user_data.id, beatmap)):
-                    user_play = await self.osu.get_score_data(beatmap, user_data.id)
+                if not(await self.database.get_score(user_data.id, beatmap[0])):
+                    user_play = await self.osu.get_score_data(beatmap[0], user_data.id)
                     if user_play:
                         converted_stars = 0
                         converted_bpm = 0
@@ -205,7 +205,7 @@ class Friend(Cog):  # must have interactions.Extension or this wont work
                                 converted_stars = beatmap_mod_data.attributes.star_rating
                             else:
                                 converted_stars = beatmap[1]
-                        await self.database.add_score(user_data.id, beatmap, user_play.score.score, user_play.score.accuracy, user_play.score.max_combo, user_play.score.passed, user_play.score.pp, user_play.score.rank, user_play.score.statistics.count_300, user_play.score.statistics.count_100, user_play.score.statistics.count_50, user_play.score.statistics.count_miss, user_play.score.created_at, await self.tracker.convert_mods_to_int(user_play.score.mods), converted_stars, converted_bpm)
+                        await self.database.add_score(user_data.id, beatmap[0], user_play.score.score, user_play.score.accuracy, user_play.score.max_combo, user_play.score.passed, user_play.score.pp, user_play.score.rank, user_play.score.statistics.count_300, user_play.score.statistics.count_100, user_play.score.statistics.count_50, user_play.score.statistics.count_miss, user_play.score.created_at, await self.tracker.convert_mods_to_int(user_play.score.mods), converted_stars, converted_bpm)
                         main_users = await self.database.get_all_users()
                         for main_user in main_users:
                             main_user_friends = await self.database.get_user_friends(main_user[0])
@@ -215,28 +215,28 @@ class Friend(Cog):  # must have interactions.Extension or this wont work
                                 if str(main_user_friend[1]) == str(user_data.id):
                                     found_friend = True
                             if found_friend is True:
-                                main_user_play = await self.osu.get_score_data(beatmap, main_user[1])
+                                main_user_play = await self.osu.get_score_data(beatmap[0], main_user[1])
                                 if main_user_play:
                                     first_mods = await self.tracker.convert_mods_to_int(user_play.score.mods)
                                     second_mods = await self.tracker.convert_mods_to_int(main_user_play.score.mods)
                                     if await self.tracker.convert_datetime_to_int(main_user_play.score.created_at) < await self.tracker.convert_datetime_to_int(user_play.score.created_at):
                                         if int(user_play.score.score) > int(main_user_play.score.score):
                                             # friend user gets passive snipe
-                                            await self.database.add_snipe(user_data.id, beatmap, main_user_play.score.user_id, user_play.score.created_at, user_play.score.score, main_user_play.score.score, user_play.score.accuracy, main_user_play.score.accuracy, first_mods, second_mods, user_play.score.pp, main_user_play.score.pp)
+                                            await self.database.add_snipe(user_data.id, beatmap[0], main_user_play.score.user_id, user_play.score.created_at, user_play.score.score, main_user_play.score.score, user_play.score.accuracy, main_user_play.score.accuracy, first_mods, second_mods, user_play.score.pp, main_user_play.score.pp)
 
                                     else:
                                         if int(user_play.score.score) < int(main_user_play.score.score):
                                             # main user gets passive snipe
-                                            await self.database.add_snipe(main_user_play.score.user_id, beatmap, user_data.id, main_user_play.score.created_at, main_user_play.score.score, user_play.score.score, main_user_play.score.accuracy, user_play.score.accuracy, second_mods, first_mods, main_user_play.score.pp, user_play.score.pp)
+                                            await self.database.add_snipe(main_user_play.score.user_id, beatmap[0], user_data.id, main_user_play.score.created_at, main_user_play.score.score, user_play.score.score, main_user_play.score.accuracy, user_play.score.accuracy, second_mods, first_mods, main_user_play.score.pp, user_play.score.pp)
 
                     else:
-                        await self.database.add_score(user_data.id, beatmap, 0, False, False, False, False, False, False, False, False, False, False, False, False, False)
+                        await self.database.add_score(user_data.id, beatmap[0], 0, False, False, False, False, False, False, False, False, False, False, False, False, False)
                 else:
                     # This is the case that if the score that is stored here is from SnipeBot3, it needs to update it. Painful Stuff.
-                    local_score_data = await self.database.get_score(user_data.id, beatmap)
+                    local_score_data = await self.database.get_score(user_data.id, beatmap[0])
                     # accuracy being 0 signifies old format
                     if str(local_score_data[3]) == "0":
-                        user_play = await self.osu.get_score_data(beatmap, user_data.id)
+                        user_play = await self.osu.get_score_data(beatmap[0], user_data.id)
                         if not(user_play):
                             if i != 0:
                                 elapsed_time = time.time() - start_time
@@ -282,7 +282,7 @@ class Friend(Cog):  # must have interactions.Extension or this wont work
             if int(beatmap[0]) in conv_scores or int(beatmap[0]) in zero_scores:
                 add_beatmap = False
             if add_beatmap is True:
-                return_beatmaps.append(beatmap[0])
+                return_beatmaps.append(beatmap)
         return return_beatmaps
 
 
