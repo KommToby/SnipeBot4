@@ -1,9 +1,8 @@
 import interactions
-import math
-from data_types.osu import UserData
 from embed.snipelist import create_snipelist_embed
 from data_types.interactions import CustomInteractionsClient
 from data_types.cogs import Cog
+import random
 
 
 class Snipelist(Cog):  # must have interactions.Extension or this wont work
@@ -50,11 +49,15 @@ class Snipelist(Cog):  # must have interactions.Extension or this wont work
     async def get_scores(self, main_id: int, friend_id: int):
         snipes = await self.database.get_single_user_snipes_ids(main_id, friend_id)
         sniped = await self.database.get_single_user_snipes_ids(friend_id, main_id)
+        random.shuffle(snipes)
+        random.shuffle(sniped)
         beatmaps = []
         beatmaps_data = []
         links = []
         # elements that are in snipes but not in sniped
         for snipe in snipes:
+            if len(beatmaps) > 10:
+                break
             if snipe not in sniped:
                 beatmaps.append(snipe)
         for beatmap in beatmaps:
