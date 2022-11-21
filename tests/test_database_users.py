@@ -1275,5 +1275,45 @@ async def test_db_get_single_user_snipes(db: Database):
     main_user_snipes = await db.get_single_user_snipes(12345, 7671790)
     assert len(main_user_snipes) == 1
 
-
-
+@pytest.mark.asyncio
+@db_handler
+async def test_db_get_all_scores_beatmap_ids(db: Database):
+    await db.add_score(
+        score_data.score.user_id,
+        score_data.score.beatmap.id,
+        score_data.score.score,
+        score_data.score.accuracy,
+        score_data.score.max_combo,
+        score_data.score.passed,
+        score_data.score.pp,
+        score_data.score.rank,
+        score_data.score.statistics.count_300,
+        score_data.score.statistics.count_100,
+        score_data.score.statistics.count_50,
+        score_data.score.statistics.count_miss,
+        score_data.score.created_at,
+        64,  # This is the mod integer value for DT
+        score_data.score.beatmap.difficulty_rating,
+        score_data.score.beatmap.bpm
+    )
+    await db.add_score(
+        score_data.score.user_id,
+        score_data.score.beatmap.id+1,
+        score_data.score.score,
+        score_data.score.accuracy,
+        score_data.score.max_combo,
+        score_data.score.passed,
+        score_data.score.pp,
+        score_data.score.rank,
+        score_data.score.statistics.count_300,
+        score_data.score.statistics.count_100,
+        score_data.score.statistics.count_50,
+        score_data.score.statistics.count_miss,
+        score_data.score.created_at,
+        32,  # This is the mod integer value for not DT
+        score_data.score.beatmap.difficulty_rating,
+        score_data.score.beatmap.bpm
+    )
+    beatmap_ids = await db.get_all_scores_beatmap_ids(score_data.score.user_id)
+    assert len(beatmap_ids) == 2
+    assert beatmap_ids[0] == score_data.score.beatmap.id

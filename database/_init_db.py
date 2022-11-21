@@ -187,6 +187,12 @@ class Database:
             "SELECT * FROM scores WHERE user_id=? AND score!=?",
             (user_id, 0)).fetchall()
 
+    async def get_all_scores_beatmap_ids(self, user_id): # does not include 0s and only returns beatmap ids
+        a = self.cursor.execute(
+            "SELECT beatmap_id FROM scores WHERE user_id=? AND score!=?",
+            (user_id, 0)).fetchall()
+        return [x[0] for x in a]
+
     async def get_all_scores_all_users_with_zeros(self): # does include 0s
         return self.cursor.execute(
             "SELECT * FROM scores").fetchall()
