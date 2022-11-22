@@ -4,7 +4,7 @@ from data_types.osu import UserData
 
 async def create_recommend_embed(friend_username: str, beatmaps: list, links: list):
     embed = interactions.Embed(
-        title=f"<=10 maps the {friend_username} should snipe the main user back on",
+        title=f"<=10 maps the {friend_username} should snipe the main user on",
         color=16753920,
     )
     # shuffle the beatmaps and links so that they are in a random order but the same order
