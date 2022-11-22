@@ -2,6 +2,7 @@ import interactions
 
 from data_types.osu import Beatmap, OsuRecentScore
 
+
 async def create_friend_snipe_embed(play: OsuRecentScore, main_user: str, beatmap_data: Beatmap, main_user_score: int):
     # Mod handling
     if play.mods:
@@ -43,8 +44,8 @@ async def create_friend_snipe_embed(play: OsuRecentScore, main_user: str, beatma
     # Score Details
     embed.add_field(
         name=score_message, value=f"**▸ [{play.statistics.count_300}/{play.statistics.count_100}/{play.statistics.count_50}/{play.statistics.count_miss}] ▸ {play.max_combo}x/{beatmap_data.max_combo}x ▸** [link to map]("
-                                + str(play.beatmap.url)
-                                + ")", inline=False
+        + str(play.beatmap.url)
+        + ")", inline=False
     )
 
     return embed

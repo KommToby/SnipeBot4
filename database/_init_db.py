@@ -2,6 +2,7 @@ import sqlite3
 from data_types.osu import *
 import datetime
 
+
 class Database:
     def __init__(self, database_name):
         self.db = sqlite3.connect(database_name)
@@ -55,7 +56,7 @@ class Database:
                 ping boolean,
                 leaderboard real
             )
-        ''') # Ping value for this is redundant but will take time to alter so keeping it for now
+        ''')  # Ping value for this is redundant but will take time to alter so keeping it for now
 
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS beatmaps(
@@ -102,7 +103,7 @@ class Database:
             )
         ''')
 
-    ## GETS
+    # GETS
     async def get_converted_scores(self, user_id):
         return self.cursor.execute(
             "SELECT * FROM scores WHERE user_id=? AND converted_bpm>?",
@@ -111,7 +112,7 @@ class Database:
     async def get_zero_scores(self, user_id):
         # using row factory ensures it returns an arr_iray of values not tuples
         self.cursor.row_factory = lambda cursor, row: row[0]
-        array =  self.cursor.execute(
+        array = self.cursor.execute(
             "SELECT beatmap_id FROM scores WHERE user_id=? AND score=?",
             (user_id, 0)).fetchall()
         self.cursor.row_factory = None
@@ -159,7 +160,8 @@ class Database:
             "SELECT * FROM snipes WHERE user_id=? AND second_user_id=?",
             (friend_user_id, main_user_id)).fetchall()
 
-    async def get_single_user_snipes_ids(self, friend_user_id, main_user_id): # beatmap ids only
+    # beatmap ids only
+    async def get_single_user_snipes_ids(self, friend_user_id, main_user_id):
         a = self.cursor.execute(
             "SELECT beatmap_id FROM snipes WHERE user_id=? AND second_user_id=?",
             (friend_user_id, main_user_id)).fetchall()
@@ -189,21 +191,22 @@ class Database:
             (user_id, beatmap_id)
         ).fetchone()
 
-    async def get_all_scores(self, user_id): # does not include 0s
+    async def get_all_scores(self, user_id):  # does not include 0s
         return self.cursor.execute(
             "SELECT * FROM scores WHERE user_id=? AND score!=?",
             (user_id, 0)).fetchall()
 
-    async def get_all_scores_beatmap_ids(self, user_id): # does not include 0s and only returns beatmap ids
+    # does not include 0s and only returns beatmap ids
+    async def get_all_scores_beatmap_ids(self, user_id):
         a = self.cursor.execute(
             "SELECT beatmap_id FROM scores WHERE user_id=? AND score!=?",
             (user_id, 0)).fetchall()
         return [x[0] for x in a]
 
-    async def get_all_scores_all_users_with_zeros(self): # does include 0s
+    async def get_all_scores_all_users_with_zeros(self):  # does include 0s
         return self.cursor.execute(
             "SELECT * FROM scores").fetchall()
-    
+
     async def get_all_users(self):
         return self.cursor.execute(
             "SELECT * FROM users").fetchall()
@@ -217,7 +220,7 @@ class Database:
         return self.cursor.execute(
             "SELECT * FROM friends WHERE discord_channel=?",
             (discord_id,)).fetchall()
-        
+
     async def get_user_beatmap_play(self, user_id, beatmap_id):
         return self.cursor.execute(
             "SELECT * FROM scores WHERE user_id=? AND beatmap_id=?",
@@ -234,7 +237,7 @@ class Database:
         return self.cursor.execute(
             "SELECT * FROM scores WHERE user_id=? AND beatmap_id=?",
             (user_id, beatmap_id)
-        ).fetchone() 
+        ).fetchone()
 
     async def get_all_friends(self):
         return self.cursor.execute(
@@ -294,20 +297,22 @@ class Database:
             "SELECT * FROM scores WHERE user_id=? AND date>=?",
             (user_id, one_week_ago_utc)).fetchall()
 
+    # ADDS
 
-    ## ADDS
     async def add_channel(self, channel_id, user_data: UserData):
         self.cursor.execute(
             "INSERT INTO users VALUES(?,?,?,?,?,?,?,?,?)",
-            (channel_id, user_data.id, user_data.username, user_data.country_code, user_data.avatar_url, user_data.is_supporter, user_data.cover_url, user_data.playmode, 0)
+            (channel_id, user_data.id, user_data.username, user_data.country_code,
+             user_data.avatar_url, user_data.is_supporter, user_data.cover_url, user_data.playmode, 0)
         )
-        self.db.commit()        
+        self.db.commit()
 
     async def add_beatmap(self, id, sr, artist, song, diff, url, len, bpm, mapper, status, bms_id, od, ar, cs, hp):
         if not(await self.get_beatmap(id)):
             self.cursor.execute(
                 "INSERT INTO beatmaps VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                (id, sr, artist, song, diff, url, len, bpm, mapper, status, bms_id, od, ar, cs, hp)
+                (id, sr, artist, song, diff, url, len, bpm,
+                 mapper, status, bms_id, od, ar, cs, hp)
             )
             self.db.commit()
 
@@ -315,7 +320,8 @@ class Database:
         if not(await self.get_snipe(user_id, beatmap_id, second_user_id)):
             self.cursor.execute(
                 "INSERT INTO snipes VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
-                (user_id, beatmap_id, second_user_id, date, first_score, second_score, first_accuracy, second_accuracy, first_mods, second_mods, first_pp, second_pp)
+                (user_id, beatmap_id, second_user_id, date, first_score, second_score,
+                 first_accuracy, second_accuracy, first_mods, second_mods, first_pp, second_pp)
             )
             self.db.commit()
 
@@ -324,7 +330,8 @@ class Database:
         if not(await self.get_score(user_id, beatmap_id)):
             self.cursor.execute(
                 "INSERT INTO scores VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                (user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods, converted_score, converted_bpm)
+                (user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300,
+                 count_100, count_50, count_miss, date, mods, converted_score, converted_bpm)
             )
             self.db.commit()
             return
@@ -334,9 +341,10 @@ class Database:
     async def add_friend(self, channel_id, user_data: User):
         self.cursor.execute(
             "INSERT INTO friends VALUES(?,?,?,?,?,?,?,?,?,?,?)",
-            (channel_id, user_data.id, user_data.username, user_data.country_code, user_data.avatar_url, user_data.is_supporter, user_data.cover_url, user_data.playmode, 0, False, 0)
+            (channel_id, user_data.id, user_data.username, user_data.country_code, user_data.avatar_url,
+             user_data.is_supporter, user_data.cover_url, user_data.playmode, 0, False, 0)
         )
-        self.db.commit()    
+        self.db.commit()
 
     async def add_link(self, discord_id, user_id):
         self.cursor.execute(
@@ -345,7 +353,7 @@ class Database:
         )
         self.db.commit()
 
-    ## UPDATES
+    # UPDATES
     async def update_link(self, discord_id, user_id):
         self.cursor.execute(
             "UPDATE link SET osu_id=? WHERE discord_id=?",
@@ -363,14 +371,16 @@ class Database:
     async def update_score(self, user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods, conv_stars, conv_bpm):
         self.cursor.execute(
             "UPDATE scores SET score=?, accuracy=?, max_combo=?, passed=?, pp=?, rank=?, count_300=?, count_100=?, count_50=?, count_miss=?, date=?, mods=?, converted_stars=?, converted_bpm=? WHERE user_id=? AND beatmap_id=?",
-            (score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods, conv_stars, conv_bpm, user_id, beatmap_id)
+            (score, accuracy, max_combo, passed, pp, rank, count_300, count_100,
+             count_50, count_miss, date, mods, conv_stars, conv_bpm, user_id, beatmap_id)
         )
         self.db.commit()
 
     async def update_score_zeros(self, user_id, beatmap_id):
         self.cursor.execute(
             "UPDATE scores SET score=?, accuracy=?, max_combo=?, passed=?, pp=?, rank=?, count_300=?, count_100=?, count_50=?, count_miss=?, date=?, mods=?, converted_stars=?, converted_bpm=? WHERE user_id=? AND beatmap_id=?",
-            (0, False, False, False, False, False, False, False, False, False, False, False, False, False, user_id, beatmap_id)
+            (0, False, False, False, False, False, False, False, False,
+             False, False, False, False, False, user_id, beatmap_id)
         )
         self.db.commit()
 
@@ -402,7 +412,7 @@ class Database:
         )
         self.db.commit()
 
-    ## DELETES
+    # DELETES
     async def delete_friend(self, user_id, discord_id):
         self.cursor.execute(
             "DELETE FROM friends WHERE osu_id=? AND discord_channel=?",

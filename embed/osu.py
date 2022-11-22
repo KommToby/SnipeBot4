@@ -2,6 +2,7 @@ import interactions
 
 from data_types.osu import UserData
 
+
 async def create_osu_embed(user: UserData):
     embed = interactions.Embed(
         title=f"osu! profile for {user.username}",
@@ -13,7 +14,7 @@ async def create_osu_embed(user: UserData):
 **Accuracy**: {round(user.statistics.hit_accuracy, 2)}%
 """
     embed.set_author(name="Snipebot by Komm",
-                    icon_url=f"https://osu.ppy.sh/images/flags/{user.country_code}.png")
+                     icon_url=f"https://osu.ppy.sh/images/flags/{user.country_code}.png")
     if user.avatar_url[0] == "/":
         embed.set_thumbnail(url=f"https://osu.ppy.sh{user.avatar_url}")
     else:

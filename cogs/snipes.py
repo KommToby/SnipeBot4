@@ -72,7 +72,7 @@ class Snipes(Cog):  # must have interactions.Extension or this wont work
         leaderboard.sort(
             reverse=True, key=lambda friends_data: friends_data['snipe_pp']
         )
-        friend_dict = [] # Initialisation for a check later
+        friend_dict = []  # Initialisation for a check later
         for _, friend_leaderboard_data in enumerate(leaderboard):
             if friend_leaderboard_data['username'] == user_data.username:
                 friend_dict = friend_leaderboard_data

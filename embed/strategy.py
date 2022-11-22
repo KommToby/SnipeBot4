@@ -1,5 +1,7 @@
-import interactions, random
+import interactions
+import random
 from data_types.osu import *
+
 
 async def create_strategy_embed(strategy, current_pp, new_pp, back_pp, username):
     embed = interactions.Embed(

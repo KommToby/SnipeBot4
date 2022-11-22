@@ -1,12 +1,16 @@
-import interactions, random
+import interactions
+import random
 from data_types.osu import *
+
 
 async def update_decode(modint, value, modarray, mod):
     modarray.append(mod)
     modint = modint - value
     return modint, modarray
 
-async def decode_mods_to_array(modint): # converts mod integer back into array of mods
+
+# converts mod integer back into array of mods
+async def decode_mods_to_array(modint):
     modarray = []
     if modint == '':
         return modarray
@@ -30,11 +34,12 @@ async def decode_mods_to_array(modint): # converts mod integer back into array o
     }
     for key in moddict:
         if modint >= key:
-            if (modint-key)>=0:
+            if (modint-key) >= 0:
                 modint, modarray = await update_decode(modint, key, modarray, moddict[key])
     if modint != 1:
         print("An error occured when decoding mod array")
     return modarray
+
 
 async def frequency_check(array):
     title = ""
@@ -46,14 +51,15 @@ async def frequency_check(array):
             title = i
     return title, best_occurences
 
+
 async def create_stats_embed(user: UserData, user_score_data, top_ten_artists, scores):
     embed = interactions.Embed(
         title=f"osu! stats for {user.username}",
         color=16737962,
     )
     embed.set_author(name="Snipebot by Komm",
-                    icon_url=f"https://osu.ppy.sh/images/flags/{user.country_code}.png")
-    
+                     icon_url=f"https://osu.ppy.sh/images/flags/{user.country_code}.png")
+
     if user.avatar_url[0] == "/":
         embed.set_thumbnail(url=f"https://osu.ppy.sh{user.avatar_url}")
     else:
@@ -65,7 +71,8 @@ async def create_stats_embed(user: UserData, user_score_data, top_ten_artists, s
     artist_string = artist_string + "```"
 
     # average map length
-    average_map_length = round(sum(user_score_data['lengths'])/len(user_score_data['lengths']))
+    average_map_length = round(
+        sum(user_score_data['lengths'])/len(user_score_data['lengths']))
     if average_map_length < 60:
         average_map_length_string = f"{average_map_length} seconds"
     else:
@@ -88,16 +95,18 @@ async def create_stats_embed(user: UserData, user_score_data, top_ten_artists, s
     if len(user_score_data['stars']) == 0:
         average_sr = "None yet"
     else:
-        average_sr = round(sum(user_score_data['stars'])/len(user_score_data['stars']), 2)
+        average_sr = round(
+            sum(user_score_data['stars'])/len(user_score_data['stars']), 2)
     # check to see if bpm values exist
     if user_score_data['bpm'] == []:
         average_bpm = "N/A"
     else:
-        average_bpm = round(sum(user_score_data['bpm'])/len(user_score_data['bpm']))
+        average_bpm = round(
+            sum(user_score_data['bpm'])/len(user_score_data['bpm']))
     embed.add_field(name=f"Average SR of all your stored plays: `{average_sr}` ({len(scores)} stored plays!)\nAverage length of stored plays: `{average_map_length_string}`\nAverage BPM of stored plays: `{average_bpm}`",
                     value=f"**Most played song: `{best_song}` ({best_song_freq} instances)**\n**Favourite guest difficulty mapper: `{best_guest}` ({best_guest_freq} instances)**\n**Favourite mapper: `{best_mapper}` ({best_mapper_freq} instances)**\n**Favourite mod combination: `{best_mod_string}` ({best_mod_freq} instances)**")
 
-    ## I got bullied into this
+    # I got bullied into this
     facts_of_the_day = ["Did you know that Shii is the mapper of Lagtrain?",
                         "Did you know that this fact of the day is new?",
                         "I am inside your walls!",
@@ -144,6 +153,7 @@ async def create_stats_embed(user: UserData, user_score_data, top_ten_artists, s
                         "Left right left right left right left right left right left right hold",
                         "Did you know happystick is responsible for mrekk's cycle hit DT fc"]
 
-    embed.set_footer(text=f"Fact of the day: {random.choice(facts_of_the_day)}", icon_url="https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Blue_question_mark_icon.svg/1200px-Blue_question_mark_icon.svg.png")
+    embed.set_footer(text=f"Fact of the day: {random.choice(facts_of_the_day)}",
+                     icon_url="https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Blue_question_mark_icon.svg/1200px-Blue_question_mark_icon.svg.png")
 
     return embed

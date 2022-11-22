@@ -143,6 +143,6 @@ class Auth:
         return BeatmapMods(beatmap_mods)
 
     # Users recent activity, I think this returns every single beatmap they have played in the last 24 hours, which can be used for a buffer when the api is down / slow
-    #TODO do something with this
+    # TODO do something with this
     async def get_user_recent_activity(self, user_id: str):
         return await self.get_api_v2(f"users/{user_id}/recent_activity")

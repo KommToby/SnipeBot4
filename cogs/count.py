@@ -3,6 +3,7 @@ from embed.count import create_count_embed
 from data_types.interactions import CustomInteractionsClient
 from data_types.cogs import Cog
 
+
 class Count(Cog):  # must have interactions.Extension or this wont work
     def __init__(self, client: CustomInteractionsClient):
         self.client = client
@@ -17,7 +18,7 @@ class Count(Cog):  # must have interactions.Extension or this wont work
             description="the username of the player",
             type=interactions.OptionType.STRING,
             required=True,
-        ),interactions.Option(
+        ), interactions.Option(
             name="mapper",
             description="the username of the mapper",
             type=interactions.OptionType.STRING,
@@ -55,12 +56,13 @@ class Count(Cog):  # must have interactions.Extension or this wont work
         await ctx.send(embeds=embed)
 
     async def handle_linked_account(self, ctx, kwargs):
-        if len(kwargs) <2:
+        if len(kwargs) < 2:
             await ctx.send("You need to specify both a player and a mapper!")
             return False, False
         username = kwargs["player"]
         mapper = kwargs["mapper"]
         return username, mapper
+
 
 def setup(client):
     Count(client)

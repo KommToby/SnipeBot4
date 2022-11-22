@@ -45,7 +45,7 @@ class Snipeback(Cog):  # must have interactions.Extension or this wont work
             return
         embed = await create_snipeback_embed(user_data.username, beatmaps, links)
         await ctx.send(embeds=embed)
-        
+
     async def get_scores(self, main_id: int, friend_id: int):
         sniped = await self.database.get_single_user_snipes_ids(main_id, friend_id)
         snipes = await self.database.get_single_user_snipes_ids(friend_id, main_id)
@@ -78,6 +78,7 @@ class Snipeback(Cog):  # must have interactions.Extension or this wont work
                                "Alternatively you can do `/snipeback username:username` to get a specific persons profile")
                 return False
             return username_array[0]
+
 
 def setup(client):
     Snipeback(client)

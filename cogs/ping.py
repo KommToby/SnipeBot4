@@ -2,6 +2,7 @@ import interactions
 from data_types.interactions import CustomInteractionsClient
 from data_types.cogs import Cog
 
+
 class Ping(Cog):  # must have interactions.Extension or this wont work
     def __init__(self, client: CustomInteractionsClient):
         self.client = client
@@ -33,6 +34,7 @@ class Ping(Cog):  # must have interactions.Extension or this wont work
         await self.database.update_ping(False, discord_id)
         await ctx.send(f"Pinging has been turned off for <@{discord_id}>")
         return
+
 
 def setup(client):
     Ping(client)

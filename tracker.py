@@ -270,7 +270,7 @@ class SnipeTracker:
                     if not main_user_data.id in plays:
                         plays[main_user_data.id] = []
                     if plays[main_user_data.id] == recent_plays:
-                        continue # No need to do anything if the plays are the same
+                        continue  # No need to do anything if the plays are the same
                     plays[main_user_data.id] = recent_plays
                     # Gets the recent score of the main user from the database to compare
                     recent_score = await self.database.get_main_recent_score(main_user_id)
@@ -430,7 +430,7 @@ class SnipeTracker:
                             sniped_friends = await self.get_sniped_friends(play, other_main_user[0])
                             post_channel = await get(self.client, interactions.Channel, channel_id=int(other_main_user[0]))
                             beatmap_data = await self.osu.get_beatmap(beatmap_id)
-                            await post_channel.send(embeds=await create_high_score_embed(play, sniped_friends, beatmap_data ))
+                            await post_channel.send(embeds=await create_high_score_embed(play, sniped_friends, beatmap_data))
                             ping_string = await self.construct_pinging_string(sniped_friends)
                             if ping_string != "":
                                 await post_channel.send(f"{ping_string}")

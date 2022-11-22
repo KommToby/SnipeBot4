@@ -99,7 +99,6 @@ class Track(Cog):  # must have interactions.Extension or this wont work
                 continue
         await message.edit(f"Started tracking user {user_data.username} in this channel! \nScanning plays... {len(beatmaps)}/{len(beatmaps)} - **Done!**")
 
-
     async def handle_user_already_stored_scores(self, user_id, beatmaps: list):
         return_beatmaps = []
         conv_scores = await self.database.get_converted_scores(user_id)
@@ -147,6 +146,7 @@ class Track(Cog):  # must have interactions.Extension or this wont work
                 elif mod == "PF":
                     value += 16384
         return value
+
 
 def setup(client):
     Track(client)

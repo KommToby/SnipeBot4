@@ -3,10 +3,12 @@ from embed.osu import create_osu_embed
 from data_types.interactions import CustomInteractionsClient
 from data_types.cogs import Cog
 
+
 class Osu(Cog):  # must have interactions.Extension or this wont work
     def __init__(self, client: CustomInteractionsClient):
         self.client = client
-        self.osuauth = client.auth # has to be osuauth since the command is called osu and it clashes
+        # has to be osuauth since the command is called osu and it clashes
+        self.osuauth = client.auth
         self.database = client.database
 
     @interactions.extension_command(

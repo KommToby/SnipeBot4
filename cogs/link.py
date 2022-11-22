@@ -2,6 +2,7 @@ import interactions
 from data_types.interactions import CustomInteractionsClient
 from data_types.cogs import Cog
 
+
 class Link(Cog):  # must have interactions.Extension or this wont work
     def __init__(self, client: CustomInteractionsClient):
         self.client: client

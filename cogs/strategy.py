@@ -41,10 +41,14 @@ class Strategy(Cog):  # must have commands.cog or this wont work
             await ctx.send(f"{username} is the main user, and therefore cannot snipe themselves!")
             return
         main_user_id = main_user_id_array[1]
-        user_sniped_array = await self.database.get_user_snipes(main_user_id, user_data.id) # how many times the user has been sniped by the main user
-        user_snipes_array = await self.database.get_user_snipes(user_data.id, main_user_id) # how many times the user has sniped the main user
-        held_snipes_array = await self.calculate_one_way_snipes(user_snipes_array, user_sniped_array) # how many snipes the user has against the main user, that the main user hasnt sniped back
-        not_sniped_back_array = await self.calculate_one_way_snipes(user_sniped_array, user_snipes_array) # how many times the user has been sniped by the main user, that the user hasnt sniped back
+        # how many times the user has been sniped by the main user
+        user_sniped_array = await self.database.get_user_snipes(main_user_id, user_data.id)
+        # how many times the user has sniped the main user
+        user_snipes_array = await self.database.get_user_snipes(user_data.id, main_user_id)
+        # how many snipes the user has against the main user, that the main user hasnt sniped back
+        held_snipes_array = await self.calculate_one_way_snipes(user_snipes_array, user_sniped_array)
+        # how many times the user has been sniped by the main user, that the user hasnt sniped back
+        not_sniped_back_array = await self.calculate_one_way_snipes(user_sniped_array, user_snipes_array)
         snipe_pp = await self.calculate_snipe_pp(main_user_id, len(user_snipes_array), len(not_sniped_back_array), len(held_snipes_array), len(user_sniped_array))
 
         # how much pp will they have if they snipe back the main user

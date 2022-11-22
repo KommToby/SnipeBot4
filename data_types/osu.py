@@ -14,11 +14,13 @@ class OsuScoreData():
         self.rank: str = recent_score_data['rank']
         self.replay: bool = recent_score_data['replay']
         self.score: int = recent_score_data['score']
-        self.statistics: BeatmapStatistics = BeatmapStatistics(recent_score_data['statistics'])
+        self.statistics: BeatmapStatistics = BeatmapStatistics(
+            recent_score_data['statistics'])
         self.user_id: int = recent_score_data['user_id']
         self.current_user_attributes: CurrentUserAttributes = CurrentUserAttributes(
             recent_score_data['current_user_attributes'])
-        self.beatmap: RecentBeatmap = RecentBeatmap(recent_score_data['beatmap'])
+        self.beatmap: RecentBeatmap = RecentBeatmap(
+            recent_score_data['beatmap'])
         self.user: User = User(recent_score_data['user'])
 
 # Api return for recent scores
@@ -27,15 +29,19 @@ class OsuScoreData():
 class OsuRecentScore(OsuScoreData):
     def __init__(self, recent_score_data):
         super().__init__(recent_score_data)
-        self.beatmapset: RecentBeatmapset = RecentBeatmapset(recent_score_data['beatmapset'])
+        self.beatmapset: RecentBeatmapset = RecentBeatmapset(
+            recent_score_data['beatmapset'])
 
 # Api return for top 100 scores
+
 
 class OsuBestScore(OsuScoreData):
     def __init__(self, recent_score_data):
         super().__init__(recent_score_data)
-        self.beatmapset: RecentBeatmapset = RecentBeatmapset(recent_score_data['beatmapset'])
+        self.beatmapset: RecentBeatmapset = RecentBeatmapset(
+            recent_score_data['beatmapset'])
         self.weight: Weight = Weight(recent_score_data['weight'])
+
 
 class Weight():
     def __init__(self, weight):
@@ -82,7 +88,7 @@ class User:
         self.is_supporter: bool = user['is_supporter']
         self.last_visit: str = user['last_visit']
         self.pm_friends_only: bool = user['pm_friends_only']
-        self.profile_colour = user['profile_colour'] # TODO: Type definition
+        self.profile_colour = user['profile_colour']  # TODO: Type definition
         self.username: str = user['username']
 
 
@@ -104,14 +110,15 @@ class UserData(User):
         self.playstyle: list = user_data['playstyle']
         self.post_count: int = user_data['post_count']
         self.profile_order: list = user_data['profile_order']
-        self.title = user_data['title'] # TODO: Type definition
-        self.title_url = user_data['title_url'] # TODO: Type definition
+        self.title = user_data['title']  # TODO: Type definition
+        self.title_url = user_data['title_url']  # TODO: Type definition
         self.twitter: str = user_data['twitter']
         self.website: str = user_data['website']
         self.country: Country = Country(user_data['country'])
         self.cover: Cover = Cover(user_data['cover'])
         self.account_history: list = user_data['account_history']
-        self.active_tournament_banner = user_data['active_tournament_banner'] # TODO: Type definition
+        # TODO: Type definition
+        self.active_tournament_banner = user_data['active_tournament_banner']
         self.badges: list = user_data['badges']
         self.beatmap_playcounts_count: int = user_data['beatmap_playcounts_count']
         self.comments_count: int = user_data['comments_count']
@@ -132,12 +139,14 @@ class UserData(User):
         self.scores_first_count: int = user_data['scores_first_count']
         self.scores_pinned_count: int = user_data['scores_pinned_count']
         self.scores_recent_count: int = user_data['scores_recent_count']
-        self.statistics: UserStatistics = UserStatistics(user_data['statistics'])
+        self.statistics: UserStatistics = UserStatistics(
+            user_data['statistics'])
         self.support_level: int = user_data['support_level']
         self.user_achievements: list = user_data['user_achievements']
         self.rankHistory: dict = user_data['rankHistory']
         self.rank_history: dict = user_data['rank_history']
-        self.ranked_and_approved_beatmapset_count: int = user_data['ranked_and_approved_beatmapset_count']
+        self.ranked_and_approved_beatmapset_count: int = user_data[
+            'ranked_and_approved_beatmapset_count']
         self.unranked_beatmapset_count: int = user_data['unranked_beatmapset_count']
 
 
@@ -160,7 +169,8 @@ class UserStatistics():
         self.maximum_combo: int = statistics['maximum_combo']
         self.replays_watched_by_others: int = statistics['replays_watched_by_others']
         self.is_ranked: bool = statistics['is_ranked']
-        self.grade_counts: GradeCounts = GradeCounts(statistics['grade_counts'])
+        self.grade_counts: GradeCounts = GradeCounts(
+            statistics['grade_counts'])
         self.country_rank: int = statistics['country_rank']
         self.rank = Rank(statistics['rank'])
 
@@ -195,7 +205,7 @@ class Cover:
     def __init__(self, cover):
         self.url: str = cover['url']
         self.custom_url: str = cover['custom_url']
-        self.id = cover['id'] # TODO: Type definition
+        self.id = cover['id']  # TODO: Type definition
 
 
 class Country:
@@ -218,10 +228,11 @@ class RecentBeatmapset:
         self.covers: Covers = Covers(beatmapset['covers'])
         self.creator: str = beatmapset['creator']
         self.favourite_count: int = beatmapset['favourite_count']
-        self.hype = beatmapset['hype'] # TODO: Type definition
+        self.hype = beatmapset['hype']  # TODO: Type definition
         self.id: int = beatmapset['id']
         self.nsfw: bool = beatmapset['nsfw']
-        self.offset = beatmapset['offset'] # TODO: Type definition (int or float)
+        # TODO: Type definition (int or float)
+        self.offset = beatmapset['offset']
         self.play_count: int = beatmapset['play_count']
         self.preview_url: str = beatmapset['preview_url']
         self.source: str = beatmapset['source']
@@ -229,7 +240,7 @@ class RecentBeatmapset:
         self.status: str = beatmapset['status']
         self.title: str = beatmapset['title']
         self.title_unicode: str = beatmapset['title_unicode']
-        self.track_id = beatmapset['track_id'] # TODO: Type definition
+        self.track_id = beatmapset['track_id']  # TODO: Type definition
         self.user_id: int = beatmapset['user_id']
         self.video: bool = beatmapset['video']
 
@@ -265,7 +276,7 @@ class RecentBeatmap:
         self.count_sliders: int = beatmap['count_sliders']
         self.count_spinners: int = beatmap['count_spinners']
         self.cs: float = beatmap['cs']
-        self.deleted_at = beatmap['deleted_at'] # TODO: Type definition
+        self.deleted_at = beatmap['deleted_at']  # TODO: Type definition
         self.drain: float = beatmap['drain']
         self.hit_length: float = beatmap['hit_length']
         self.is_scoreable: bool = beatmap['is_scoreable']
@@ -297,7 +308,8 @@ class FailTimes():
 class Beatmapset(RecentBeatmapset):
     def __init__(self, beatmapset_data):
         super().__init__(beatmapset_data)
-        self.availability: Availability = Availability(beatmapset_data['availability'])
+        self.availability: Availability = Availability(
+            beatmapset_data['availability'])
         self.bpm: float = beatmapset_data['bpm']
         self.can_be_hyped: bool = beatmapset_data['can_be_hyped']
         self.discussion_enabled: bool = beatmapset_data['discussion_enabled']
@@ -324,7 +336,8 @@ class NominationsSummary():
 class Availability():
     def __init__(self, availability):
         self.download_disabled: bool = availability['download_disabled']
-        self.more_information = availability['more_information'] # TODO: Type definition
+        # TODO: Type definition
+        self.more_information = availability['more_information']
 
 
 class BeatmapStatistics:
@@ -339,4 +352,4 @@ class BeatmapStatistics:
 
 class CurrentUserAttributes:
     def __init__(self, current_user_attributes):
-        self.pin = current_user_attributes['pin'] # TODO: Type definition
+        self.pin = current_user_attributes['pin']  # TODO: Type definition

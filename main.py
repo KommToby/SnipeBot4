@@ -1,7 +1,9 @@
 # pip install -U discord-py-interactions
 # pip install -u interactions-get
 # pip install -U git+https://github.com/interactions-py/library@unstable
-import json, os, asyncio
+import json
+import os
+import asyncio
 from tracker import SnipeTracker
 from data_types.interactions import CustomInteractionsClient
 
@@ -18,6 +20,8 @@ client.tracker: SnipeTracker = SnipeTracker(client)
 client.running: bool = False
 
 # Bot Online
+
+
 @client.event
 async def on_ready():
     print("\n\n\n\n\n\n\n\n")

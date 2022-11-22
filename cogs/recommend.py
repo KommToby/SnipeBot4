@@ -46,7 +46,7 @@ class Recommend(Cog):  # must have interactions.Extension or this wont work
             return
         embed = await create_recommend_embed(user_data.username, beatmaps, links)
         await ctx.send(embeds=embed)
-        
+
     async def get_scores(self, main_id: int, friend_id: int):
         friend_scores = await self.database.get_all_scores_beatmap_ids(friend_id)
         main_scores = await self.database.get_all_scores_beatmap_ids(main_id)
@@ -63,7 +63,7 @@ class Recommend(Cog):  # must have interactions.Extension or this wont work
             if score not in friend_scores:
                 beatmaps.append(score)
                 if score not in checked_beatmap_ids:
-                    beatmap_data = await self.database.get_beatmap(score) 
+                    beatmap_data = await self.database.get_beatmap(score)
                     if beatmap_data:
                         beatmaps_data.append(beatmap_data)
                         links.append(beatmap_data[5])
@@ -80,6 +80,7 @@ class Recommend(Cog):  # must have interactions.Extension or this wont work
                                "Alternatively you can do `/recommend username:username` to get a specific persons profile")
                 return False
             return username_array[0]
+
 
 def setup(client):
     Recommend(client)

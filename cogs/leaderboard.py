@@ -5,6 +5,8 @@ from data_types.interactions import CustomInteractionsClient
 from data_types.cogs import Cog
 
 # must have interactions.Extension or this wont work
+
+
 class Leaderboard(Cog):
     def __init__(self, client: CustomInteractionsClient):
         self.client = client

@@ -2,6 +2,7 @@ import interactions
 import random
 from data_types.osu import UserData
 
+
 async def create_snipeback_embed(friend_username: str, beatmaps: list, links: list):
     embed = interactions.Embed(
         title=f"10 random maps the main user should snipe {friend_username} back on",
@@ -12,7 +13,8 @@ async def create_snipeback_embed(friend_username: str, beatmaps: list, links: li
         if i < 10:
             beatmap_index = i
             beatmap_string = f"{beatmaps[beatmap_index][2]} - {beatmaps[beatmap_index][3]} [{beatmaps[beatmap_index][4]}]"
-            embed.add_field(name=str(i+1) + ". " + beatmap_string, value="[Link to map](" + str(links[beatmap_index]) + ")", inline=False)
+            embed.add_field(name=str(i+1) + ". " + beatmap_string,
+                            value="[Link to map](" + str(links[beatmap_index]) + ")", inline=False)
         else:
             break
     return embed
