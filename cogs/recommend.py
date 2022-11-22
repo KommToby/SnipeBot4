@@ -77,7 +77,7 @@ class Recommend(Cog):  # must have interactions.Extension or this wont work
             username_array = await self.database.get_linked_user_osu_id(ctx.author.id._snowflake)
             if not username_array:
                 await ctx.send("You are not linked to an osu! account - use `/link` to link your account\n"
-                               "Alternatively you can do `/snipelist username:username` to get a specific persons profile")
+                               "Alternatively you can do `/recommend username:username` to get a specific persons profile")
                 return False
             return username_array[0]
 
