@@ -5,6 +5,7 @@ from tracker import SnipeTracker
 from interactions.ext.get import get
 from data_types.interactions import CustomInteractionsClient
 from data_types.cogs import Cog
+import asyncio
 # TODO make all friend adding in the same instances of the FIRST friend add.
 # This can be done by regularly checking a value of friends that need to be added
 # And if a new friend has been added to that list, it can start scanning them.
@@ -43,7 +44,13 @@ class Friend(Cog):  # must have interactions.Extension or this wont work
             name="list",
             description="provide the username of the main user you want to list the friends of",
             type=interactions.OptionType.STRING,
-        )],
+        ),
+            interactions.Option(
+                name="add-multiple",
+                description="provide a list of usernames you want to add seperated by commas WITH NO SPACES",
+                type=interactions.OptionType.STRING,
+        ),
+        ],
     )
     async def friend(self, ctx: interactions.CommandContext, *args, **kwargs):
         await ctx.defer()
@@ -60,6 +67,8 @@ class Friend(Cog):  # must have interactions.Extension or this wont work
                 await self.handle_remove(ctx, kwargs["remove"])
             elif "list" in kwargs:
                 await self.handle_list(ctx, kwargs["list"])
+            elif "add-multiple" in kwargs:
+                await self.handle_add_multiple(ctx, kwargs["add-multiple"])
 
     async def convert_mods_to_int(self, modarray: list):
         value = 0
@@ -97,6 +106,35 @@ class Friend(Cog):  # must have interactions.Extension or this wont work
                     value += 16384
         return value
 
+    async def handle_add_multiple(self, ctx, usernames: str):
+        # split the usernames into a list of usernames split by commas
+        usernames = usernames.split(",")
+        channel_id_snowflake = ctx.channel_id._snowflake
+        # for every user in the list of usernames, add them to the friend list
+        for i, username in enumerate(usernames):
+            if i == 0:
+                message = await ctx.send(f"Adding {username} to the friends list... {usernames.index(username) + 1}/{len(usernames)}")
+            else:
+                ctx = await get(self.client, interactions.Channel,
+                                   channel_id=int(channel_id_snowflake))
+                message = await ctx.send(f"Adding {username} to the friends list... {usernames.index(username) + 1}/{len(usernames)}")
+            user_data = await self.osu.get_user_data(username)
+            if user_data:
+                if not(await self.database.get_friend_from_channel(user_data.id, channel_id_snowflake)):
+                    await self.database.add_friend(channel_id_snowflake, user_data)
+                    await message.edit(content=f"Adding {username} to the friends list... **Done!**")
+                    # if they arent a main user or a friend you should scan their plays on all beatmaps next TODO
+                    await self.scan_users_plays(ctx, username, message)
+                    newctx = await get(self.client, interactions.Channel,
+                                       channel_id=int(channel_id_snowflake))
+                    await newctx.send(f"Finished scanning {username}'s plays")
+                else:
+                    await ctx.send(f"{user_data.username} is already in the friend list!")
+                    return
+            else:
+                await ctx.send(f"Could not find the user {username} on the osu! servers")
+                return
+
     async def handle_add(self, ctx, username: str):
         message = await ctx.send(f"Adding {username} to the friends list...")
         user_data = await self.osu.get_user_data(username)
@@ -106,8 +144,8 @@ class Friend(Cog):  # must have interactions.Extension or this wont work
                 await message.edit(content=f"Adding {username} to the friends list... **Done!**")
                 # if they arent a main user or a friend you should scan their plays on all beatmaps next TODO
                 await self.scan_users_plays(ctx, username, message)
-                newctx = get(self.client, interactions.Channel,
-                             channel_id=int(ctx.channel_id._snowflake))
+                newctx = await get(self.client, interactions.Channel,
+                                   channel_id=int(ctx.channel_id._snowflake))
                 await newctx.send(f"Finished scanning {username}'s plays")
             else:
                 await ctx.send(f"{user_data.username} is already in the friend list!")
@@ -191,6 +229,7 @@ class Friend(Cog):  # must have interactions.Extension or this wont work
         message_update_time = time.time()
         for i, beatmap in enumerate(beatmaps):
             try:
+                await asyncio.sleep(0.05)
                 if not(await self.database.get_score(user_data.id, beatmap[0])):
                     user_play = await self.osu.get_score_data(beatmap[0], user_data.id)
                     if user_play:
@@ -235,7 +274,7 @@ class Friend(Cog):  # must have interactions.Extension or this wont work
                     # This is the case that if the score that is stored here is from SnipeBot3, it needs to update it. Painful Stuff.
                     local_score_data = await self.database.get_score(user_data.id, beatmap[0])
                     # accuracy being 0 signifies old format
-                    if str(local_score_data[3]) == "0":
+                    if local_score_data[3] == None:
                         user_play = await self.osu.get_score_data(beatmap[0], user_data.id)
                         if not(user_play):
                             if i != 0:
