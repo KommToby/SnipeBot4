@@ -156,7 +156,7 @@ async def create_stats_embed(user: UserData, user_score_data, top_ten_artists, s
                         "The USA has had a top 3 spot in owc every year since 2015",
                         "Komm is the best osu! player of all time",
                         "Snipebot was rewritten over 4 times before this release",
-                        "Dean Herbert (Peppy) was Originally from Australia, but now lives in Japan"]
+                        "Dean Herbert (Peppy) was originally from Australia, but now lives in Japan"]
 
     embed.set_footer(text=f"Fact of the day: {random.choice(facts_of_the_day)}",
                      icon_url="https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Blue_question_mark_icon.svg/1200px-Blue_question_mark_icon.svg.png")
