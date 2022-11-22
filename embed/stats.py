@@ -85,7 +85,10 @@ async def create_stats_embed(user: UserData, user_score_data, top_ten_artists, s
     best_mod_string = best_mod_string
 
     embed.description = artist_string
-    average_sr = round(sum(user_score_data['stars'])/len(user_score_data['stars']), 2)
+    if len(user_score_data['stars']) == 0:
+        average_sr = "None yet"
+    else:
+        average_sr = round(sum(user_score_data['stars'])/len(user_score_data['stars']), 2)
     # check to see if bpm values exist
     if user_score_data['bpm'] == []:
         average_bpm = "N/A"
@@ -96,7 +99,50 @@ async def create_stats_embed(user: UserData, user_score_data, top_ten_artists, s
 
     ## I got bullied into this
     facts_of_the_day = ["Did you know that Shii is the mapper of Lagtrain?",
-                        "Did you know that this fact of the day is new?"]
+                        "Did you know that this fact of the day is new?",
+                        "I am inside your walls!",
+                        "Carcharodontosaurus had relatively weak jaws with a bite force estimated at 3,000 pounds per square inch.",
+                        "osu! is a game that was created",
+                        "flubb",
+                        "Furytail sucks at facts",
+                        "flubb can't use cutlery!",
+                        "Did you know that Shii is the mapper of the big black?",
+                        "Cookiezi is better than chocomint",
+                        "China can't go 3 years without cheating in OWC",
+                        "Doomsday is the sexiest osu! player",
+                        "if you want to start a conversation, ask the highest ranked osu! player their thoughts on minorities",
+                        "you are not hanzer",
+                        "my ex wife still misses me",
+                        "my ex wife asked me to stop singing wonderwall",
+                        "osu! isn't real",
+                        "osu! is real",
+                        "You will die in 19 years, 3 months, 23 days, 9 hours, 52 minutes and 5 seconds",
+                        "Help i'm trapped in a discord bot factory",
+                        "The moon looks the same on the other side",
+                        "Toilet water swirls the other way in Australia",
+                        "Wine isn't an anagram of grape",
+                        "RIP Asparagus",
+                        "'This December' mapped by Komm is the best taiko map of this decade",
+                        "Did you know thelewa FC'd road of resistance's hardest stream on membrane keys",
+                        "99% Of osu! players give up on a map right before they are about to FC it!",
+                        "Did you know, before computers were invented people used to play osu! on paper?",
+                        "Did you know, the first osu! player was a monkey?",
+                        "freedom dive (the old one) has more HR only FCs than HD only passes",
+                        "The original My Love set was discovered on a cave wall in Cornwall, England",
+                        "You will never be the best at osu!. Give up now.",
+                        "penguins are 90% torso",
+                        "did you know spamming mappers will get them to mod your map faster",
+                        "did you know, shigetora's brother was the original owner of his account",
+                        "freedom dive girl has 0 posts on r34",
+                        "every planet can fit between the earth and the moon",
+                        "the earth is more smooth than any non lab-made ball",
+                        "it took 7 years and 8 months between the first and second SS on Kokou no Sousei",
+                        "around 8180 litres of water is required to grow enough cotton to create one pair of jeans",
+                        "I have rigged your home with 100 sticks of dynamite and you have 10 seconds to run",
+                        "Toy is our boy",
+                        "Karcher has earned more via map bounties than the winning owc team will earn total in 2022",
+                        "Left right left right left right left right left right left right hold",
+                        "Did you know happystick is responsible for mrekk's cycle hit DT fc"]
 
     embed.set_footer(text=f"Fact of the day: {random.choice(facts_of_the_day)}", icon_url="https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Blue_question_mark_icon.svg/1200px-Blue_question_mark_icon.svg.png")
 
