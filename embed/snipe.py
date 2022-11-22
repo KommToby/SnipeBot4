@@ -20,7 +20,7 @@ async def create_friend_snipe_embed(play: OsuRecentScore, main_user: str, beatma
 
     # Message Handling
     title_message = f"{play.user.username} just sniped {main_user} with {modstr}!"
-    score_message = f"▸ {play.score:,} > {main_user_score:,} (+{play.score-main_user_score})" + \
+    score_message = f"▸ {play.score:,} > {main_user_score:,} (+{play.score-main_user_score:,})" + \
                     f"▸ {round((float(play.accuracy) * 100), 2)}%" + \
                     f"▸ {play.rank} Rank ▸ pp: {pp}pp"
 
