@@ -336,7 +336,8 @@ class Database:
             self.db.commit()
             return
         else:
-            raise Exception("Duplicate Score Error")
+            print(f"Duplicate Score Error on beatmap {beatmap_id}")
+            return
 
     async def add_friend(self, channel_id, user_data: User):
         self.cursor.execute(
