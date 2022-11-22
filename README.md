@@ -15,7 +15,7 @@ This is in a seperate repo as it is a major update, the whole of SnipeBot3 was b
 <!-- mention contributors -->
 ## Contributors
 - [KommToby](https://github.com/KommToby) - Creator & Bot Maintainer
-- [Wimble](https://github.com/macha-dev) - Website Maintainer
+- [wimble](https://github.com/macha-dev) - Website Maintainer
 - [Jamgyo](https://github.com/jamiegyoung) - Contributor
 - [ito](https://github.com/largereptile) - Contributor
 
