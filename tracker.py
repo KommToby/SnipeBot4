@@ -364,7 +364,7 @@ class SnipeTracker:
             main_user_friends_list = await self.database.get_main_user_friends(main_user[0])
             if main_user_friends_list is not None:
                 for friend in main_user_friends_list:
-                    if friend[1] == friend_id:
+                    if str(friend[1]) == friend_id:
                         friend_found = True
                         break
             # If the main user has this friend on their friends list, we can scan their play against them
@@ -586,16 +586,16 @@ class SnipeTracker:
     async def add_scores(self, main_user_friends: list, main_user, play: OsuRecentScore, users_checked: list):
         # for main users who may be friends with other main users
         if main_user[1] not in users_checked:
-            if not(await self.database.get_user_score_with_zeros(main_user, play.beatmap.id)):
+            if not(await self.database.get_user_score_with_zeros(main_user[1], play.beatmap.id)):
                 # if the user doesnt have a score and hasnt played the map, it just stores a 0 score
-                await self.database.add_score(main_user[1], play.beatmap.id, 0, None, None, None, None, None, None, None, None, None, None, 0, 0)
+                await self.database.add_score(main_user[1], play.beatmap.id, 0, None, None, None, None, None, None, None, None, None, None, None, 0, 0)
                 users_checked.append(main_user[1])
         for friend in main_user_friends:
             if friend[1] in users_checked:  # for duplicate friends over multiple main users
                 continue
             if not(await self.database.get_user_score_with_zeros(friend[1], play.beatmap.id)):
                 # The friend has not played the map and has not got a score saved
-                await self.database.add_score(friend[1], play.beatmap.id, 0, None, None, None, None, None, None, None, None, None, None, 0, 0)
+                await self.database.add_score(friend[1], play.beatmap.id, 0, None, None, None, None, None, None, None, None, None, None, None, 0, 0)
             else:
                 friend_play = self.osu.get_score_data(
                     play.beatmap.id, friend[1])
@@ -619,7 +619,9 @@ class SnipeTracker:
             first_mods = await self.convert_mods_to_int(play.mods)
             second_mods = await self.convert_mods_to_int(main_user_play.mods)
             await self.database.add_snipe(play.user.id, play.beatmap.id, main_user_db[1], play.created_at, play.score, main_user_play.score, play.accuracy, main_user_play.accuracy, first_mods, second_mods, play.pp, main_user_play.pp)
-        discord_channel = f'{main_user_db[0]}'
+        discord_channel = await self.database.get_channel(main_user_db)
+        if discord_channel is tuple:
+            discord_channel = discord_channel[0]
         post_channel = await get(self.client, interactions.Channel, channel_id=int(discord_channel))
         beatmap_data = await self.osu.get_beatmap(play.beatmap.id)
         await post_channel.send(embeds=await create_friend_snipe_embed(play, main_username, beatmap_data, main_user_play.score))
