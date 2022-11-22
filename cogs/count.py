@@ -1,10 +1,7 @@
 import interactions
-from data_types.osu import UserData
 from embed.count import create_count_embed
 from data_types.interactions import CustomInteractionsClient
 from data_types.cogs import Cog
-import random
-
 
 class Count(Cog):  # must have interactions.Extension or this wont work
     def __init__(self, client: CustomInteractionsClient):
@@ -51,7 +48,7 @@ class Count(Cog):  # must have interactions.Extension or this wont work
         # then we get all scores that the user has played that the mapper has mapped
         all_user_scores_mapper = []
         for score in all_user_scores:
-            if str(score[1]) in all_beatmaps:
+            if int(score[1]) in all_beatmaps:
                 all_user_scores_mapper.append(score)
 
         embed = await create_count_embed(user_data.username, mapper_data.username, all_user_scores_mapper)
