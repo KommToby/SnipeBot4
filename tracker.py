@@ -4,6 +4,7 @@ from embed.snipe import *
 from interactions.ext.get import get
 from data_types.osu import *
 from data_types.interactions import CustomInteractionsClient
+import asyncio
 # TODO add type values to all methods
 # TODO map json dictionaries to classes
 # TODO make methods that dont use client, database, or osu static (dont contain self)
@@ -111,6 +112,7 @@ class SnipeTracker:
                     plays = {}
                 s = time.time()
                 plays = await self.tracker_loop(plays)
+                await asyncio.sleep(1)
                 print(
                     f"Tracker loop took {round((time.time() - s),2)} seconds")
             except Exception as e:
@@ -256,7 +258,6 @@ class SnipeTracker:
         try:
             # plays = {} # this is used to store the plays we get from the api, and check for duplicates to prevent api pinging :D
             # above line is now introduced in the loop beginning since we need to store the previous loops data
-            start_time = time.time()
             users = await self.database.get_all_users()
             for data in users:
                 # Stores the user id of the main user
@@ -531,7 +532,7 @@ class SnipeTracker:
             main_user_friends = await self.database.get_user_friends(main_user[0])
             if not(main_user_play):
                 # if the main user hasnt played the map, only scores need to be checked
-                users_checked = self.add_scores(
+                users_checked = await self.add_scores(
                     main_user_friends, main_user, play, users_checked)
                 continue
             for friend in main_user_friends:
