@@ -38,7 +38,8 @@ class Database:
                 date varchar(32),
                 mods int(32),
                 converted_stars real,
-                converted_bpm real
+                converted_bpm real,
+                snipability real
             )
         ''')
 
@@ -207,6 +208,11 @@ class Database:
         return self.cursor.execute(
             "SELECT * FROM scores").fetchall()
 
+    async def get_all_scores_all_users_without_zeros_no_snipability(self):  # does include 0s
+        return self.cursor.execute(
+            "SELECT * FROM scores WHERE score!=? AND accuracy>=? AND snipability IS NULL",
+            ('0', 0.01)).fetchall()
+
     async def get_all_users(self):
         return self.cursor.execute(
             "SELECT * FROM users").fetchall()
@@ -325,13 +331,13 @@ class Database:
             )
             self.db.commit()
 
-    async def add_score(self, user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods, converted_score, converted_bpm):
+    async def add_score(self, user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods, converted_score, converted_bpm, snipability):
         # if score already exists throw an error
         if not(await self.get_score(user_id, beatmap_id)):
             self.cursor.execute(
-                "INSERT INTO scores VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                "INSERT INTO scores VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300,
-                 count_100, count_50, count_miss, date, mods, converted_score, converted_bpm)
+                 count_100, count_50, count_miss, date, mods, converted_score, converted_bpm, snipability)
             )
             self.db.commit()
             return
@@ -369,11 +375,11 @@ class Database:
         )
         self.db.commit()
 
-    async def update_score(self, user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods, conv_stars, conv_bpm):
+    async def update_score(self, user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods, conv_stars, conv_bpm, snipability):
         self.cursor.execute(
-            "UPDATE scores SET score=?, accuracy=?, max_combo=?, passed=?, pp=?, rank=?, count_300=?, count_100=?, count_50=?, count_miss=?, date=?, mods=?, converted_stars=?, converted_bpm=? WHERE user_id=? AND beatmap_id=?",
+            "UPDATE scores SET score=?, accuracy=?, max_combo=?, passed=?, pp=?, rank=?, count_300=?, count_100=?, count_50=?, count_miss=?, date=?, mods=?, converted_stars=?, converted_bpm=? WHERE user_id=? AND beatmap_id=? AND snipability=?",
             (score, accuracy, max_combo, passed, pp, rank, count_300, count_100,
-             count_50, count_miss, date, mods, conv_stars, conv_bpm, user_id, beatmap_id)
+             count_50, count_miss, date, mods, conv_stars, conv_bpm, user_id, beatmap_id, snipability)
         )
         self.db.commit()
 
@@ -412,6 +418,14 @@ class Database:
             (pp, discord_channel, friend_id)
         )
         self.db.commit()
+
+    async def update_snipability(self, user_id, beatmap_id, score, snipability):
+        self.cursor.execute(
+            "UPDATE scores SET snipability=? WHERE user_id=? AND beatmap_id=? AND score=?",
+            (snipability, user_id, beatmap_id, score)
+        )
+        self.db.commit()
+
 
     # DELETES
     async def delete_friend(self, user_id, discord_id):

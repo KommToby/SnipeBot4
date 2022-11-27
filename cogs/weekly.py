@@ -1,7 +1,4 @@
 import interactions
-import math
-import datetime
-from data_types.osu import UserData
 from embed.weekly import create_weekly_embed
 from data_types.interactions import CustomInteractionsClient
 from data_types.cogs import Cog

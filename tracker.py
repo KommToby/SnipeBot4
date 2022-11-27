@@ -97,7 +97,7 @@ class SnipeTracker:
             if modint >= key:
                 if (modint-key) >= 0:
                     modint, modarray = await self.update_decode(modint, key, modarray, moddict[key])
-        if modint != 1:
+        if modint != 0:
             print("An error occured when decoding mod array")
         return modarray
 
@@ -113,6 +113,24 @@ class SnipeTracker:
                 await asyncio.sleep(1)
                 print(
                     f"Tracker loop took {round((time.time() - s),2)} seconds")
+                tracker_time = time.time() - s
+                while tracker_time < 150:
+                    all_scores = await self.database.get_all_scores_all_users_without_zeros_no_snipability()
+                    for i, score in enumerate(all_scores):
+                        try:
+                            tracker_time = time.time() - s
+                            if tracker_time > 150:
+                                break
+                            # print the percentage every 100 scores with the estimated time remaining
+                            print(f"{i}/{len(all_scores)}")
+                            # map_length, normal_difficulty, stats, bpm, mods, rank, spinner_count, pp):
+                            beatmap = await self.database.get_beatmap(score[1])
+                            if beatmap:
+                                await self.database.update_snipability(score[0], score[1], score[2], await self.calculate_snipability(beatmap[6], beatmap[1], {"AR": beatmap[12], "OD": beatmap[11]}, beatmap[7], await self.decode_mods_to_array(score[13]), score[7], 0, score[6]))
+                        except Exception as e:
+                            print(e)
+                            print(score)
+                            continue
             except Exception as e:
                 print(f"Error occured in tracker loop: {e}")
                 pass
@@ -156,7 +174,8 @@ class SnipeTracker:
             if not (await self.database.get_user_beatmap_play(friend_id, play.beatmap.id)):
                 # Converted score values
                 converted_stars, converted_bpm = await self.convert_stars_and_bpm(play)
-                await self.database.add_score(play.user_id, play.beatmap.id, play.score, play.accuracy, play.max_combo, play.passed, play.pp, play.rank, play.statistics.count_300, play.statistics.count_100, play.statistics.count_50, play.statistics.count_miss, play.created_at, await self.convert_mods_to_int(play.mods), converted_stars, converted_bpm)
+                snipability = await self.calculate_snipability(play.beatmap.drain, play.beatmap.difficulty_rating, {"AR": play.beatmap.ar, "OD": play.beatmap.accuracy}, play.beatmap.bpm, play.mods, play.rank, play.max_combo, play.rank, play.beatmap.count_spinners, play.pp)
+                await self.database.add_score(play.user_id, play.beatmap.id, play.score, play.accuracy, play.max_combo, play.passed, play.pp, play.rank, play.statistics.count_300, play.statistics.count_100, play.statistics.count_50, play.statistics.count_miss, play.created_at, await self.convert_mods_to_int(play.mods), converted_stars, converted_bpm, snipability)
             # this is the snipe check                   # print(f"\t Adding active snipe for {friend_play.score.user.username}")
             if friend_play.score.score < play.score:
                 sniped_friends.append(friend_username)
@@ -199,7 +218,8 @@ class SnipeTracker:
                 # if the recent score is larger than the local score
                 if play.score > int(user_play[2]):
                     conv_stars, conv_bpm = await self.convert_stars_and_bpm(play)
-                    await self.database.update_score(user_play[0], user_play[1], play.score, play.accuracy, play.max_combo, play.passed, play.pp, play.rank, play.statistics.count_300, play.statistics.count_100, play.statistics.count_50, play.statistics.count_miss, play.created_at, await self.convert_mods_to_int(play.mods), conv_stars, conv_bpm)
+                    snipability = await self.calculate_snipability(play.beatmap.drain, play.beatmap.difficulty_rating, {"AR": play.beatmap.ar, "OD": play.beatmap.accuracy}, play.beatmap.bpm, play.mods, play.rank, play.beatmap.count_spinners, play.pp)
+                    await self.database.update_score(user_play[0], user_play[1], play.score, play.accuracy, play.max_combo, play.passed, play.pp, play.rank, play.statistics.count_300, play.statistics.count_100, play.statistics.count_50, play.statistics.count_miss, play.created_at, await self.convert_mods_to_int(play.mods), conv_stars, conv_bpm, snipability)
                     # If the recent play is the recent score, then its a new best
                     if play.score >= online_play.score.score:
                         sniped_friends = await self.get_sniped_friends(play, f"{data[0]}")
@@ -233,9 +253,11 @@ class SnipeTracker:
                 if ping_string != "":
                     await post_channel.send(f"{ping_string}")
             else:
-                await self.database.add_score(play.user_id, play.beatmap.id, play.score, play.accuracy, play.max_combo, play.passed, play.pp, play.rank, play.statistics.count_300, play.statistics.count_100, play.statistics.count_50, play.statistics.count_miss, play.created_at, await self.convert_mods_to_int(play.mods), converted_stars, converted_bpm)
+                snipability = await self.calculate_snipability(play.beatmap.drain, play.beatmap.difficulty_rating, {"AR": play.beatmap.ar, "OD": play.beatmap.accuracy}, play.beatmap.bpm, play.mods, play.rank, play.max_combo, play.rank, play.beatmap.count_spinners, play.pp)
+                await self.database.add_score(play.user_id, play.beatmap.id, play.score, play.accuracy, play.max_combo, play.passed, play.pp, play.rank, play.statistics.count_300, play.statistics.count_100, play.statistics.count_50, play.statistics.count_miss, play.created_at, await self.convert_mods_to_int(play.mods), converted_stars, converted_bpm, snipability)
         else:
-            await self.database.add_score(play.user_id, play.beatmap.id, play.score, play.accuracy, play.max_combo, play.passed, play.pp, play.rank, play.statistics.count_300, play.statistics.count_100, play.statistics.count_50, play.statistics.count_miss, play.created_at, await self.convert_mods_to_int(play.mods), converted_stars, converted_bpm)
+            snipability = await self.calculate_snipability(play.beatmap.drain, play.beatmap.difficulty_rating, {"AR": play.beatmap.ar, "OD": play.beatmap.accuracy}, play.beatmap.bpm, play.mods, play.rank, play.max_combo, play.rank, play.beatmap.count_spinners, play.pp)
+            await self.database.add_score(play.user_id, play.beatmap.id, play.score, play.accuracy, play.max_combo, play.passed, play.pp, play.rank, play.statistics.count_300, play.statistics.count_100, play.statistics.count_50, play.statistics.count_miss, play.created_at, await self.convert_mods_to_int(play.mods), converted_stars, converted_bpm, snipability)
 
     # The main infinite loop tracker
     async def tracker_loop(self, plays):
@@ -390,7 +412,7 @@ class SnipeTracker:
                 # Now we see if the bot has already scanned this score but it wasnt recent
                 local_score = await self.database.get_user_score_with_zeros(friend_id, play.beatmap.id)
                 if local_score is None:  # in case the user has never played it before and its not stored
-                    await self.database.add_score(friend_id, play.beatmap.id, 0, False, False, False, False, False, False, False, False, False, False, False, 0, 0)
+                    await self.database.add_score(friend_id, play.beatmap.id, 0, False, False, False, False, False, False, False, False, False, False, False, 0, 0, None)
                     local_score = await self.database.get_user_score_with_zeros(friend_id, play.beatmap.id)
                 # the score is unique, so we can continue
                 if str(play.score) != local_score[2] or local_score is None:
@@ -407,7 +429,8 @@ class SnipeTracker:
                                 await self.check_main_user_play(play, main_user[1], main_user)
                     if str(play.score) > str(local_score[2]):
                         conv_stars, conv_bpm = await self.convert_stars_and_bpm(play)
-                        await self.database.update_score(friend_id, beatmap_id, play.score, play.accuracy, play.max_combo, play.passed, play.pp, play.rank, play.statistics.count_300, play.statistics.count_100, play.statistics.count_50, play.statistics.count_miss, play.created_at, await self.convert_mods_to_int(play.mods), conv_stars, conv_bpm)
+                        snipability = await self.calculate_snipability(play.beatmap.drain, play.beatmap.difficulty_rating, {"AR": play.beatmap.ar, "OD": play.beatmap.accuracy}, play.beatmap.bpm, play.mods, play.rank, play.beatmap.count_spinners, play.pp)
+                        await self.database.update_score(friend_id, beatmap_id, play.score, play.accuracy, play.max_combo, play.passed, play.pp, play.rank, play.statistics.count_300, play.statistics.count_100, play.statistics.count_50, play.statistics.count_miss, play.created_at, await self.convert_mods_to_int(play.mods), conv_stars, conv_bpm, snipability)
                     await self.database.update_friend_recent_score(friend_id, play.score)
                 else:
                     await self.database.update_friend_recent_score(friend_id, play.score)
@@ -420,7 +443,8 @@ class SnipeTracker:
             if not(await self.database.get_score(friend_id, beatmap_id)):
                 # this means its the friends first time playing the beatmap, so we add the score
                 converted_stars, converted_bpm = await self.convert_stars_and_bpm(play)
-                await self.database.add_score(friend_id, beatmap_id, play.score, play.accuracy, play.max_combo, play.passed, play.pp, play.rank, play.statistics.count_300, play.statistics.count_100, play.statistics.count_50, play.statistics.count_miss, play.created_at, await self.convert_mods_to_int(play.mods), converted_stars, converted_bpm)
+                snipability = await self.calculate_snipability(play.beatmap.drain, play.beatmap.difficulty_rating, {"AR": play.beatmap.ar, "OD": play.beatmap.accuracy}, play.beatmap.bpm, play.mods, play.rank, play.max_combo, play.rank, play.beatmap.count_spinners, play.pp)
+                await self.database.add_score(friend_id, beatmap_id, play.score, play.accuracy, play.max_combo, play.passed, play.pp, play.rank, play.statistics.count_300, play.statistics.count_100, play.statistics.count_50, play.statistics.count_miss, play.created_at, await self.convert_mods_to_int(play.mods), converted_stars, converted_bpm, snipability)
                 # now we make sure the user hasnt (somehow) got a snipe on this beatmap before
                 if not(await self.database.get_user_snipe_on_beatmap(friend_id, beatmap_id, main_user[1])):
                     # Now we can post the friend snipe
@@ -432,7 +456,8 @@ class SnipeTracker:
                 # if its their new best
                 if int(play.score) > int(local_score[2]):
                     conv_stars, conv_bpm = await self.convert_stars_and_bpm(play)
-                    await self.database.update_score(friend_id, beatmap_id, play.score, play.accuracy, play.max_combo, play.passed, play.pp, play.rank, play.statistics.count_300, play.statistics.count_300, play.statistics.count_50, play.statistics.count_miss, play.created_at, await self.convert_mods_to_int(play.mods), conv_stars, conv_bpm)
+                    snipability = await self.calculate_snipability(play.beatmap.drain, play.beatmap.difficulty_rating, {"AR": play.beatmap.ar, "OD": play.beatmap.accuracy}, play.beatmap.bpm, play.mods, play.rank, play.beatmap.count_spinners, play.pp)
+                    await self.database.update_score(friend_id, beatmap_id, play.score, play.accuracy, play.max_combo, play.passed, play.pp, play.rank, play.statistics.count_300, play.statistics.count_300, play.statistics.count_50, play.statistics.count_miss, play.created_at, await self.convert_mods_to_int(play.mods), conv_stars, conv_bpm, snipability)
                     # now we check if the user has got a snipe on this beatmap before
                     if not(await self.database.get_user_snipe_on_beatmap(friend_id, beatmap_id, main_user[1])):
                         # Now we can post the friend snipe
@@ -464,10 +489,11 @@ class SnipeTracker:
         for main_user in main_users:
             main_play = await self.osu.get_score_data(data.id, main_user[1])
             if not(main_play):
-                await self.database.add_score(main_user[1], data.id, 0, False, False, False, False, False, False, False, False, False, False, False, 0, 0)
+                await self.database.add_score(main_user[1], data.id, 0, False, False, False, False, False, False, False, False, False, False, False, 0, 0, None)
                 continue
             # first we add the score of the main user
             converted_stars, converted_bpm = await self.convert_stars_and_bpm(main_play.score)
+            snipability = await self.calculate_snipability(main_play.score.beatmap.drain, main_play.score.beatmap.difficulty_rating, {"AR": main_play.score.beatmap.ar, "OD": main_play.score.beatmap.accuracy}, main_play.score.beatmap.bpm, main_play.score.mods, main_play.score.rank, main_play.score.max_combo, main_play.score.rank, main_play.score.beatmap.count_spinners, main_play.score.pp)
             await self.database.add_score(main_user[1], data.id, main_play.score.score, main_play.score.accuracy, main_play.score.max_combo, main_play.score.passed, main_play.score.pp, main_play.score.rank, main_play.score.statistics.count_300, main_play.score.statistics.count_100, main_play.score.statistics.count_50, main_play.score.statistics.count_miss, main_play.score.created_at, await self.convert_mods_to_int(main_play.score.mods), converted_stars, converted_bpm)
             friends = await self.database.get_user_friends(main_user[0])
             for friend in friends:
@@ -477,7 +503,7 @@ class SnipeTracker:
                     friend_play.score.mods = 0
                     converted_bpm = 0
                     if not(await self.convert_mods_to_int(friend_play.score.mods) > 15):
-                        await self.database.add_score(friend[1], data.id, 0, False, False, False, False, False, False, False, False, False, False, False, 0, 0)
+                        await self.database.add_score(friend[1], data.id, 0, False, False, False, False, False, False, False, False, False, False, False, 0, 0, None)
                         continue
                     if "DT" in friend_play.score.mods or "NC" in friend_play.score.mods:
                         converted_bpm = int(
@@ -485,7 +511,8 @@ class SnipeTracker:
                     beatmap_mod_data = await self.osu.get_beatmap_mods(friend_play.score.beatmap.id, await self.convert_mods_to_int(friend_play.score.mods))
                     if beatmap_mod_data:
                         converted_stars = beatmap_mod_data.attributes.star_rating
-                    await self.database.add_score(friend[1], friend_play.score.beatmap.id, friend_play.score.score, friend_play.score.accuracy, friend_play.score.max_combo, friend_play.score.passed, friend_play.score.pp, friend_play.score.rank, friend_play.score.statistics.count_300, friend_play.score.statistics.count_100, friend_play.score.statistics.count_50, friend_play.score.statistics.count_miss, friend_play.score.created_at, await self.convert_mods_to_int(friend_play.score.mods))
+                    snipability = await self.calculate_snipability(friend_play.score.beatmap.drain, friend_play.score.beatmap.difficulty_rating, {"AR": friend_play.score.beatmap.ar, "OD": friend_play.score.beatmap.accuracy}, friend_play.score.beatmap.bpm, friend_play.score.mods, friend_play.score.rank, friend_play.score.max_combo, friend_play.score.rank, friend_play.score.beatmap.count_spinners, friend_play.score.pp)
+                    await self.database.add_score(friend[1], friend_play.score.beatmap.id, friend_play.score.score, friend_play.score.accuracy, friend_play.score.max_combo, friend_play.score.passed, friend_play.score.pp, friend_play.score.rank, friend_play.score.statistics.count_300, friend_play.score.statistics.count_100, friend_play.score.statistics.count_50, friend_play.score.statistics.count_miss, friend_play.score.created_at, await self.convert_mods_to_int(friend_play.score.mods), snipability)
                     if await self.convert_datetime_to_int(friend_play.score.created_at) > await self.convert_datetime_to_int(main_play.score.created_at):
                         # this means friend has sniped main play if they got higher score
                         if friend_play.score.score > main_play.score.score:
@@ -548,7 +575,7 @@ class SnipeTracker:
                     await self.check_friend_snipe_on_beatmap(friend_play, main_user_play, friend, main_user, play, friends_to_skip)
                 else:  # if the friend play doesnt exist, we still add a 0-score to the database to speed up in future
                     if not(await self.database.get_user_score_with_zeros(friend[1], play.beatmap.id)):
-                        await self.database.add_score(friend[1], play.beatmap.id, 0, None, None, None, None, None, None, None, None, None, None, None, 0, 0)
+                        await self.database.add_score(friend[1], play.beatmap.id, 0, None, None, None, None, None, None, None, None, None, None, None, 0, 0, None)
                     # when friends get scanned for plays, this user gets skipped as we know they dont have a play.
                     friends_to_skip.append(friend[1])
 
@@ -586,21 +613,22 @@ class SnipeTracker:
                 if friend_play.score.score > friend_local_score[2]:
                     # we need to update their local score
                     conv_stars, conv_bpm = await self.convert_stars_and_bpm(friend_play.score)
-                    await self.database.update_score(friend[1], play.beatmap.id, friend_play.score.score, friend_play.score.accuracy, friend_play.score.max_combo, friend_play.score.passed, friend_play.score.pp, friend_play.score.rank, friend_play.score.statistics.count_300, friend_play.score.statistics.count_100, friend_play.score.statistics.count_50, friend_play.score.statistics.count_miss, friend_play.score.created_at, await self.convert_mods_to_int(friend_play.score.mods), conv_stars, conv_bpm)
+                    snipability = await self.calculate_snipability(play.beatmap.drain, play.beatmap.difficulty_rating, {"AR": play.beatmap.ar, "OD": play.beatmap.accuracy}, play.beatmap.bpm, friend_play.score.mods, friend_play.score.rank, friend_play.score.max_combo, friend_play.score.rank, play.beatmap.count_spinners, play.pp)
+                    await self.database.update_score(friend[1], play.beatmap.id, friend_play.score.score, friend_play.score.accuracy, friend_play.score.max_combo, friend_play.score.passed, friend_play.score.pp, friend_play.score.rank, friend_play.score.statistics.count_300, friend_play.score.statistics.count_100, friend_play.score.statistics.count_50, friend_play.score.statistics.count_miss, friend_play.score.created_at, await self.convert_mods_to_int(friend_play.score.mods), conv_stars, conv_bpm, snipability)
 
     async def add_scores(self, main_user_friends: list, main_user, play: OsuRecentScore, users_checked: list):
         # for main users who may be friends with other main users
         if main_user[1] not in users_checked:
             if not(await self.database.get_user_score_with_zeros(main_user[1], play.beatmap.id)):
                 # if the user doesnt have a score and hasnt played the map, it just stores a 0 score
-                await self.database.add_score(main_user[1], play.beatmap.id, 0, None, None, None, None, None, None, None, None, None, None, None, 0, 0)
+                await self.database.add_score(main_user[1], play.beatmap.id, 0, None, None, None, None, None, None, None, None, None, None, None, 0, 0, None)
                 users_checked.append(main_user[1])
         for friend in main_user_friends:
             if friend[1] in users_checked:  # for duplicate friends over multiple main users
                 continue
             if not(await self.database.get_user_score_with_zeros(friend[1], play.beatmap.id)):
                 # The friend has not played the map and has not got a score saved
-                await self.database.add_score(friend[1], play.beatmap.id, 0, None, None, None, None, None, None, None, None, None, None, None, 0, 0)
+                await self.database.add_score(friend[1], play.beatmap.id, 0, None, None, None, None, None, None, None, None, None, None, None, 0, 0, None)
             else:
                 friend_play = await self.osu.get_score_data(
                     play.beatmap.id, friend[1])
@@ -610,13 +638,124 @@ class SnipeTracker:
                         # if the new score is better than the stored one
                         if friend_play.score.score > int(local_score[2]):
                             await self.convert_stars_and_bpm(friend_play.score)
-                            await self.database.update_score(friend[1], friend_play.score.beatmap.id, friend_play.score.score, friend_play.score.accuracy, friend_play.score.max_combo, friend_play.score.passed, friend_play.score.pp, friend_play.score.rank, friend_play.score.statistics.count_300, friend_play.score.statistics.count_100, friend_play.score.statistics.count_50, friend_play.score.statistics.count_miss, friend_play.score.created_at, await self.convert_mods_to_int(friend_play.score.mods))
+                            snipability = await self.calculate_snipability(play.beatmap.drain, play.beatmap.difficulty_rating, {"AR": play.beatmap.ar, "OD": play.beatmap.accuracy}, play.beatmap.bpm, friend_play.score.mods, friend_play.score.rank, friend_play.score.max_combo, friend_play.score.rank, play.beatmap.count_spinners, play.pp)
+                            await self.database.update_score(friend[1], friend_play.score.beatmap.id, friend_play.score.score, friend_play.score.accuracy, friend_play.score.max_combo, friend_play.score.passed, friend_play.score.pp, friend_play.score.rank, friend_play.score.statistics.count_300, friend_play.score.statistics.count_100, friend_play.score.statistics.count_50, friend_play.score.statistics.count_miss, friend_play.score.created_at, await self.convert_mods_to_int(friend_play.score.mods), snipability)
                 else:
                     pass  # because they already have a 0 score stored
             users_checked.append(friend[1])
         return users_checked
 
+    # This calculates the maps snipability and returns a value between 0 and 10
+    async def calculate_snipability(self, map_length: int, normal_difficulty: float, stats: dict, bpm: int, mods: list, rank: str, spinner_count: int, pp: float):
+        snipability = 1
+        # map length handler
+        # for every interval of 30 seconds, the snipability increases by 0.025*
+        # this maxes at 300 seconds with the snipability increasing 1*
+        # this is to prevent snipes from being too easy on long maps
+        if map_length > 300:
+            map_length = 300
+        # floor to the nearest 30 seconds
+        map_length = map_length - (map_length % 30)
+        snipability *= (0.75 + ((map_length/30)*0.025))
+
+        # difficulty handler
+        # for every difficulty interval of 1, the snipability multiplier reduces by 0.25
+        # maxing at 10 difficulty, the snipability multiplier is 0.5
+        if normal_difficulty > 10:
+            snipability *= 0.5
+        else:
+            snipability *= (1 - (normal_difficulty/20))
+        # The easier the map, the more snipable it is.
+        # This is so 6 star maps arent sniped as easily as 4 star maps, it sort of makes sense if you include passing.
+
+        # map difficulty handler
+        # this is for specific cases
+        if stats['AR'] > 9.5:
+            snipability *= 0.97
+        if stats['AR'] > 10.9:
+            snipability *= 0.97
+        if stats['OD'] > 9:
+            snipability *= 0.99
+        if stats['OD'] > 9.5:
+            snipability *= 0.99
+        if stats['OD'] > 10:
+            snipability *= 0.99
+
+        # bpm handler
+        if bpm > 200:
+            snipability *= 0.99
+        if bpm > 210:
+            snipability *= 0.99
+        if bpm > 220:
+            snipability *= 0.99
+        if bpm > 230:
+            snipability *= 0.99
+        if bpm > 240:
+            snipability *= 0.99
+        if bpm > 250:
+            snipability *= 0.99
+
+        # pp handler
+        if pp is not None:
+            if pp > 100:
+                snipability *= 0.99
+            if pp > 200:
+                snipability *= 0.99
+            if pp > 300:
+                snipability *= 0.98
+            if pp > 400:
+                snipability *= 0.97
+            if pp > 500:
+                snipability *= 0.9
+            if pp > 600:
+                snipability *= 0.5
+
+        # rank handler MAKE LAST
+        if rank == 'F':
+            snipability = 1
+        if rank == 'D':
+            # half the effect of the snipability
+            snipability = snipability + 0.5*(1-snipability) # add 50% back to the snipability
+        if rank == 'C':
+            snipability = snipability + 0.4*(1-snipability) # add 40% back to the snipability
+        if rank == 'B':
+            snipability = snipability + 0.25*(1-snipability) # add 25% back to the snipability
+        if rank == 'A':
+            snipability = snipability + 0.05*(1-snipability) # add 5% back to the snipability
+        if rank == 'S':
+            snipability *= 0.98
+        if rank == 'SH':
+            snipability *= 0.97
+        if "DT" in mods and "HR" not in mods and "HD" not in mods:
+            if rank == 'X':
+                snipability *= 0.97 # DT SS
+            if rank == 'XH':
+                snipability *= 0.8 # DTFL SS
+        if "DT" in mods and "HR" in mods and "HD" not in mods:
+            if rank == 'X':
+                snipability *= 0.95 # DTHR SS
+            if rank == 'XH':
+                snipability *= 0.77 # DTHRFL SS
+        if "DT" in mods and "HD" in mods and "HR" not in mods:
+            if rank == 'X':
+                snipability *= 0.85 # HDDT SS
+        if "DT" in mods and "HD" in mods and "HR" in mods:
+            if rank == 'X':
+                snipability *= 0.25 # HDDTHR SS
+            if rank == 'XH':
+                snipability *= 0.1 # DTHRFL SS
+
+        # spinner handler
+        if spinner_count > 0:
+            snipability = snipability + 0.25*(1-snipability) # add 25% back to the snipability if map has a spinner
+        if spinner_count > 5:
+            snipability = snipability + 0.25*(1-snipability) # add another 25% if there are lots of spinners
+
+        # return the snipability
+        return snipability
+
     # this takes in the main users best play and their local play, adds the snipe data to the db, and posts the snipe embed to discord
+
     async def post_friend_snipe(self, main_user_play: OsuRecentScore, play: OsuRecentScore, main_user_db):
         main_username = main_user_db[2]
         # if the snipe doesnt exist

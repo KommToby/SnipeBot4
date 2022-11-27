@@ -8,6 +8,7 @@ from tracker import SnipeTracker
 from data_types.interactions import CustomInteractionsClient
 from interactions.ext.get import get
 import interactions
+import time
 
 with open("config.json") as f:
     DISCORD_CONFIG_DATA = json.load(f)["discord"]
@@ -47,7 +48,6 @@ async def on_ready():
             #     )
             #     embed.set_author(name='Snipebot by Komm')
             #     await ctx.send(embeds=embed)
-
 
             await asyncio.sleep(3)
             await client.tracker.start_loop()
