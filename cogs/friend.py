@@ -29,6 +29,7 @@ class Friend(Cog):  # must have interactions.Extension or this wont work
 
     @interactions.extension_command(
         name="friend",
+        default_member_permissions=interactions.Permissions.ADMINISTRATOR, # Admin only
         description="add to, remove, or check a main users friend list",
         options=[interactions.Option(
             name="add",

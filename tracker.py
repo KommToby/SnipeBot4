@@ -5,8 +5,6 @@ from interactions.ext.get import get
 from data_types.osu import *
 from data_types.interactions import CustomInteractionsClient
 import asyncio
-# TODO add type values to all methods
-# TODO map json dictionaries to classes
 # TODO make methods that dont use client, database, or osu static (dont contain self)
 # TODO for all api returns create a class object "type" to refer to
 # TODO for all "white" variable names, make a new submethod that passes in the correct Class Type
@@ -167,11 +165,13 @@ class SnipeTracker:
                 first_mods = await self.convert_mods_to_int(play.mods)
                 second_mods = await self.convert_mods_to_int(friend_play.score.mods)
                 # adds the snipe to the database
-                await self.database.add_snipe(play.user_id, play.beatmap.id, friend_id, play.created_at, play.score, friend_play.score.score, play.accuracy, friend_play.score.accuracy, first_mods, second_mods, play.pp, friend_play.score.pp)
+                await self.database.add_snipe(play.user_id, play.beatmap.id, int(friend_id), play.created_at, play.score, friend_play.score.score, play.accuracy, friend_play.score.accuracy, first_mods, second_mods, play.pp, friend_play.score.pp)
                 main_users = await self.database.get_all_users()
                 for main_user in main_users:  # In case the main user from one server is a friend on another
                     if str(friend_play.score.user.id) == str(main_user[1]):
-                        await self.post_friend_snipe(friend_play.score, play, friend_id)
+                        main_user_db = await self.database.get_channel_from_username(friend_username)
+                        if main_user_db:
+                            await self.post_friend_snipe(friend_play.score, play, main_user_db)
         return sniped_friends
 
     # creates a string consisting of the user ids of linked users who want to be pinged
@@ -224,7 +224,7 @@ class SnipeTracker:
                             if not(main_user[2] in sniped_friends):
                                 continue  # exit the index and continue for loop
                             friend_play = await self.osu.get_score_data(play.beatmap.id, play.user_id)
-                            await self.post_friend_snipe(play, friend_play.score, play.user_id)
+                            await self.post_friend_snipe(play, friend_play.score, main_user)
             return
         # even if the local play doesnt exist we still need to add it as a score
         converted_stars, converted_bpm = await self.convert_stars_and_bpm(play)
@@ -295,6 +295,13 @@ class SnipeTracker:
                                 await self.database.update_main_recent_score(main_user_id, recent_plays[0].score)
                                 break  # we break out of the loop because if the most recent play is the same, we do not need to continue checking other older plays
                     # Implement the checked users counter used for priority tracking
+                        # now we check if the main user is a friend of another user
+                        friends = await self.database.get_all_friends()
+                        for friend in friends:
+                            if main_user_id in friend:
+                                # if the main user is a friend of another user we need to check their plays as a friend
+                                await self.check_friend_recent_score(active_friends, main_user_id, users, recent_plays, beatmaps_to_scan, recent_score )
+                                break
                     checked_users_count += 1
                     if main_user_id not in checked_users:
                         # append the user to the priority tracking list
@@ -346,6 +353,15 @@ class SnipeTracker:
                     if friend_id in active_friends:
                         active_friends.remove(friend_id)
                     pass
+                # We need to check if the friend is a main user on another server, and if they are, we check their beatmap as a main user as well
+                for user in users:
+                    if str(user[1]) == friend_id:
+                        # get the user data from the database
+                        user_data = await self.database.get_channel_from_username(user[2])
+                        for play in recent_plays:
+                            await self.check_main_user_play(play, friend_id, user_data)
+                        # this has to always update for the 0 index
+                        await self.database.update_main_recent_score(friend_id, recent_plays[0].score)
             checked_users_count += 1
             if friend_id not in checked_users:
                 checked_users.append(friend_id)
@@ -513,14 +529,28 @@ class SnipeTracker:
                                     await self.database.add_snipe(main_user[1], friend_play.score.beatmap.id, friend[1], main_play.score.created_at, main_play.score.score, friend_play.score.score, main_play.score.accuracy, friend_play.score.accuracy, first_mods, second_mods, main_play.score.pp, friend_play.score.pp)
 
     async def check_duplicate_friends(self, friends: list, main_users: list):
+        seen_friends = []
+        # First we remove any friend duplicates
         for friend in friends:
-            while friends.count(friend) > 1:  # we only want 1 of a friend
-                friends.remove(friend)
+            add = True # if we are going to add or not
+            for seen_friend in seen_friends:
+                if seen_friends == []:
+                    seen_friends.append(friend)
+                    break
+                if friend[2] == seen_friend[2]:
+                    add = False
+                    break
+            if add:
+                seen_friends.append(friend)
+        
+        # Now we get rid of any main users that are left in the seen friends
         for main_user in main_users:
-            # we dont want to check a main user as a friend
-            while friends.count(main_user) > 0:
-                friends.remove(main_user)
-        return friends  # returns altered array
+            for seen_friend in seen_friends:
+                if main_user[2] == seen_friend[2]:
+                    seen_friends.remove(seen_friend)
+                    break
+        
+        return seen_friends  # returns altered array
 
     # When given a play, checks all users for snipes on that map.
     async def add_snipes(self, play: OsuRecentScore):
@@ -619,8 +649,8 @@ class SnipeTracker:
             first_mods = await self.convert_mods_to_int(play.mods)
             second_mods = await self.convert_mods_to_int(main_user_play.mods)
             await self.database.add_snipe(play.user.id, play.beatmap.id, main_user_db[1], play.created_at, play.score, main_user_play.score, play.accuracy, main_user_play.accuracy, first_mods, second_mods, play.pp, main_user_play.pp)
-        discord_channel = await self.database.get_channel(main_user_db)
-        if discord_channel is tuple:
+        discord_channel = await self.database.get_channel(int(main_user_db[0]))
+        while type(discord_channel) is tuple:
             discord_channel = discord_channel[0]
         post_channel = await get(self.client, interactions.Channel, channel_id=int(discord_channel))
         beatmap_data = await self.osu.get_beatmap(play.beatmap.id)

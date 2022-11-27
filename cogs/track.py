@@ -13,6 +13,7 @@ class Track(Cog):  # must have interactions.Extension or this wont work
 
     @interactions.extension_command(
         name="track",
+        default_member_permissions=interactions.Permissions.ADMINISTRATOR, # admin only
         description="add a user to be tracked in the channel",
         options=[interactions.Option(
             name="username",
