@@ -142,3 +142,4 @@ database.db-journal
 beatmaps.txt
 coverage/
 .coveragerc
+test.py
