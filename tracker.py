@@ -181,7 +181,7 @@ class SnipeTracker:
             if not (await self.database.get_user_beatmap_play(friend_id, play.beatmap.id)):
                 # Converted score values
                 converted_stars, converted_bpm, max_combo = await self.convert_stars_and_bpm(play)
-                snipability = await self.calculate_snipability(play.beatmap.drain, play.beatmap.difficulty_rating, {"AR": play.beatmap.ar, "OD": play.beatmap.accuracy}, play.beatmap.bpm, play.mods, play.rank, play.max_combo, play.rank, play.beatmap.count_spinners, play.pp, play.accuracy, play.statistics.count_miss, play.max_combo, max_combo)
+                snipability = await self.calculate_snipability(play.beatmap.drain, play.beatmap.difficulty_rating, {"AR": play.beatmap.ar, "OD": play.beatmap.accuracy}, play.beatmap.bpm, play.mods, play.rank, play.beatmap.count_spinners, play.pp, play.accuracy, play.statistics.count_miss, play.max_combo, max_combo)
                 await self.database.add_score(play.user_id, play.beatmap.id, play.score, play.accuracy, play.max_combo, play.passed, play.pp, play.rank, play.statistics.count_300, play.statistics.count_100, play.statistics.count_50, play.statistics.count_miss, play.created_at, await self.convert_mods_to_int(play.mods), converted_stars, converted_bpm, snipability)
             # this is the snipe check                   # print(f"\t Adding active snipe for {friend_play.score.user.username}")
             if friend_play.score.score < play.score:
@@ -260,10 +260,10 @@ class SnipeTracker:
                 if ping_string != "":
                     await post_channel.send(f"{ping_string}")
             else:
-                snipability = await self.calculate_snipability(play.beatmap.drain, play.beatmap.difficulty_rating, {"AR": play.beatmap.ar, "OD": play.beatmap.accuracy}, play.beatmap.bpm, play.mods, play.rank, play.max_combo, play.rank, play.beatmap.count_spinners, play.pp, play.accuracy, play.statistics.count_miss, play.max_combo, max_combo)
+                snipability = await self.calculate_snipability(play.beatmap.total_length, play.beatmap.difficulty_rating, {"AR": play.beatmap.ar, "OD": play.beatmap.accuracy}, play.beatmap.bpm, play.mods, play.rank, play.beatmap.count_spinners, play.pp, play.accuracy, play.statistics.count_miss, play.max_combo, max_combo)
                 await self.database.add_score(play.user_id, play.beatmap.id, play.score, play.accuracy, play.max_combo, play.passed, play.pp, play.rank, play.statistics.count_300, play.statistics.count_100, play.statistics.count_50, play.statistics.count_miss, play.created_at, await self.convert_mods_to_int(play.mods), converted_stars, converted_bpm, snipability)
         else:
-            snipability = await self.calculate_snipability(play.beatmap.drain, play.beatmap.difficulty_rating, {"AR": play.beatmap.ar, "OD": play.beatmap.accuracy}, play.beatmap.bpm, play.mods, play.rank, play.max_combo, play.rank, play.beatmap.count_spinners, play.pp, play.accuracy, play.statistics.count_miss, play.max_combo, max_combo)
+            snipability = await self.calculate_snipability(play.beatmap.total_length, play.beatmap.difficulty_rating, {"AR": play.beatmap.ar, "OD": play.beatmap.accuracy}, play.beatmap.bpm, play.mods, play.rank, play.beatmap.count_spinners, play.pp, play.accuracy, play.statistics.count_miss, play.max_combo, max_combo)
             await self.database.add_score(play.user_id, play.beatmap.id, play.score, play.accuracy, play.max_combo, play.passed, play.pp, play.rank, play.statistics.count_300, play.statistics.count_100, play.statistics.count_50, play.statistics.count_miss, play.created_at, await self.convert_mods_to_int(play.mods), converted_stars, converted_bpm, snipability)
 
     # The main infinite loop tracker
@@ -450,7 +450,7 @@ class SnipeTracker:
             if not(await self.database.get_score(friend_id, beatmap_id)):
                 # this means its the friends first time playing the beatmap, so we add the score
                 converted_stars, converted_bpm, max_combo = await self.convert_stars_and_bpm(play)
-                snipability = await self.calculate_snipability(play.beatmap.drain, play.beatmap.difficulty_rating, {"AR": play.beatmap.ar, "OD": play.beatmap.accuracy}, play.beatmap.bpm, play.mods, play.rank, play.max_combo, play.rank, play.beatmap.count_spinners, play.pp, play.max_combo, max_combo)
+                snipability = await self.calculate_snipability(play.beatmap.total_length, play.beatmap.difficulty_rating, {"AR": play.beatmap.ar, "OD": play.beatmap.accuracy}, play.beatmap.bpm, play.mods, play.rank, play.beatmap.count_spinners, play.pp, play.accuracy, play.statistics.count_miss, play.max_combo, max_combo)
                 await self.database.add_score(friend_id, beatmap_id, play.score, play.accuracy, play.max_combo, play.passed, play.pp, play.rank, play.statistics.count_300, play.statistics.count_100, play.statistics.count_50, play.statistics.count_miss, play.created_at, await self.convert_mods_to_int(play.mods), converted_stars, converted_bpm, snipability)
                 # now we make sure the user hasnt (somehow) got a snipe on this beatmap before
                 if not(await self.database.get_user_snipe_on_beatmap(friend_id, beatmap_id, main_user[1])):
