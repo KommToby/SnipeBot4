@@ -110,6 +110,11 @@ class Database:
             "SELECT * FROM scores WHERE user_id=? AND converted_bpm>?",
             (user_id, 0)).fetchall()
 
+    async def get_snipable_scores(self, user_id): # TODO test for this function
+        return self.cursor.execute(
+            "SELECT * FROM scores WHERE user_id=? AND snipability>?",
+            (user_id, 0)).fetchall()
+
     async def get_zero_scores(self, user_id):
         # using row factory ensures it returns an arr_iray of values not tuples
         self.cursor.row_factory = lambda cursor, row: row[0]
