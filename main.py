@@ -6,6 +6,8 @@ import os
 import asyncio
 from tracker import SnipeTracker
 from data_types.interactions import CustomInteractionsClient
+from interactions.ext.get import get
+import interactions
 
 with open("config.json") as f:
     DISCORD_CONFIG_DATA = json.load(f)["discord"]
@@ -34,6 +36,19 @@ async def on_ready():
                     client.load(f"cogs.{filename[:-3]}")
             print("All cogs loaded successfully")
             print("Starting main loop in 3 seconds")
+
+            # for channel_id in [843020728773378069, 928423777270919198, 846070773235712070]:
+            #     ctx = await get(client, interactions.Channel,
+            #                                 channel_id=int(channel_id))
+            #     embed = interactions.Embed(
+            #     title="Snipebot Launched!",
+            #     description=f"Snipebot is now online on all servers!\nVersion: 4.1.0",
+            #     color=16711680
+            #     )
+            #     embed.set_author(name='Snipebot by Komm')
+            #     await ctx.send(embeds=embed)
+
+
             await asyncio.sleep(3)
             await client.tracker.start_loop()
         else:
