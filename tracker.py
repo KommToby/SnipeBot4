@@ -779,7 +779,9 @@ class SnipeTracker:
             snipability *= 0.98
         if rank == 'SH':
             snipability *= 0.97
+        remove_dt = False
         if "NC" in mods:
+            remove_dt = True
             mods.append("DT") # simple fix
         if "DT" in mods and "HR" not in mods and "HD" not in mods:
             if rank == 'X':
@@ -823,6 +825,10 @@ class SnipeTracker:
             snipability = snipability + 0.25*(1-snipability) # add 25% back to the snipability if map has a spinner
         if spinner_count > 5:
             snipability = snipability + 0.25*(1-snipability) # add another 25% if there are lots of spinners
+
+        # Remove DT if needed
+        if remove_dt:
+            mods.remove("DT")
 
         # return the snipability
         return snipability
