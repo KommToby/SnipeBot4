@@ -1,5 +1,4 @@
 import interactions
-import random
 from data_types.osu import *
 import datetime
 

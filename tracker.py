@@ -166,12 +166,6 @@ class SnipeTracker:
                 second_mods = await self.convert_mods_to_int(friend_play.score.mods)
                 # adds the snipe to the database
                 await self.database.add_snipe(play.user_id, play.beatmap.id, int(friend_id), play.created_at, play.score, friend_play.score.score, play.accuracy, friend_play.score.accuracy, first_mods, second_mods, play.pp, friend_play.score.pp)
-                main_users = await self.database.get_all_users()
-                for main_user in main_users:  # In case the main user from one server is a friend on another
-                    if str(friend_play.score.user.id) == str(main_user[1]):
-                        main_user_db = await self.database.get_channel_from_username(friend_username)
-                        if main_user_db:
-                            await self.post_friend_snipe(friend_play.score, play, main_user_db)
         return sniped_friends
 
     # creates a string consisting of the user ids of linked users who want to be pinged
@@ -223,8 +217,8 @@ class SnipeTracker:
                             # why didnt i do it this way originally i will never know
                             if not(main_user[2] in sniped_friends):
                                 continue  # exit the index and continue for loop
-                            friend_play = await self.osu.get_score_data(play.beatmap.id, play.user_id)
-                            await self.post_friend_snipe(play, friend_play.score, main_user)
+                            friend_play = await self.osu.get_score_data(play.beatmap.id, main_user[1])
+                            await self.post_friend_snipe(friend_play.score, play, main_user)
             return
         # even if the local play doesnt exist we still need to add it as a score
         converted_stars, converted_bpm = await self.convert_stars_and_bpm(play)
@@ -295,13 +289,6 @@ class SnipeTracker:
                                 await self.database.update_main_recent_score(main_user_id, recent_plays[0].score)
                                 break  # we break out of the loop because if the most recent play is the same, we do not need to continue checking other older plays
                     # Implement the checked users counter used for priority tracking
-                        # now we check if the main user is a friend of another user
-                        friends = await self.database.get_all_friends()
-                        for friend in friends:
-                            if main_user_id in friend:
-                                # if the main user is a friend of another user we need to check their plays as a friend
-                                await self.check_friend_recent_score(active_friends, main_user_id, users, recent_plays, beatmaps_to_scan, recent_score )
-                                break
                     checked_users_count += 1
                     if main_user_id not in checked_users:
                         # append the user to the priority tracking list
@@ -438,18 +425,6 @@ class SnipeTracker:
                 if not(await self.database.get_user_snipe_on_beatmap(friend_id, beatmap_id, main_user[1])):
                     # Now we can post the friend snipe
                     await self.post_friend_snipe(main_user_play.score, play, main_user)
-                    # But now we need to check if the friend is a main user in another server, and post their new best there
-                    for other_main_user in users:
-                        # They are!
-                        if other_main_user == play.user_id:
-                            # now we need to post the new top play in the main users server
-                            sniped_friends = await self.get_sniped_friends(play, other_main_user[0])
-                            post_channel = await get(self.client, interactions.Channel, channel_id=int(other_main_user[0]))
-                            beatmap_data = await self.osu.get_beatmap(beatmap_id)
-                            await post_channel.send(embeds=await create_high_score_embed(play, sniped_friends, beatmap_data))
-                            ping_string = await self.construct_pinging_string(sniped_friends)
-                            if ping_string != "":
-                                await post_channel.send(f"{ping_string}")
 
             else:  # the user has played the beatmap before
                 # note, this cant be the main user on another server, since the main user play score would have to be identical for a new high score
@@ -532,7 +507,7 @@ class SnipeTracker:
         seen_friends = []
         # First we remove any friend duplicates
         for friend in friends:
-            add = True # if we are going to add or not
+            add = True  # if we are going to add or not
             for seen_friend in seen_friends:
                 if seen_friends == []:
                     seen_friends.append(friend)
@@ -542,14 +517,14 @@ class SnipeTracker:
                     break
             if add:
                 seen_friends.append(friend)
-        
+
         # Now we get rid of any main users that are left in the seen friends
         for main_user in main_users:
             for seen_friend in seen_friends:
                 if main_user[2] == seen_friend[2]:
                     seen_friends.remove(seen_friend)
                     break
-        
+
         return seen_friends  # returns altered array
 
     # When given a play, checks all users for snipes on that map.
@@ -627,7 +602,7 @@ class SnipeTracker:
                 # The friend has not played the map and has not got a score saved
                 await self.database.add_score(friend[1], play.beatmap.id, 0, None, None, None, None, None, None, None, None, None, None, None, 0, 0)
             else:
-                friend_play = self.osu.get_score_data(
+                friend_play = await self.osu.get_score_data(
                     play.beatmap.id, friend[1])
                 if friend_play:
                     local_score = await self.database.get_user_beatmap_play(friend[1], play.beatmap.id)
@@ -643,7 +618,7 @@ class SnipeTracker:
 
     # this takes in the main users best play and their local play, adds the snipe data to the db, and posts the snipe embed to discord
     async def post_friend_snipe(self, main_user_play: OsuRecentScore, play: OsuRecentScore, main_user_db):
-        main_username = main_user_play.user.username
+        main_username = main_user_db[2]
         # if the snipe doesnt exist
         if not(await self.database.get_user_snipe_on_beatmap(play.user.id, play.beatmap.id, main_user_db[0])):
             first_mods = await self.convert_mods_to_int(play.mods)
