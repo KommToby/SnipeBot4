@@ -115,6 +115,18 @@ class Database:
             "SELECT * FROM scores WHERE user_id=? AND snipability>?",
             (user_id, 0)).fetchall()
 
+    async def get_snipable_scores_beatmap_ids(self, user_id): # TODO test for this function
+        a = self.cursor.execute(
+            "SELECT beatmap_id FROM scores WHERE user_id=? AND snipability>?",
+            (user_id, 0)).fetchall()
+        return [x[0] for x in a]
+
+    async def get_snipable_scores_values(self, user_id): # TODO test for this function
+        a = self.cursor.execute(
+            "SELECT snipability FROM scores WHERE user_id=? AND snipability>?",
+            (user_id, 0)).fetchall()
+        return [x[0] for x in a]
+
     async def get_zero_scores(self, user_id):
         # using row factory ensures it returns an arr_iray of values not tuples
         self.cursor.row_factory = lambda cursor, row: row[0]
