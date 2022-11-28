@@ -295,9 +295,11 @@ class SnipeTracker:
                     recent_plays = await self.osu.get_recent_plays(main_user_id)
                     if not main_user_data.id in plays:
                         plays[main_user_data.id] = []
-                    if plays[main_user_data.id] == recent_plays:
-                        continue  # No need to do anything if the plays are the same
-                    plays[main_user_data.id] = recent_plays
+                    if recent_plays and plays[main_user_data.id] != []:
+                        if plays[main_user_data.id].score == recent_plays[0].score and plays[main_user_data.id].beatmap.id == recent_plays[0].beatmap.id and plays[main_user_data.id].created_at == recent_plays[0].created_at:
+                            continue  # No need to do anything if the plays are the same
+                    if recent_plays:
+                        plays[main_user_data.id] = recent_plays[0]
                     # Gets the recent score of the main user from the database to compare
                     recent_score = await self.database.get_main_recent_score(main_user_id)
                     print(
@@ -346,7 +348,14 @@ class SnipeTracker:
             # active user check
             if checked_users_count > 15:
                 pass  # TODO tbh this doesnt need to be implemented for a while, because its pretty fast
-            friend_id = f"{friend[1]}"
+            friend_id = friend[1]
+            # Below we scan every single friend, which is why we did the removals above
+            recent_plays = await self.osu.get_recent_plays(friend_id)
+            if not friend_id in plays:
+                plays[friend_id] = []
+            if recent_plays and plays[friend_id] != []:
+                if plays[friend_id].score == recent_plays[0].score and plays[friend_id].beatmap.id == recent_plays[0].beatmap.id:
+                    continue  # No need to do anything if the plays are the same
             friend_data = await self.osu.get_user_data(friend_id)
             if not(friend_data):
                 continue
@@ -354,14 +363,9 @@ class SnipeTracker:
             print(
                 f"     checking {friend_data.username} [{round((time.time() - local_time), 2)}s]")
             local_time = time.time()  # reset api timer
-            # Below we scan every single friend, which is why we did the removals above
-            recent_plays = await self.osu.get_recent_plays(friend_id)
-            if not friend_data.id in plays:
-                plays[friend_data.id] = []
-            if plays[friend_data.id] == recent_plays:
-                continue
-            plays[friend_data.id] = recent_plays
+            friend_id = f"{friend[1]}"
             if recent_plays:
+                plays[friend_data.id] = recent_plays[0]
                 recent_score = await self.database.get_friend_recent_score(friend_id)
                 if recent_score is None:
                     break  # this is if they were removed as a friend mid loop

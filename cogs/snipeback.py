@@ -169,14 +169,16 @@ class Snipeback(Cog):  # must have interactions.Extension or this wont work
 
     async def handle_linked_account(self, ctx, kwargs):
         if len(kwargs) > 0:
-            return kwargs['username']
-        else:
-            username_array = await self.database.get_linked_user_osu_id(ctx.author.id._snowflake)
-            if not username_array:
-                await ctx.send("You are not linked to an osu! account - use `/link` to link your account\n"
-                               "Alternatively you can do `/snipeback username:username` to get a specific persons profile")
-                return False
-            return username_array[0]
+            if "username" in kwargs:
+                return kwargs['username']
+            else:
+                pass
+        username_array = await self.database.get_linked_user_osu_id(ctx.author.id._snowflake)
+        if not username_array:
+            await ctx.send("You are not linked to an osu! account - use `/link` to link your account\n"
+                            "Alternatively you can do `/recommend username:username` to get a specific persons profile")
+            return False
+        return username_array[0]
 
 
 def setup(client):
