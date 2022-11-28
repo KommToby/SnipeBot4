@@ -3,9 +3,13 @@ import random
 from data_types.osu import UserData
 
 
-async def create_snipelist_embed(friend_username: str, beatmaps: list, links: list):
+async def create_snipelist_embed(friend_username: str, beatmaps: list, links: list, type: str):
+    if type.lower() == "snipability":
+        title = f"<=10 most snipable that {friend_username} should snipe the main user back on"
+    else:
+        title = f"<=10 random maps that {friend_username} should snipe the main user back on"
     embed = interactions.Embed(
-        title=f"10 random maps the {friend_username} should snipe the main user back on",
+        title=title,
         color=16753920,
     )
     # shuffle the beatmaps and links so that they are in a random order but the same order

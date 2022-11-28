@@ -214,6 +214,39 @@ class Database:
             "SELECT * FROM scores WHERE user_id=? AND score!=?",
             (user_id, 0)).fetchall()
 
+    async def get_min_max_scores(self, user_id, min, max): # TODO test this
+        # return the values from scores where converted_stars is larger than min and lower than max
+        return self.cursor.execute(
+            "SELECT * FROM scores WHERE user_id=? AND converted_stars>? AND converted_stars<?",
+            (user_id, min, max)).fetchall()
+
+    async def get_min_max_scores_beatmap_ids(self, user_id, min, max): # TODO test this
+        # return the values from scores where converted_stars is larger than min and lower than max
+        a = self.cursor.execute(
+            "SELECT beatmap_id FROM scores WHERE user_id=? AND converted_stars>? AND converted_stars<?",
+            (user_id, min, max)).fetchall()
+        return [x[0] for x in a]
+
+    async def get_min_max_scores_snipable_beatmap_ids(self, user_id, min, max): # TODO test this
+        # return the values from scores where converted_stars is larger than min and lower than max
+        a = self.cursor.execute(
+            "SELECT beatmap_id FROM scores WHERE user_id=? AND converted_stars>? AND converted_stars<? AND snipability>?",
+            (user_id, min, max, 0)).fetchall()
+        return [x[0] for x in a]
+
+    async def get_min_max_scores_snipable_values(self, user_id, min, max): # TODO test this
+        # return the values from scores where converted_stars is larger than min and lower than max
+        a = self.cursor.execute(
+            "SELECT snipability FROM scores WHERE user_id=? AND converted_stars>? AND converted_stars<? AND snipability>?",
+            (user_id, min, max, 0)).fetchall()
+        return [x[0] for x in a]
+
+    async def get_min_max_scores_snipable(self, user_id, min, max): # TODO test this
+        # return the values from scores where converted_stars is larger than min and lower than max
+        return self.cursor.execute(
+            "SELECT * FROM scores WHERE user_id=? AND converted_stars>? AND converted_stars<? AND snipability>?",
+            (user_id, min, max, 0)).fetchall()
+
     # does not include 0s and only returns beatmap ids
     async def get_all_scores_beatmap_ids(self, user_id):
         a = self.cursor.execute(
@@ -394,9 +427,9 @@ class Database:
 
     async def update_score(self, user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods, conv_stars, conv_bpm, snipability):
         self.cursor.execute(
-            "UPDATE scores SET score=?, accuracy=?, max_combo=?, passed=?, pp=?, rank=?, count_300=?, count_100=?, count_50=?, count_miss=?, date=?, mods=?, converted_stars=?, converted_bpm=? WHERE user_id=? AND beatmap_id=? AND snipability=?",
+            "UPDATE scores SET score=?, accuracy=?, max_combo=?, passed=?, pp=?, rank=?, count_300=?, count_100=?, count_50=?, count_miss=?, date=?, mods=?, converted_stars=?, converted_bpm=?, snipability=? WHERE user_id=? AND beatmap_id=?",
             (score, accuracy, max_combo, passed, pp, rank, count_300, count_100,
-             count_50, count_miss, date, mods, conv_stars, conv_bpm, user_id, beatmap_id, snipability)
+             count_50, count_miss, date, mods, conv_stars, conv_bpm, snipability, user_id, beatmap_id)
         )
         self.db.commit()
 

@@ -120,7 +120,7 @@ class SnipeTracker:
                     random.shuffle(all_scores)
                     for i, score in enumerate(all_scores):
                         try:
-                            asyncio.sleep(0.1)
+                            await asyncio.sleep(0.1)
                             tracker_time = time.time() - s
                             if tracker_time > 150:
                                 break
@@ -130,8 +130,9 @@ class SnipeTracker:
                             beatmap = await self.database.get_beatmap(score[1])
                             if beatmap:
                                 a = await self.osu.get_score_data(score[1], score[0])
-                                _, _2, max_combo = await self.convert_stars_and_bpm(a.score)
-                                await self.database.update_snipability(score[0], score[1], score[2], await self.calculate_snipability(beatmap[6], beatmap[1], {"AR": beatmap[12], "OD": beatmap[11]}, beatmap[7], await self.decode_mods_to_array(score[13]), score[7], 0, score[6], score[3], score[11], score[4], max_combo))
+                                if a:
+                                    _, _2, max_combo = await self.convert_stars_and_bpm(a.score)
+                                    await self.database.update_snipability(score[0], score[1], score[2], await self.calculate_snipability(beatmap[6], beatmap[1], {"AR": beatmap[12], "OD": beatmap[11]}, beatmap[7], await self.decode_mods_to_array(score[13]), score[7], 0, score[6], score[3], score[11], score[4], max_combo))
                         except Exception as e:
                             print(e)
                             print(score)
@@ -259,6 +260,8 @@ class SnipeTracker:
                 ping_string = await self.construct_pinging_string(sniped_friends)
                 if ping_string != "":
                     await post_channel.send(f"{ping_string}")
+                snipability = await self.calculate_snipability(play.beatmap.total_length, play.beatmap.difficulty_rating, {"AR": play.beatmap.ar, "OD": play.beatmap.accuracy}, play.beatmap.bpm, play.mods, play.rank, play.beatmap.count_spinners, play.pp, play.accuracy, play.statistics.count_miss, play.max_combo, max_combo)
+                await self.database.add_score(play.user_id, play.beatmap.id, play.score, play.accuracy, play.max_combo, play.passed, play.pp, play.rank, play.statistics.count_300, play.statistics.count_100, play.statistics.count_50, play.statistics.count_miss, play.created_at, await self.convert_mods_to_int(play.mods), converted_stars, converted_bpm, snipability)
             else:
                 snipability = await self.calculate_snipability(play.beatmap.total_length, play.beatmap.difficulty_rating, {"AR": play.beatmap.ar, "OD": play.beatmap.accuracy}, play.beatmap.bpm, play.mods, play.rank, play.beatmap.count_spinners, play.pp, play.accuracy, play.statistics.count_miss, play.max_combo, max_combo)
                 await self.database.add_score(play.user_id, play.beatmap.id, play.score, play.accuracy, play.max_combo, play.passed, play.pp, play.rank, play.statistics.count_300, play.statistics.count_100, play.statistics.count_50, play.statistics.count_miss, play.created_at, await self.convert_mods_to_int(play.mods), converted_stars, converted_bpm, snipability)
