@@ -16,6 +16,7 @@ class SnipeTracker:
         self.client = client
         self.osu = client.auth
         self.database = client.database
+        self.rescan_beatmaps = []
 
     async def convert_datetime_to_int(self, datetime: str):
         # '2021-08-23T21:31:10+00:00'
@@ -150,7 +151,7 @@ class SnipeTracker:
             await self.add_snipes(play)
 
     # If HR or DT/NC is used, this converts the bpm and star rating of the map for stats
-    async def convert_stars_and_bpm(self, play: OsuScore):
+    async def convert_stars_and_bpm(self, play: OsuScoreData):
         converted_stars = 0
         converted_bpm = 0
         max_combo = 0
@@ -388,8 +389,8 @@ class SnipeTracker:
             checked_users_count += 1
             if friend_id not in checked_users:
                 checked_users.append(friend_id)
-        if beatmaps_to_scan != []:
-            print(f"     checking {len(beatmaps_to_scan)} new beatmaps")
+        if beatmaps_to_scan != [] and self.rescan_beatmaps != []:
+            print(f"     checking {len(beatmaps_to_scan) + len(self.rescan_beatmaps)} new beatmaps")
             await self.check_new_beatmaps(beatmaps_to_scan)
         return local_time, plays
 
@@ -471,7 +472,7 @@ class SnipeTracker:
                 if int(play.score) > int(local_score[2]):
                     conv_stars, conv_bpm, max_combo = await self.convert_stars_and_bpm(play)
                     snipability = await self.calculate_snipability(play.beatmap.total_length, play.beatmap.difficulty_rating, {"AR": play.beatmap.ar, "OD": play.beatmap.accuracy}, play.beatmap.bpm, play.mods, play.rank, play.beatmap.count_spinners, play.pp, play.accuracy, play.statistics.count_miss, play.max_combo, max_combo)
-                    await self.database.update_score(friend_id, beatmap_id, play.score, play.accuracy, play.max_combo, play.passed, play.pp, play.rank, play.statistics.count_300, play.statistics.count_300, play.statistics.count_50, play.statistics.count_miss, play.created_at, await self.convert_mods_to_int(play.mods), conv_stars, conv_bpm, snipability)
+                    await self.database.update_score(friend_id, beatmap_id, play.score, play.accuracy, play.max_combo, play.passed, play.pp, play.rank, play.statistics.count_300, play.statistics.count_100, play.statistics.count_50, play.statistics.count_miss, play.created_at, await self.convert_mods_to_int(play.mods), conv_stars, conv_bpm, snipability)
                     # now we check if the user has got a snipe on this beatmap before
                     if not(await self.database.get_user_snipe_on_beatmap(friend_id, beatmap_id, main_user[1])):
                         # Now we can post the friend snipe
@@ -492,9 +493,64 @@ class SnipeTracker:
                     await self.database.add_beatmap(beatmap_id, beatmap_data.difficulty_rating, beatmap_data.beatmapset.artist, beatmap_data.beatmapset.title, beatmap_data.version, beatmap_data.url, beatmap_data.total_length, beatmap_data.bpm, beatmap_data.beatmapset.creator, beatmap_data.status, beatmap_data.beatmapset_id, beatmap_data.accuracy, beatmap_data.ar, beatmap_data.cs, beatmap_data.drain)
                     # should all be passive snipes
                     await self.add_new_beatmap_snipes(beatmap_data)
-            else:  # this should not happen
+            else:  # this means we need to rescan every user on the beatmap
+                await self.rescan_beatmap(beatmap_id)
                 print(
                     f"program attempted to check new beatmap that was already stored - {beatmap_id}")
+        for beatmap_id in self.rescan_beatmaps:
+            print(f"scanning {beatmap_id} - {counter}/{len(self.rescan_beatmaps)}")
+            await self.rescan_beatmap(beatmap_id)
+        self.rescan_beatmaps = []
+
+    async def rescan_beatmap(self, beatmap_id):
+        # this is called when a new beatmap is added to the db, or when a beatmap is updated
+        # we need to rescan every user on the beatmap to see if they have a new high score
+        # we also need to check if any users have sniped the new high score
+        # we also need to check if any users have sniped the new high score
+        beatmap_data = await self.osu.get_beatmap(beatmap_id)
+        if not(beatmap_data):
+            return
+        if beatmap_data.mode == 'osu':
+            all_users = []
+            users = await self.database.get_all_users()
+            friends = await self.database.get_all_friends()
+            for user in users:
+                if user[1] not in all_users:
+                    all_users.append(user[1])
+            for user in friends:
+                if user[1] not in all_users:
+                    all_users.append(user[1])
+            # Now we have a list of all users with no dupes
+            for user in all_users:
+                await asyncio.sleep(0.1)
+                # Get the score of the user on the beatmap
+                score = await self.osu.get_score_data(beatmap_id, user)
+                if score:
+                    # They have played the map
+                    # Now we check if they have a stored score in the database
+                    stored_score = await self.database.get_score(user, beatmap_id)
+                    if stored_score:
+                        # Now we check if the score is a new high score
+                        if int(score.score.score) > int(stored_score[2]):
+                            # We update the score in the database
+                            conv_stars, conv_bpm, max_combo = await self.convert_stars_and_bpm(score.score)
+                            snipability = await self.calculate_snipability(score.score.beatmap.total_length, score.score.beatmap.difficulty_rating, {"AR": score.score.beatmap.ar, "OD": score.score.beatmap.accuracy}, score.score.beatmap.bpm, score.score.mods, score.score.rank, score.score.beatmap.count_spinners, score.score.pp, score.score.accuracy, score.score.statistics.count_miss, score.score.max_combo, max_combo)
+                            await self.database.update_score(user, beatmap_id, score.score.score, score.score.accuracy, score.score.max_combo, score.score.passed, score.score.pp, score.score.rank, score.score.statistics.count_300, score.score.statistics.count_100, score.score.statistics.count_50, score.score.statistics.count_miss, score.score.created_at, await self.convert_mods_to_int(score.score.mods), conv_stars, conv_bpm, snipability)
+                        else:
+                            # We dont need to do anything
+                            pass
+                    else:
+                        # We add the score to the database
+                        conv_stars, conv_bpm, max_combo = await self.convert_stars_and_bpm(score.score)
+                        snipability = await self.calculate_snipability(score.score.beatmap.total_length, score.score.beatmap.difficulty_rating, {"AR": score.score.beatmap.ar, "OD": score.score.beatmap.accuracy}, score.score.beatmap.bpm, score.score.mods, score.score.rank, score.score.beatmap.count_spinners, score.score.pp, score.score.accuracy, score.score.statistics.count_miss, score.score.max_combo, max_combo)
+                        await self.database.add_score(user, beatmap_id, score.score.score, score.score.accuracy, score.score.max_combo, score.score.passed, score.score.pp, score.score.rank, score.score.statistics.count_300, score.score.statistics.count_100, score.score.statistics.count_50, score.score.statistics.count_miss, score.score.created_at, await self.convert_mods_to_int(score.score.mods), conv_stars, conv_bpm, snipability)
+                else:
+                    # They have not played the map
+                    # We can add an empty score to the database if one doesnt already exist
+                    stored_score = await self.database.get_score(user, beatmap_id)
+                    if not(stored_score):
+                        await self.database.add_score(user, beatmap_id, 0, False, False, False, False, False, False, False, False, False, False, False, 0, 0, None)
+
 
     async def add_new_beatmap_snipes(self, data: Beatmap):
         # data is beatmap data

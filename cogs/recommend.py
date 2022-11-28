@@ -4,6 +4,7 @@ from embed.recommend import create_recommend_embed
 from data_types.interactions import CustomInteractionsClient
 from data_types.cogs import Cog
 import random
+from interactions.ext.get import get
 
 
 class Recommend(Cog):  # must have interactions.Extension or this wont work
@@ -63,11 +64,28 @@ class Recommend(Cog):  # must have interactions.Extension or this wont work
         else:
             return
         beatmaps, links = await self.get_scores(main_user_data.id, user_data.id, sort_type, kwargs)
+        beatmaps = await self.double_check_scores(beatmaps, user_data.id, ctx)
         if beatmaps == []:
             await ctx.send(f"Main user has no scores on any maps that {user_data.username} has")
             return
         embed = await create_recommend_embed(user_data.username, beatmaps, links, sort_type)
         await ctx.send(embeds=embed)
+
+    async def double_check_scores(self, beatmaps, friend_id, ctx):
+        # This checks all 10 beatmaps to see if the user actually has a score on it
+        # Since the database is not 100% accurate, this is needed
+        for beatmap in beatmaps:
+            scores = await self.osu.get_score_data(beatmap[0], friend_id)
+            if scores:
+                # The program should update the score data if it is not up to date
+                # First we check if the score is local, but just 0
+                beatmaps.remove(beatmap)
+                newctx = await get(self.client, interactions.Channel,
+                                       channel_id=int(ctx.channel_id._snowflake))
+                await newctx.send(f"Queued score data Scan for {beatmap[0]}...")
+                # Now we tell the program to rescan the beatmap
+                self.client.tracker.rescan_beatmaps.append(beatmap[0])
+        return beatmaps
 
     async def get_scores(self, main_id: int, friend_id: int, sort_type: str, kwargs):
         if len(kwargs) > 0:
@@ -80,14 +98,15 @@ class Recommend(Cog):  # must have interactions.Extension or this wont work
             else:
                 min_sr = 0
         if sort_type == "random":
-            friend_scores_local = await self.database.get_min_max_scores_snipable_beatmap_ids(friend_id, min_sr, max_sr)
-            main_scores = await self.database.get_min_max_scores_snipable_beatmap_ids(main_id, min_sr, max_sr)
+            friend_scores_local = await self.database.get_min_max_scores_beatmap_ids(friend_id, min_sr, max_sr)
+            main_scores = await self.database.get_min_max_scores_beatmap_ids(main_id, min_sr, max_sr)
             random.shuffle(friend_scores_local)
             random.shuffle(main_scores)
         elif sort_type == "snipability":
-            friend_scores_local = await self.database.get_min_max_scores_snipable_beatmap_ids(friend_id, min_sr, max_sr) # these include scores with no snipability
-            friend_scores = await self.database.get_min_max_scores_snipable(friend_id, min_sr, max_sr) # these only include scores with snipability
+            friend_scores_local = await self.database.get_min_max_scores_snipable_beatmap_ids(friend_id, min_sr, max_sr)
+            friend_scores = await self.database.get_min_max_scores_snipable(friend_id, min_sr, max_sr)
             main_scores = await self.database.get_min_max_scores_snipable(main_id, min_sr, max_sr)
+            # sort both arrays by snipability
             friend_scores.sort(key=lambda x: x[16], reverse=True)
             main_scores.sort(key=lambda x: x[16], reverse=True)
 

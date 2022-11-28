@@ -3,6 +3,7 @@ from embed.snipeback import create_snipeback_embed
 from data_types.interactions import CustomInteractionsClient
 from data_types.cogs import Cog
 import random
+from interactions.ext.get import get
 
 
 class Snipeback(Cog):  # must have interactions.Extension or this wont work
@@ -63,6 +64,7 @@ class Snipeback(Cog):  # must have interactions.Extension or this wont work
         else:
             return
         beatmaps, links, sort = await self.get_scores(main_user_data.id, user_data.id, sort_type, kwargs)
+        beatmaps = await self.osu.get_beatmaps(beatmaps)
         if not(beatmaps):
             await ctx.send(f"Main user has no scores on any maps that {user_data.username} has with the given parameters!")
             return
@@ -71,6 +73,22 @@ class Snipeback(Cog):  # must have interactions.Extension or this wont work
             return
         embed = await create_snipeback_embed(user_data.username, beatmaps, links, sort)
         await ctx.send(embeds=embed)
+
+    async def double_check_scores(self, beatmaps, friend_id, ctx):
+        # This checks all 10 beatmaps to see if the user actually has a score on it
+        # Since the database is not 100% accurate, this is needed
+        for beatmap in beatmaps:
+            scores = await self.osu.get_score_data(beatmap[0], friend_id)
+            if scores:
+                # The program should update the score data if it is not up to date
+                # First we check if the score is local, but just 0
+                beatmaps.remove(beatmap)
+                newctx = await get(self.client, interactions.Channel,
+                                       channel_id=int(ctx.channel_id._snowflake))
+                await newctx.send(f"Queued score data Scan for {beatmap[0]}...")
+                # Now we tell the program to rescan the beatmap
+                self.client.tracker.rescan_beatmaps.append(beatmap[0])
+        return beatmaps
 
     async def get_scores(self, main_id: int, friend_id: int, sort_type: str, kwargs):
         if len(kwargs) > 0:
