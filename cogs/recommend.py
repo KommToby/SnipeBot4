@@ -64,28 +64,29 @@ class Recommend(Cog):  # must have interactions.Extension or this wont work
         else:
             return
         beatmaps, links = await self.get_scores(main_user_data.id, user_data.id, sort_type, kwargs)
-        beatmaps = await self.double_check_scores(beatmaps, user_data.id, ctx)
+        beatmaps, links = await self.double_check_scores(beatmaps, user_data.id, ctx, links)
         if beatmaps == []:
             await ctx.send(f"Main user has no scores on any maps that {user_data.username} has")
             return
         embed = await create_recommend_embed(user_data.username, beatmaps, links, sort_type)
         await ctx.send(embeds=embed)
 
-    async def double_check_scores(self, beatmaps, friend_id, ctx):
+    async def double_check_scores(self, beatmaps, friend_id, ctx, links):
         # This checks all 10 beatmaps to see if the user actually has a score on it
         # Since the database is not 100% accurate, this is needed
-        for beatmap in beatmaps:
+        for i, beatmap in enumerate(beatmaps):
             scores = await self.osu.get_score_data(beatmap[0], friend_id)
             if scores:
                 # The program should update the score data if it is not up to date
                 # First we check if the score is local, but just 0
                 beatmaps.remove(beatmap)
+                links.remove(links[i])
                 newctx = await get(self.client, interactions.Channel,
                                        channel_id=int(ctx.channel_id._snowflake))
                 await newctx.send(f"Queued score data Scan for {beatmap[0]}...")
                 # Now we tell the program to rescan the beatmap
                 self.client.tracker.rescan_beatmaps.append(beatmap[0])
-        return beatmaps
+        return beatmaps, links
 
     async def get_scores(self, main_id: int, friend_id: int, sort_type: str, kwargs):
         if len(kwargs) > 0:

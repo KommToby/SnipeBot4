@@ -63,7 +63,7 @@ class Snipelist(Cog):  # must have interactions.Extension or this wont work
         else:
             return
         beatmaps, links, sort = await self.get_scores(main_user_data.id, user_data.id, sort_type, kwargs)
-        beatmaps = await self.double_check_scores(beatmaps, user_data.id, ctx)
+        # beatmaps = await self.double_check_scores(beatmaps, user_data.id, ctx) not needed in this command
         if not(beatmaps):
             await ctx.send(f"Main user has no scores on any maps that {user_data.username} has with the given parameters!")
             return
@@ -123,8 +123,8 @@ class Snipelist(Cog):  # must have interactions.Extension or this wont work
             sniped = await self.database.get_single_user_snipes_ids(friend_id, main_id)
 
             # Now we get the scores of the main user and friends with min and max sr
-            main_scores = await self.database.get_min_max_scores_snipable_beatmap_ids(main_id, min_sr, max_sr)
-            friend_scores = await self.database.get_min_max_scores_snipable_beatmap_ids(friend_id, min_sr, max_sr)
+            main_scores = await self.database.get_min_max_scores_beatmap_ids(main_id, min_sr, max_sr)
+            friend_scores = await self.database.get_min_max_scores_beatmap_ids(friend_id, min_sr, max_sr)
 
             # Check if the scores exist for the parameters
             if not(main_scores) or not(friend_scores):

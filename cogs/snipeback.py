@@ -64,7 +64,7 @@ class Snipeback(Cog):  # must have interactions.Extension or this wont work
         else:
             return
         beatmaps, links, sort = await self.get_scores(main_user_data.id, user_data.id, sort_type, kwargs)
-        beatmaps = await self.osu.get_beatmaps(beatmaps)
+        # beatmaps = await self.osu.get_beatmaps(beatmaps) not needed in this command
         if not(beatmaps):
             await ctx.send(f"Main user has no scores on any maps that {user_data.username} has with the given parameters!")
             return
@@ -74,21 +74,22 @@ class Snipeback(Cog):  # must have interactions.Extension or this wont work
         embed = await create_snipeback_embed(user_data.username, beatmaps, links, sort)
         await ctx.send(embeds=embed)
 
-    async def double_check_scores(self, beatmaps, friend_id, ctx):
+    async def double_check_scores(self, beatmaps, friend_id, ctx, links):
         # This checks all 10 beatmaps to see if the user actually has a score on it
         # Since the database is not 100% accurate, this is needed
-        for beatmap in beatmaps:
+        for i, beatmap in enumerate(beatmaps):
             scores = await self.osu.get_score_data(beatmap[0], friend_id)
             if scores:
                 # The program should update the score data if it is not up to date
                 # First we check if the score is local, but just 0
                 beatmaps.remove(beatmap)
+                links.remove(links[i])
                 newctx = await get(self.client, interactions.Channel,
                                        channel_id=int(ctx.channel_id._snowflake))
                 await newctx.send(f"Queued score data Scan for {beatmap[0]}...")
                 # Now we tell the program to rescan the beatmap
                 self.client.tracker.rescan_beatmaps.append(beatmap[0])
-        return beatmaps
+        return beatmaps, links
 
     async def get_scores(self, main_id: int, friend_id: int, sort_type: str, kwargs):
         if len(kwargs) > 0:
@@ -109,8 +110,8 @@ class Snipeback(Cog):  # must have interactions.Extension or this wont work
             snipes = await self.database.get_single_user_snipes_ids(friend_id, main_id)
 
             # Now we get the scores of the main user and friends with min and max sr
-            main_scores = await self.database.get_min_max_scores_snipable_beatmap_ids(main_id, min_sr, max_sr)
-            friend_scores = await self.database.get_min_max_scores_snipable_beatmap_ids(friend_id, min_sr, max_sr)
+            main_scores = await self.database.get_min_max_scores_beatmap_ids(main_id, min_sr, max_sr)
+            friend_scores = await self.database.get_min_max_scores_beatmap_ids(friend_id, min_sr, max_sr)
 
             # Check if the scores exist for the parameters
             if not(main_scores) or not(friend_scores):
@@ -155,7 +156,6 @@ class Snipeback(Cog):  # must have interactions.Extension or this wont work
             sniped = [x[0] for x in new_sniped]
             snipes = [x[0] for x in new_snipes]
 
-        beatmaps = []
         beatmaps_data = []
         links = []
         # elements that are in snipes but not in sniped

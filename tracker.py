@@ -404,7 +404,7 @@ class SnipeTracker:
             main_user_friends_list = await self.database.get_main_user_friends(main_user[0])
             if main_user_friends_list is not None:
                 for friend in main_user_friends_list:
-                    if str(friend[1]) == friend_id:
+                    if str(friend[1]) == friend_id: # This needs to be changed in case the friend is a friend of multiple main users
                         friend_found = True
                         break
             # If the main user has this friend on their friends list, we can scan their play against them
@@ -497,8 +497,9 @@ class SnipeTracker:
                 await self.rescan_beatmap(beatmap_id)
                 print(
                     f"program attempted to check new beatmap that was already stored - {beatmap_id}")
+        length = len(self.rescan_beatmaps)
         for beatmap_id in self.rescan_beatmaps:
-            print(f"scanning {beatmap_id} - {counter}/{len(self.rescan_beatmaps)}")
+            print(f"scanning {beatmap_id} - {counter}/{length}")
             await self.rescan_beatmap(beatmap_id)
         self.rescan_beatmaps = []
 
