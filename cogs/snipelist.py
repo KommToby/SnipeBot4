@@ -130,10 +130,6 @@ class Snipelist(Cog):  # must have interactions.Extension or this wont work
             if not(main_scores) or not(friend_scores):
                 return False, False, False
 
-            # Now we set sniped and snipes to only contain the scores that are in both the main and friend scores
-            sniped = [x for x in sniped if x in main_scores]
-            snipes = [x for x in snipes if x in friend_scores]
-
             # Now shuffle the sniped and snipes lists
             random.shuffle(sniped)
             random.shuffle(snipes)

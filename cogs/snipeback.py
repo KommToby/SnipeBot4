@@ -117,10 +117,6 @@ class Snipeback(Cog):  # must have interactions.Extension or this wont work
             if not(main_scores) or not(friend_scores):
                 return False, False, False
 
-            # Now we set sniped and snipes to only contain the scores that are in both the main and friend scores
-            sniped = [x for x in sniped if x in main_scores]
-            snipes = [x for x in snipes if x in friend_scores]
-
             # Now shuffle the sniped and snipes lists
             random.shuffle(sniped)
             random.shuffle(snipes)
@@ -139,8 +135,8 @@ class Snipeback(Cog):  # must have interactions.Extension or this wont work
             snipes = await self.database.get_single_user_snipes_ids(friend_id, main_id)
 
             # Now we only keep the snipes that are in the snipability list and append the snipability score to the snipe
-            sniped = [x for x in sniped if x in snipability_ids_main]
-            snipes = [x for x in snipes if x in snipability_ids_friend]
+            sniped = [x for x in sniped if x in snipability_ids_friend]
+            snipes = [x for x in snipes if x in snipability_ids_main]
 
             new_sniped = []
             new_snipes = []

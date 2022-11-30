@@ -116,28 +116,29 @@ class SnipeTracker:
                 print(
                     f"Tracker loop took {round((time.time() - s),2)} seconds")
                 tracker_time = time.time() - s
-                while tracker_time < 150:
-                    all_scores = await self.database.get_all_scores_all_users_without_zeros_no_snipability()
-                    random.shuffle(all_scores)
-                    for i, score in enumerate(all_scores):
-                        try:
-                            await asyncio.sleep(0.1)
-                            tracker_time = time.time() - s
-                            if tracker_time > 150:
-                                break
-                            # print the percentage every 100 scores with the estimated time remaining
-                            print(f"{i}/{len(all_scores)}")
-                            # map_length, normal_difficulty, stats, bpm, mods, rank, spinner_count, pp):
-                            beatmap = await self.database.get_beatmap(score[1])
-                            if beatmap:
-                                a = await self.osu.get_score_data(score[1], score[0])
-                                if a:
-                                    _, _2, max_combo = await self.convert_stars_and_bpm(a.score)
-                                    await self.database.update_snipability(score[0], score[1], score[2], await self.calculate_snipability(beatmap[6], beatmap[1], {"AR": beatmap[12], "OD": beatmap[11]}, beatmap[7], await self.decode_mods_to_array(score[13]), score[7], 0, score[6], score[3], score[11], score[4], max_combo))
-                        except Exception as e:
-                            print(e)
-                            print(score)
-                            continue
+                # Below is code for scanning snipability no longer used since all have been converted
+                # while tracker_time < 150:
+                #     all_scores = await self.database.get_all_scores_all_users_without_zeros_no_snipability()
+                #     random.shuffle(all_scores)
+                #     for i, score in enumerate(all_scores):
+                #         try:
+                #             await asyncio.sleep(0.1)
+                #             tracker_time = time.time() - s
+                #             if tracker_time > 150:
+                #                 break
+                #             # print the percentage every 100 scores with the estimated time remaining
+                #             print(f"{i}/{len(all_scores)}")
+                #             # map_length, normal_difficulty, stats, bpm, mods, rank, spinner_count, pp):
+                #             beatmap = await self.database.get_beatmap(score[1])
+                #             if beatmap:
+                #                 a = await self.osu.get_score_data(score[1], score[0])
+                #                 if a:
+                #                     _, _2, max_combo = await self.convert_stars_and_bpm(a.score)
+                #                     await self.database.update_snipability(score[0], score[1], score[2], await self.calculate_snipability(beatmap[6], beatmap[1], {"AR": beatmap[12], "OD": beatmap[11]}, beatmap[7], await self.decode_mods_to_array(score[13]), score[7], 0, score[6], score[3], score[11], score[4], max_combo))
+                #         except Exception as e:
+                #             print(e)
+                #             print(score)
+                #             continue
             except Exception as e:
                 print(f"Error occured in tracker loop: {e}")
                 pass
