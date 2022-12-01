@@ -302,6 +302,10 @@ class SnipeTracker:
                             continue  # No need to do anything if the plays are the same
                     if recent_plays:
                         plays[main_user_data.id] = recent_plays[0]
+                    if not(recent_plays) and plays[main_user_data.id] == []:
+                        continue # still no plays
+                    else:
+                        plays[main_user_data.id] = []
                     # Gets the recent score of the main user from the database to compare
                     recent_score = await self.database.get_main_recent_score(main_user_id)
                     print(
@@ -358,6 +362,10 @@ class SnipeTracker:
             if recent_plays and plays[friend_id] != []:
                 if plays[friend_id].score == recent_plays[0].score and plays[friend_id].beatmap.id == recent_plays[0].beatmap.id:
                     continue  # No need to do anything if the plays are the same
+            if not(recent_plays) and plays[friend_id] == []:
+                        continue # still no plays
+            else:
+                plays[friend_id] = []
             friend_data = await self.osu.get_user_data(friend_id)
             if not(friend_data):
                 continue
