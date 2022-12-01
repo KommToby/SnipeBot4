@@ -1,10 +1,11 @@
 import interactions
 from data_types.osu import UserData
-from embed.recommend import create_recommend_embed
+from embed.recommend import create_recommend_embed, create_recommend_embed_main
 from data_types.interactions import CustomInteractionsClient
 from data_types.cogs import Cog
 import random
 from interactions.ext.get import get
+import asyncio
 
 
 class Recommend(Cog):  # must have interactions.Extension or this wont work
@@ -59,6 +60,9 @@ class Recommend(Cog):  # must have interactions.Extension or this wont work
         if not(main_user_data):
             await ctx.send(f"Main user not found!")
             return
+        if str(main_user_data.id) == str(user_data.id):
+            await self.main_user_recommendations(main_user_data, ctx, kwargs)
+            return
         if await self.handle_sort(ctx, kwargs):
             sort_type = await self.handle_sort(ctx, kwargs)
         else:
@@ -69,6 +73,117 @@ class Recommend(Cog):  # must have interactions.Extension or this wont work
             await ctx.send(f"Main user has no scores on any maps that {user_data.username} has")
             return
         embed = await create_recommend_embed(user_data.username, beatmaps, links, sort_type)
+        await ctx.send(embeds=embed)
+
+    async def main_user_recommendations(self, main_user_data, ctx, kwargs):
+        # first we get all of the friends of the main user
+        friends = await self.database.get_main_user_friends(ctx.channel_id._snowflake)
+        if not friends:
+            await ctx.send("Either main user has no friends, or you've used the command in the wrong channel!")
+            return
+        
+        if len(kwargs) > 0:
+            if "max-sr" in kwargs:
+                max_sr = kwargs["max-sr"]
+            else:
+                max_sr = 1000
+            if "min-sr" in kwargs:
+                min_sr = kwargs["min-sr"]
+            else:
+                min_sr = 0
+        else:
+            max_sr = 1000
+            min_sr = 0
+
+        snipable_plays_snipability = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        snipable_plays_ids = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        snipable_plays_user_ids = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+        # Now we randomise the friends list
+        random.shuffle(friends)
+
+        # now we get all the non-zero scores for every friend
+        # if the snipability of the score is in the top 25 lowest in the list, we add it to the list and remove the highest
+        for friend in friends:
+            await asyncio.sleep(0.1)
+            # if the lowest snipability is 70% or higher, we stop
+            if min(snipable_plays_snipability) >= 0.7:
+                break
+            scores_snipability = await self.database.get_min_max_scores_snipable_values(friend[1], min_sr, max_sr)
+            scores_ids = await self.database.get_min_max_scores_snipable_beatmap_ids(friend[1], min_sr, max_sr)
+            scores_user_ids = await self.database.get_min_max_scores_snipable_user_ids(friend[1], min_sr, max_sr)
+            # we need to sort scores_snipability but maintain the order of the other two lists
+            # we do this by zipping the lists together, sorting the zipped list in reverse order, and then unzipping the list
+            scores_snipability, scores_ids, scores_user_ids = zip(*sorted(zip(scores_snipability, scores_ids, scores_user_ids), reverse=True))
+            # Now we make every list only have 10 elements
+            scores_snipability = scores_snipability[:10]
+            scores_ids = scores_ids[:10]
+            scores_user_ids = scores_user_ids[:10]
+            if not scores_snipability:
+                continue
+            for i in range(len(scores_snipability)):
+                # we need to make sure the main user hasnt played the map
+                if await self.database.get_user_score_on_beatmap_no_zeros(main_user_data.id, scores_ids[i]):
+                    continue
+                if scores_snipability[i] == 0:
+                    continue
+                if scores_snipability[i] < min(snipable_plays_snipability):
+                    continue
+                index = snipable_plays_snipability.index(min(snipable_plays_snipability))
+                snipable_plays_snipability[index] = scores_snipability[i]
+                snipable_plays_ids[index] = scores_ids[i]
+                snipable_plays_user_ids[index] = scores_user_ids[i]
+
+        # now we sort the snipability list and make sure the ids are in the same order in reverse
+        snipable_plays_snipability, snipable_plays_ids, snipable_plays_user_ids = zip(*sorted(zip(snipable_plays_snipability, snipable_plays_ids, snipable_plays_user_ids), reverse=True))
+
+        # Now we get rid of any initialised values left in the arrays
+        snipable_plays_snipability = [x for x in snipable_plays_snipability if x != 0]
+        snipable_plays_ids = [x for x in snipable_plays_ids if x != 0]
+        snipable_plays_user_ids = [x for x in snipable_plays_user_ids if x != 0]
+
+        # now we get the beatmaps from the ids
+        beatmaps = []
+        snipability = []
+        user_ids = []
+        for i in range(len(snipable_plays_ids)):
+            if i > 24: # 25 beatmaps is good for safety buffer
+                break
+            beatmap = await self.database.get_beatmap(snipable_plays_ids[i])
+            if beatmap:
+                beatmaps.append(beatmap)
+                snipability.append(snipable_plays_snipability[i])
+                user_ids.append(snipable_plays_user_ids[i])
+
+        # now we get the usernames of the users to snipe
+        usernames = []
+        for user_id in user_ids:
+            user = await self.database.get_friend_from_user_id_and_channel(user_id, ctx.channel_id._snowflake)
+            usernames.append(user[2])
+
+        # now we check the scores
+        checked_scores = 0
+        for i, beatmap in enumerate(beatmaps):
+            scores = await self.osu.get_score_data(beatmap[0], main_user_data.id)
+            if not scores:
+                checked_scores += 1
+                continue
+            if checked_scores > 10:
+                break
+            else:
+                # if the main user has happened to play it, we need to remove it from all lists
+                # we also need the beatmap id to be added to the rescan list
+                beatmaps.remove(beatmap)
+                snipability.remove(snipability[i])
+                user_ids.remove(user_ids[i])
+                usernames.remove(usernames[i])
+                newctx = await get(self.client, interactions.Channel,
+                                       channel_id=int(ctx.channel_id._snowflake))
+                await newctx.send(f"Queued score data Scan for {beatmap[0]}...")
+                self.client.tracker.rescan_beatmaps.append(beatmap[0])
+
+        # now we get and post the embed
+        embed = await create_recommend_embed_main(main_user_data.username, beatmaps, snipability, usernames)
         await ctx.send(embeds=embed)
 
     async def double_check_scores(self, beatmaps, friend_id, ctx, links):

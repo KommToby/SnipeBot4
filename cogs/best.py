@@ -54,7 +54,7 @@ class Best(Cog):  # must have interactions.Extension or this wont work
         # now we make an array with the beatmap data
         best_plays = []
         best_plays_times = []
-        for i, play in enumerate(best_plays_time):
+        for play in best_plays_time:
             beatmap_data = await self.database.get_beatmap(play[1])
             if beatmap_data:
                 best_plays.append(beatmap_data)

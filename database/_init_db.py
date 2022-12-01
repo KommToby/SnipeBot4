@@ -142,6 +142,11 @@ class Database:
             "SELECT * FROM friends WHERE username=?",
             (username,)).fetchone()
 
+    async def get_friend_from_user_id_and_channel(self, username, channel): # TODO test for this function
+        return self.cursor.execute(
+            "SELECT * FROM friends WHERE osu_id=? AND discord_channel=?",
+            (username, channel)).fetchone()
+
     async def get_link(self, discord_id):
         return self.cursor.execute(
             "SELECT * FROM link WHERE discord_id=?",
@@ -239,6 +244,13 @@ class Database:
             (user_id, min, max, 0)).fetchall()
         return [x[0] for x in a]
 
+    async def get_min_max_scores_snipable_user_ids(self, user_id, min, max): # TODO test this
+        # return the values from scores where converted_stars is larger than min and lower than max
+        a = self.cursor.execute(
+            "SELECT user_id FROM scores WHERE user_id=? AND converted_stars>? AND converted_stars<? AND snipability>?",
+            (user_id, min, max, 0)).fetchall()
+        return [x[0] for x in a]
+
     async def get_min_max_scores_snipable_values(self, user_id, min, max): # TODO test this
         # return the values from scores where converted_stars is larger than min and lower than max
         a = self.cursor.execute(
@@ -323,6 +335,12 @@ class Database:
         return self.cursor.execute(
             "SELECT * FROM scores WHERE user_id=? AND beatmap_id=? AND score=?",
             (osu_id, beatmap_id, score)
+        ).fetchone()
+
+    async def get_user_score_on_beatmap_no_zeros(self, osu_id, beatmap_id): # TODO test this
+        return self.cursor.execute(
+            "SELECT * FROM scores WHERE user_id=? AND beatmap_id=? AND score!=?",
+            (osu_id, beatmap_id, 0)
         ).fetchone()
 
     async def get_friend_leaderboard_score(self, friend_id):
