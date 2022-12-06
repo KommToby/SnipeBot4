@@ -245,6 +245,8 @@ class Friend(Cog):  # must have interactions.Extension or this wont work
                                 converted_stars = beatmap_mod_data.attributes.star_rating
                             else:
                                 converted_stars = beatmap[1]
+                        conv_stars, conv_bpm, max_combo = await self.client.tracker.convert_stars_and_bpm(user_play.score)
+                        snipability = await self.client.tracker.calculate_snipability(user_play.score.beatmap.drain, user_play.score.beatmap.difficulty_rating, {"AR": user_play.score.beatmap.ar, "OD": user_play.score.beatmap.accuracy}, user_play.score.beatmap.bpm, user_play.score.mods, user_play.score.rank, user_play.score.beatmap.count_spinners, user_play.score.pp, user_play.score.accuracy, user_play.score.statistics.count_miss, user_play.score.max_combo, max_combo)
                         await self.database.add_score(user_data.id, beatmap[0], user_play.score.score, user_play.score.accuracy, user_play.score.max_combo, user_play.score.passed, user_play.score.pp, user_play.score.rank, user_play.score.statistics.count_300, user_play.score.statistics.count_100, user_play.score.statistics.count_50, user_play.score.statistics.count_miss, user_play.score.created_at, await self.tracker.convert_mods_to_int(user_play.score.mods), converted_stars, converted_bpm)
                         main_users = await self.database.get_all_users()
                         for main_user in main_users:
@@ -270,7 +272,7 @@ class Friend(Cog):  # must have interactions.Extension or this wont work
                                             await self.database.add_snipe(main_user_play.score.user_id, beatmap[0], user_data.id, main_user_play.score.created_at, main_user_play.score.score, user_play.score.score, main_user_play.score.accuracy, user_play.score.accuracy, second_mods, first_mods, main_user_play.score.pp, user_play.score.pp)
 
                     else:
-                        await self.database.add_score(user_data.id, beatmap[0], 0, False, False, False, False, False, False, False, False, False, False, False, False, False)
+                        await self.database.add_score(user_data.id, beatmap[0], 0, False, False, False, False, False, False, False, False, False, False, False, False, False, False)
                 else:
                     # This is the case that if the score that is stored here is from SnipeBot3, it needs to update it. Painful Stuff.
                     local_score_data = await self.database.get_score(user_data.id, beatmap[0])
@@ -298,7 +300,9 @@ class Friend(Cog):  # must have interactions.Extension or this wont work
                                 converted_stars = beatmap_mod_data.attributes.star_rating
                             else:
                                 converted_stars = beatmap[1]
-                        await self.database.update_score(user_data.id, beatmap[0], user_play.score.score, user_play.score.accuracy, user_play.score.max_combo, user_play.score.passed, user_play.score.pp, user_play.score.rank, user_play.score.statistics.count_300, user_play.score.statistics.count_100, user_play.score.statistics.count_50, user_play.score.statistics.count_miss, user_play.score.created_at, await self.tracker.convert_mods_to_int(user_play.score.mods), converted_stars, converted_bpm)
+                        conv_stars, conv_bpm, max_combo = await self.client.tracker.convert_stars_and_bpm(user_play.score)
+                        snipability = await self.client.tracker.calculate_snipability(user_play.score.beatmap.drain, user_play.score.beatmap.difficulty_rating, {"AR": user_play.score.beatmap.ar, "OD": user_play.score.beatmap.accuracy}, user_play.score.beatmap.bpm, user_play.score.mods, user_play.score.rank, user_play.score.beatmap.count_spinners, user_play.score.pp, user_play.score.accuracy, user_play.score.statistics.count_miss, user_play.score.max_combo, max_combo)
+                        await self.database.update_score(user_data.id, beatmap[0], user_play.score.score, user_play.score.accuracy, user_play.score.max_combo, user_play.score.passed, user_play.score.pp, user_play.score.rank, user_play.score.statistics.count_300, user_play.score.statistics.count_100, user_play.score.statistics.count_50, user_play.score.statistics.count_miss, user_play.score.created_at, await self.tracker.convert_mods_to_int(user_play.score.mods), converted_stars, converted_bpm, snipability)
                         print(
                             f"Converted Snipebot3 Formatted score to Snipebot4 Format")
                 if i != 0:

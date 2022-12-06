@@ -23,8 +23,6 @@ client.tracker: SnipeTracker = SnipeTracker(client)
 client.running: bool = False
 
 # Bot Online
-
-
 @client.event
 async def on_ready():
     print("\n\n\n\n\n\n\n\n")
@@ -42,8 +40,8 @@ async def on_ready():
             #     ctx = await get(client, interactions.Channel,
             #                                 channel_id=int(channel_id))
             #     embed = interactions.Embed(
-            #     title="Major Update!: v4.3.1",
-            #     description=f"Snipebot has been updated!\n - Added new command /best - see your best plays over a time period!\n - Added new command /actives - see the most active users!\n - /recommend now works for main users\n - Bug fixes, and more!",
+            #     title="Tiny Update!: v4.3.3.1",
+            #     description=f"**Snipebot has been updated!**\n - new logo lol",
             #     color=16711680
             #     )
             #     embed.set_author(name='Snipebot by Komm')
@@ -58,4 +56,7 @@ async def on_ready():
 
 # must be final line
 if __name__ == '__main__':
-    client.start()
+    try:
+        client.start()
+    except Exception as e:
+        print(f"MAIN PROGRAM ERROR OCCURED: {e}")

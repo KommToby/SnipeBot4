@@ -213,6 +213,9 @@ class Recommend(Cog):  # must have interactions.Extension or this wont work
                 min_sr = kwargs["min-sr"]
             else:
                 min_sr = 0
+        else:
+            min_sr = 0
+            max_sr = 1000
         if sort_type == "random":
             friend_scores_local = await self.database.get_min_max_scores_beatmap_ids(friend_id, min_sr, max_sr)
             main_scores = await self.database.get_min_max_scores_beatmap_ids(main_id, min_sr, max_sr)
