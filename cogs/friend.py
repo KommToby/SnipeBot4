@@ -72,40 +72,32 @@ class Friend(Cog):  # must have interactions.Extension or this wont work
                 await self.handle_add_multiple(ctx, kwargs["add-multiple"])
 
     async def convert_mods_to_int(self, modarray: list):
+        # this was written by chatgpt you should probably test it lol TODO
+        mod_values = {
+            "NF": 1,
+            "EZ": 2,
+            "TD": 4,
+            "HD": 8,
+            "HR": 16,
+            "SD": 32,
+            "DT": 64,
+            "RX": 128,
+            "HT": 256,
+            "NC": 512,
+            "FL": 1024,
+            "Autoplay": 2048,
+            "SO": 4096,
+            "Relax2": 8192,
+            "PF": 16384,
+        }
+
         value = 0
         if modarray:
             for mod in modarray:
-                if mod == "NF":
-                    value += 1
-                elif mod == "EZ":
-                    value += 2
-                elif mod == "TD":
-                    value += 4
-                elif mod == "HD":
-                    value += 8
-                elif mod == "HR":
-                    value += 16
-                elif mod == "SD":
-                    value += 32
-                elif mod == "DT":
-                    value += 64
-                elif mod == "RX":
-                    value += 128
-                elif mod == "HT":
-                    value += 256
-                elif mod == "NC":
-                    value += 512
-                elif mod == "FL":
-                    value += 1024
-                elif mod == "Autoplay":
-                    value += 2048
-                elif mod == "SO":
-                    value += 4096
-                elif mod == "Relax2":
-                    value += 8192
-                elif mod == "PF":
-                    value += 16384
+                value += mod_values.get(mod, 0)
+
         return value
+
 
     async def handle_add_multiple(self, ctx, usernames: str):
         # split the usernames into a list of usernames split by commas
