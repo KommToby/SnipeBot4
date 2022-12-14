@@ -72,17 +72,50 @@ class Strategy(Cog):  # must have commands.cog or this wont work
         """
         main_user_id - the osu! id of the main user
         snipes - the number of snipes that this user has made against the main user
-        not_sniped_back - the number of snipes that this user hasnt sniped back against the main user
-        not_sniped_main - the number of snipes that this user has sniped on the main user, AND the main user hasnt sniped back
+        not_sniped_back - TO - the number of snipes that this user hasnt sniped back against the main user
+        not_sniped_main - HELD - the number of snipes that this user has sniped on the main user, AND the main user hasnt sniped back
         sniped - the number of snipes that this user has sniped on by the main user
         """
-        multiplier = 1
+        calculated_pp = 1000
         total_scores = await self.database.get_all_scores(main_user_id)
         total_scores = len(total_scores)
+
+        # First we apply the general score multiplier for the main user
         if snipes < total_scores:
-            multiplier = (5/100) + (0.95 * (snipes/(total_scores+1)))
-        calculated_pp = round((multiplier*((3*snipes + 7*not_sniped_main) /
-                              (10*not_sniped_back+(snipes/(not_sniped_main+1))*sniped+1)*30000)), 2)
+            # Penalty for players who havent sniped enough
+            calculated_pp = calculated_pp * ((5/100) + (0.95 * (snipes/(total_scores+1))))
+
+        # worst case 50pp
+
+        # Now we add 1pp for every single held snipe the user has
+        calculated_pp += not_sniped_main
+        # Now we multiply this pp by their snipe/sniped history, if they have been sniped more than they have sniped
+        if sniped > snipes:
+            calculated_pp = calculated_pp * (snipes/sniped)
+        # If they have more, then we add 0.5pp for every snipe they have more than sniped
+        elif sniped < snipes:
+            calculated_pp += (snipes - sniped) * 0.5
+        # Now we reduce the pp by the ratio of held snipes against to-snipes, if they have more to-snipes than held snipes
+        if not_sniped_back > not_sniped_main:
+            calculated_pp *= (not_sniped_back / not_sniped_main)
+            # we will also do a base reduction of 0.5 for every held snipe they have as a general penalty
+            calculated_pp = calculated_pp/(1 + 0.01*(not_sniped_back - not_sniped_main))
+        # If they have more held snipes than to-snipes, then we add 0.5pp for every held snipe they have more than to-snipes
+        elif not_sniped_back < not_sniped_main:
+            calculated_pp += (not_sniped_main - not_sniped_back) * 0.5
+
+        # If they have less than 100 snipes, then we reduce their pp by 50%
+        if snipes < 100:
+            calculated_pp *= 0.25
+        elif snipes < 200:
+            calculated_pp *= 0.5
+        elif snipes < 300:
+            calculated_pp *= 0.75
+        elif snipes < 400:
+            calculated_pp *= 0.95
+
+        # Now we normalise the pp (30x)
+        calculated_pp *= 30
         weighted_pp = await self.weight_snipe_pp(calculated_pp)
         return weighted_pp
 
