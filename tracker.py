@@ -611,28 +611,18 @@ class SnipeTracker:
                                     await self.database.add_snipe(main_user[1], friend_play.score.beatmap.id, friend[1], main_play.score.created_at, main_play.score.score, friend_play.score.score, main_play.score.accuracy, friend_play.score.accuracy, first_mods, second_mods, main_play.score.pp, friend_play.score.pp)
 
     async def check_duplicate_friends(self, friends: list, main_users: list):
+        # Initialise array for seen friends
         seen_friends = []
-        # First we remove any friend duplicates
+        # Make the main user ids a list of ids from the main_users list
+        main_user_ids = {main_user[2] for main_user in main_users}
+        # Now iterate for every friend
         for friend in friends:
-            add = True  # if we are going to add or not
-            for seen_friend in seen_friends:
-                if seen_friends == []:
-                    seen_friends.append(friend)
-                    break
-                if friend[2] == seen_friend[2]:
-                    add = False
-                    break
-            if add:
+            # If the friend is not a main user, and hasnt already been added
+            if friend[2] not in main_user_ids and friend[2] not in seen_friends:
+                # Add the new friend to the array
                 seen_friends.append(friend)
-
-        # Now we get rid of any main users that are left in the seen friends
-        for main_user in main_users:
-            for seen_friend in seen_friends:
-                if main_user[2] == seen_friend[2]:
-                    seen_friends.remove(seen_friend)
-                    break
-
-        return seen_friends  # returns altered array
+        # Return list of all seen friends
+        return seen_friends
 
     # When given a play, checks all users for snipes on that map.
     async def add_snipes(self, play: OsuRecentScore):
