@@ -683,7 +683,7 @@ class SnipeTracker:
                 if friend_play.score.score > friend_local_score[2]:
                     # we need to update their local score
                     conv_stars, conv_bpm, max_combo = await self.convert_stars_and_bpm(friend_play.score)
-                    snipability = await self.calculate_snipability(play.beatmap.drain, play.beatmap.difficulty_rating, {"AR": play.beatmap.ar, "OD": play.beatmap.accuracy}, play.beatmap.bpm, friend_play.score.mods, friend_play.score.rank, friend_play.score.max_combo, friend_play.score.rank, play.beatmap.count_spinners, play.pp, play.accuracy, play.statistics.count_miss, play.max_combo, max_combo)
+                    snipability = await self.calculate_snipability(play.beatmap.drain, play.beatmap.difficulty_rating, {"AR": play.beatmap.ar, "OD": play.beatmap.accuracy}, play.beatmap.bpm, friend_play.score.mods, friend_play.score.rank, play.beatmap.count_spinners, play.pp, play.accuracy, play.statistics.count_miss, play.max_combo, max_combo)
                     await self.database.update_score(friend[1], play.beatmap.id, friend_play.score.score, friend_play.score.accuracy, friend_play.score.max_combo, friend_play.score.passed, friend_play.score.pp, friend_play.score.rank, friend_play.score.statistics.count_300, friend_play.score.statistics.count_100, friend_play.score.statistics.count_50, friend_play.score.statistics.count_miss, friend_play.score.created_at, await self.convert_mods_to_int(friend_play.score.mods), conv_stars, conv_bpm, snipability)
 
     async def add_scores(self, main_user_friends: list, main_user, play: OsuRecentScore, users_checked: list):

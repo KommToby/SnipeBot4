@@ -40,8 +40,8 @@ async def on_ready():
             #     ctx = await get(client, interactions.Channel,
             #                                 channel_id=int(channel_id))
             #     embed = interactions.Embed(
-            #     title="Tiny Update!: v4.3.3.1",
-            #     description=f"**Snipebot has been updated!**\n - new logo lol",
+            #     title="Minor Update!: vPRE-4.3.7.1",
+            #     description=f"**Snipebot has been updated!**\n - thanks to clarz for the epic mathematical assistance",
             #     color=16711680
             #     )
             #     embed.set_author(name='Snipebot by Komm')
