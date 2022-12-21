@@ -104,12 +104,9 @@ class Recommend(Cog):  # must have interactions.Extension or this wont work
             max_sr = 1000
             min_sr = 0
 
-        snipable_plays_snipability = [
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        snipable_plays_ids = [0, 0, 0, 0, 0, 0, 0, 0, 0,
-                              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        snipable_plays_user_ids = [0, 0, 0, 0, 0, 0, 0, 0,
-                                   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        snipable_plays_snipability = [0]*25
+        snipable_plays_ids = [0]*25
+        snipable_plays_user_ids = [0]*25
 
         # Now we randomise the friends list
         random.shuffle(friends)
@@ -152,20 +149,18 @@ class Recommend(Cog):  # must have interactions.Extension or this wont work
             *sorted(zip(snipable_plays_snipability, snipable_plays_ids, snipable_plays_user_ids), reverse=True))
 
         # Now we get rid of any initialised values left in the arrays
-        snipable_plays_snipability = [
-            x for x in snipable_plays_snipability if x != 0]
+        snipable_plays_snipability = [x for x in snipable_plays_snipability if x != 0]
         snipable_plays_ids = [x for x in snipable_plays_ids if x != 0]
-        snipable_plays_user_ids = [
-            x for x in snipable_plays_user_ids if x != 0]
+        snipable_plays_user_ids = [x for x in snipable_plays_user_ids if x != 0]
 
         # now we get the beatmaps from the ids
         beatmaps = []
         snipability = []
         user_ids = []
-        for i in range(len(snipable_plays_ids)):
+        for i, beatmap_id in enumerate(snipable_plays_ids):
             if i > 24:  # 25 beatmaps is good for safety buffer
                 break
-            beatmap = await self.database.get_beatmap(snipable_plays_ids[i])
+            beatmap = await self.database.get_beatmap(beatmap_id)
             if beatmap:
                 beatmaps.append(beatmap)
                 snipability.append(snipable_plays_snipability[i])
