@@ -6,18 +6,6 @@ from interactions.ext.get import get
 from data_types.interactions import CustomInteractionsClient
 from data_types.cogs import Cog
 import asyncio
-# TODO make all friend adding in the same instances of the FIRST friend add.
-# This can be done by regularly checking a value of friends that need to be added
-# And if a new friend has been added to that list, it can start scanning them.
-# This will reduce the number of "Friend" Class instances, and keep all the scanning
-# To one singular thread. Not as efficient, but more reliable, and it doesnt really matter
-# What order it goes in, since the api is limited anyway.
-
-# TODO make the ETR data pull from the last ~10 seconds instead of the whole instance,
-# Because it becomes more inaccurate the more friends you add.
-
-# TODO remove the live updates of friend adding, and make a new command /status that shows
-# all the users who are currently being scanned
 
 
 class Friend(Cog):  # must have interactions.Extension or this wont work
