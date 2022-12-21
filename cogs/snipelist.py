@@ -16,14 +16,24 @@ class Snipelist(Cog):  # must have interactions.Extension or this wont work
         name="snipelist",
         description="shows some maps that the friend needs to play to snipe the main user",
         options=[interactions.Option(
-            name="username",
-            description="the username of the friend of the main user",
+            name="sort",
+            description="the sort of the snipeback list",
             type=interactions.OptionType.STRING,
-            required=False,
+            required=True,
+            choices=[
+                {
+                    "name": "Random",
+                    "value": "random"
+                },
+                {
+                    "name": "Snipability",
+                    "value": "snipability"
+                }
+            ]
         ),
         interactions.Option(
-            name="sort",
-            description="the sort of the snipeback list: random, snipability",
+            name="username",
+            description="the username of the friend of the main user",
             type=interactions.OptionType.STRING,
             required=False,
         ),

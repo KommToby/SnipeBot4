@@ -18,9 +18,23 @@ class Leaderboard(Cog):
         description="gets the snipe leaderboard for this server",
         options=[interactions.Option(
             name="sort",
-            description="sort order of leaderboard: pp, held, tosnipe",
+            description="sort order of leaderboard",
             type=interactions.OptionType.STRING,
             required=False,
+            choices=[
+                {
+                    "name": "Snipe PP",
+                    "value": "pp"
+                },
+                {
+                    "name": "Held Snipes",
+                    "value": "held"
+                },
+                {
+                    "name": "To-Snipe Plays",
+                    "value": "tosnipe"
+                }
+            ]
         )
         ]
     )
