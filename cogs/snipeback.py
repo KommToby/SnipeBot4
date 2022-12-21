@@ -31,42 +31,42 @@ class Snipeback(Cog):  # must have interactions.Extension or this wont work
                 }
             ]
         ),
-        interactions.Option(
+            interactions.Option(
             name="username",
             description="the username of the friend of the main user",
             type=interactions.OptionType.STRING,
             required=False,
         ),
-        interactions.Option(
+            interactions.Option(
             name="max-sr",
             description="maximum SR of the maps",
             type=interactions.OptionType.NUMBER,
             required=False,
         ),
-        interactions.Option(
+            interactions.Option(
             name="min-sr",
             description="minimum SR of the maps",
             type=interactions.OptionType.NUMBER,
             required=False,
         ),
-        
+
         ]
     )
     async def snipeback(self, ctx: interactions.CommandContext, *args, **kwargs):
         await ctx.defer()
         username = await self.handle_linked_account(ctx, kwargs)
-        if not(username):
+        if not (username):
             return
         main_user_id_array = await self.database.get_channel(ctx.channel_id._snowflake)
-        if not(main_user_id_array):
+        if not (main_user_id_array):
             await ctx.send(f"Either nobody is being tracked in this channel, or you've used the command in the wrong channel!")
             return
         user_data = await self.osu.get_user_data(username)
-        if not(user_data):
+        if not (user_data):
             await ctx.send(f"User {username} not found!")
             return
         main_user_data = await self.osu.get_user_data(main_user_id_array[1])
-        if not(main_user_data):
+        if not (main_user_data):
             await ctx.send(f"Main user not found!")
             return
         if await self.handle_sort(ctx, kwargs):
@@ -75,7 +75,7 @@ class Snipeback(Cog):  # must have interactions.Extension or this wont work
             return
         beatmaps, links, sort = await self.get_scores(main_user_data.id, user_data.id, sort_type, kwargs)
         # beatmaps = await self.osu.get_beatmaps(beatmaps) not needed in this command
-        if not(beatmaps):
+        if not (beatmaps):
             await ctx.send(f"Main user has no scores on any maps that {user_data.username} has with the given parameters!")
             return
         if beatmaps == []:
@@ -95,7 +95,7 @@ class Snipeback(Cog):  # must have interactions.Extension or this wont work
                 beatmaps.remove(beatmap)
                 links.remove(links[i])
                 newctx = await get(self.client, interactions.Channel,
-                                       channel_id=int(ctx.channel_id._snowflake))
+                                   channel_id=int(ctx.channel_id._snowflake))
                 await newctx.send(f"Queued score data Scan for {beatmap[0]}...")
                 # Now we tell the program to rescan the beatmap
                 self.client.tracker.rescan_beatmaps.append(beatmap[0])
@@ -124,13 +124,13 @@ class Snipeback(Cog):  # must have interactions.Extension or this wont work
             friend_scores = await self.database.get_min_max_scores_beatmap_ids(friend_id, min_sr, max_sr)
 
             # Check if the scores exist for the parameters
-            if not(main_scores) or not(friend_scores):
+            if not (main_scores) or not (friend_scores):
                 return False, False, False
 
             # Now shuffle the sniped and snipes lists
             random.shuffle(sniped)
             random.shuffle(snipes)
-        
+
         if sort_type == "snipability":
             # first we get all snipability beatmaps from both users
             snipability_ids_main = await self.database.get_min_max_scores_snipable_beatmap_ids(main_id, min_sr, max_sr)
@@ -170,7 +170,7 @@ class Snipeback(Cog):  # must have interactions.Extension or this wont work
                 break
             if snipe not in sniped:
                 beatmap_data = await self.database.get_beatmap(snipe)
-                if not(beatmap_data):
+                if not (beatmap_data):
                     continue
                 beatmaps_data.append(beatmap_data)
                 links.append(beatmap_data[5])
@@ -200,7 +200,7 @@ class Snipeback(Cog):  # must have interactions.Extension or this wont work
         username_array = await self.database.get_linked_user_osu_id(ctx.author.id._snowflake)
         if not username_array:
             await ctx.send("You are not linked to an osu! account - use `/link` to link your account\n"
-                            "Alternatively you can do `/recommend username:username` to get a specific persons profile")
+                           "Alternatively you can do `/recommend username:username` to get a specific persons profile")
             return False
         return username_array[0]
 

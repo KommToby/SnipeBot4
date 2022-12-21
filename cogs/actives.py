@@ -36,7 +36,8 @@ class Actives(Cog):  # must have interactions.Extension or this wont work
                 all_ids.append(friend_id[1])
 
         # Initialise the time exactly 7 days ago
-        seven_days_ago = (datetime.datetime.utcnow() - datetime.timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        seven_days_ago = (datetime.datetime.utcnow(
+        ) - datetime.timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%SZ")
 
         # Initialise the best number of submitted scores with their user id
         submitted_scores = {}
@@ -47,7 +48,8 @@ class Actives(Cog):  # must have interactions.Extension or this wont work
             submitted_scores[all_names[i]] = len(scores)
 
         # Sort the dictionary by the number of scores
-        sorted_scores = sorted(submitted_scores.items(), key=lambda x: x[1], reverse=True)
+        sorted_scores = sorted(submitted_scores.items(),
+                               key=lambda x: x[1], reverse=True)
 
         # Make the dictionary only have the 10 best users
         sorted_scores = sorted_scores[:10]
@@ -56,7 +58,6 @@ class Actives(Cog):  # must have interactions.Extension or this wont work
         embed = await create_actives_embed(sorted_scores)
 
         await ctx.send(embeds=embed)
-
 
 
 def setup(client):

@@ -20,7 +20,7 @@ class Best(Cog):  # must have interactions.Extension or this wont work
             type=interactions.OptionType.STRING,
             required=True,
         ),
-        interactions.Option(
+            interactions.Option(
             name="username",
             description="the username of the player",
             type=interactions.OptionType.STRING,
@@ -31,14 +31,14 @@ class Best(Cog):  # must have interactions.Extension or this wont work
     async def count(self, ctx: interactions.CommandContext, *args, **kwargs):
         await ctx.defer()
         username = await self.handle_linked_account(ctx, kwargs)
-        if not(username):
+        if not (username):
             return
         user_data = await self.osu.get_user_data(username)
-        if not(user_data):
+        if not (user_data):
             await ctx.send(f"User {username} not found!")
             return
         date, period = await self.handle_time(ctx, kwargs)
-        if not(date):
+        if not (date):
             return
         best_plays_time = await self.database.get_all_scores_after_date(user_data.id, date)
 
@@ -93,7 +93,7 @@ class Best(Cog):  # must have interactions.Extension or this wont work
         username_array = await self.database.get_linked_user_osu_id(ctx.author.id._snowflake)
         if not username_array:
             await ctx.send("You are not linked to an osu! account - use `/link` to link your account\n"
-                            "Alternatively you can do `/best username:username` to get specific user data")
+                           "Alternatively you can do `/best username:username` to get specific user data")
             return False
         return username_array[0]
 

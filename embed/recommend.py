@@ -1,6 +1,4 @@
 import interactions
-import random
-from data_types.osu import UserData
 
 
 async def create_recommend_embed(friend_username: str, beatmaps: list, links: list, sort_type: str):
@@ -22,6 +20,7 @@ async def create_recommend_embed(friend_username: str, beatmaps: list, links: li
         else:
             break
     return embed
+
 
 async def create_recommend_embed_main(username, beatmaps, snipability, usernames):
     embed = interactions.Embed(

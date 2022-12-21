@@ -26,7 +26,7 @@ class Stats(Cog):  # must have commands.cog or this wont work
     async def stats(self, ctx: interactions.CommandContext, *args, **kwargs):
         await ctx.defer()  # is thinking... message - 15 minutes timer
         username = await self.handle_linked_account(ctx, kwargs)
-        if not(username):
+        if not (username):
             return
         user_data = await self.osu.get_user_data(username)
         if user_data:

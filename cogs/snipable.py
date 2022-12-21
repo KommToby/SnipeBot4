@@ -25,18 +25,18 @@ class Snipable(Cog):  # must have interactions.Extension or this wont work
     async def snipable(self, ctx: interactions.CommandContext, *args, **kwargs):
         await ctx.defer()
         username = await self.handle_linked_account(ctx, kwargs)
-        if not(username):
+        if not (username):
             return
         main_user_id_array = await self.database.get_channel(ctx.channel_id._snowflake)
-        if not(main_user_id_array):
+        if not (main_user_id_array):
             await ctx.send(f"Either nobody is being tracked in this channel, or you've used the command in the wrong channel!")
             return
         user_data = await self.osu.get_user_data(username)
-        if not(user_data):
+        if not (user_data):
             await ctx.send(f"User {username} not found!")
             return
         snipable_scores = await self.database.get_snipable_scores(user_data.id)
-        if not(snipable_scores):
+        if not (snipable_scores):
             await ctx.send(f"User {username} has no snipable scores! - Did you check the correct user?")
             return
         await self.sort_scores(snipable_scores)
@@ -60,7 +60,7 @@ class Snipable(Cog):  # must have interactions.Extension or this wont work
                 beatmaps.append(snipe)
         for beatmap in beatmaps:
             beatmap_data = await self.database.get_beatmap(beatmap)
-            if not(beatmap_data):
+            if not (beatmap_data):
                 continue
             beatmaps_data.append(beatmap_data)
             links.append(beatmap_data[5])
@@ -83,7 +83,7 @@ class Snipable(Cog):  # must have interactions.Extension or this wont work
             if i > 10:
                 break
             beatmap = await self.database.get_beatmap(scores[i][1])
-            if not(beatmap):
+            if not (beatmap):
                 continue
             beatmaps.append(beatmap)
         return beatmaps
@@ -91,6 +91,7 @@ class Snipable(Cog):  # must have interactions.Extension or this wont work
     async def sort_scores(self, scores):
         # sort by the 16th value in the array (snipability) descending
         scores.sort(key=lambda x: x[16], reverse=True)
+
 
 def setup(client):
     Snipable(client)

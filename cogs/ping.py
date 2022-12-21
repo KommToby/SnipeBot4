@@ -23,7 +23,7 @@ class Ping(Cog):  # must have interactions.Extension or this wont work
     async def ping(self, ctx, *args, **kwargs):
         await ctx.defer()
         discord_id = ctx.author.id._snowflake
-        if not(await self.database.get_link(discord_id)):
+        if not (await self.database.get_link(discord_id)):
             await ctx.send(f"You need to link your osu! account first! Use `/link`")
             return
         pinging = kwargs['pinging']

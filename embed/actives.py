@@ -1,6 +1,4 @@
 import interactions
-import random
-from data_types.osu import UserData
 
 
 async def create_actives_embed(active_users: dict):

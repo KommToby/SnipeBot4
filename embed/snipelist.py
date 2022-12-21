@@ -1,6 +1,4 @@
 import interactions
-import random
-from data_types.osu import UserData
 
 
 async def create_snipelist_embed(friend_username: str, beatmaps: list, links: list, type: str):

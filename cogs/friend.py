@@ -29,7 +29,7 @@ class Friend(Cog):  # must have interactions.Extension or this wont work
 
     @interactions.extension_command(
         name="friend",
-        default_member_permissions=interactions.Permissions.ADMINISTRATOR, # Admin only
+        default_member_permissions=interactions.Permissions.ADMINISTRATOR,  # Admin only
         description="add to, remove, or check a main users friend list",
         options=[interactions.Option(
             name="add",
@@ -98,7 +98,6 @@ class Friend(Cog):  # must have interactions.Extension or this wont work
 
         return value
 
-
     async def handle_add_multiple(self, ctx, usernames: str):
         # split the usernames into a list of usernames split by commas
         usernames = usernames.split(",")
@@ -109,11 +108,11 @@ class Friend(Cog):  # must have interactions.Extension or this wont work
                 message = await ctx.send(f"Adding {username} to the friends list... {usernames.index(username) + 1}/{len(usernames)}")
             else:
                 ctx = await get(self.client, interactions.Channel,
-                                   channel_id=int(channel_id_snowflake))
+                                channel_id=int(channel_id_snowflake))
                 message = await ctx.send(f"Adding {username} to the friends list... {usernames.index(username) + 1}/{len(usernames)}")
             user_data = await self.osu.get_user_data(username)
             if user_data:
-                if not(await self.database.get_friend_from_channel(user_data.id, channel_id_snowflake)):
+                if not (await self.database.get_friend_from_channel(user_data.id, channel_id_snowflake)):
                     await self.database.add_friend(channel_id_snowflake, user_data)
                     await message.edit(content=f"Adding {username} to the friends list... **Done!**")
                     # if they arent a main user or a friend you should scan their plays on all beatmaps next TODO
@@ -132,7 +131,7 @@ class Friend(Cog):  # must have interactions.Extension or this wont work
         message = await ctx.send(f"Adding {username} to the friends list...")
         user_data = await self.osu.get_user_data(username)
         if user_data:
-            if not(await self.database.get_friend_from_channel(user_data.id, ctx.channel_id._snowflake)):
+            if not (await self.database.get_friend_from_channel(user_data.id, ctx.channel_id._snowflake)):
                 await self.database.add_friend(ctx.channel_id._snowflake, user_data)
                 await message.edit(content=f"Adding {username} to the friends list... **Done!**")
                 # if they arent a main user or a friend you should scan their plays on all beatmaps next TODO
@@ -185,7 +184,7 @@ class Friend(Cog):  # must have interactions.Extension or this wont work
             for top_play in top_plays:
                 beatmap_data = await self.osu.get_beatmap(top_play.beatmap.id)
                 # if the beatmap has never been scanned before
-                if not(await self.database.get_beatmap(top_play.beatmap.id)):
+                if not (await self.database.get_beatmap(top_play.beatmap.id)):
                     if beatmap_data:
                         await self.tracker.check_new_beatmaps([str(beatmap_data.id)])
                 else:  # beatmap has been scanned before
@@ -223,7 +222,7 @@ class Friend(Cog):  # must have interactions.Extension or this wont work
         for i, beatmap in enumerate(beatmaps):
             try:
                 await asyncio.sleep(0.05)
-                if not(await self.database.get_score(user_data.id, beatmap[0])):
+                if not (await self.database.get_score(user_data.id, beatmap[0])):
                     user_play = await self.osu.get_score_data(beatmap[0], user_data.id)
                     if user_play:
                         converted_stars = 0
@@ -271,7 +270,7 @@ class Friend(Cog):  # must have interactions.Extension or this wont work
                     # accuracy being 0 signifies old format
                     if local_score_data[3] == None:
                         user_play = await self.osu.get_score_data(beatmap[0], user_data.id)
-                        if not(user_play):
+                        if not (user_play):
                             if i != 0:
                                 elapsed_time = time.time() - start_time
                                 try:

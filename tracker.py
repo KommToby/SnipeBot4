@@ -5,7 +5,6 @@ from interactions.ext.get import get
 from data_types.osu import *
 from data_types.interactions import CustomInteractionsClient
 import asyncio
-import random
 # TODO make methods that dont use client, database, or osu static (dont contain self)
 # TODO for all api returns create a class object "type" to refer to
 # TODO for all "white" variable names, make a new submethod that passes in the correct Class Type

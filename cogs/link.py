@@ -30,7 +30,7 @@ class Link(Cog):  # must have interactions.Extension or this wont work
 
         # get osu account details
         osu_account_data = await self.osu.get_user_data(username)
-        if not(osu_account_data):
+        if not (osu_account_data):
             await ctx.send(f"User {username} was not found on osu! - did you write it correctly?")
             return
 

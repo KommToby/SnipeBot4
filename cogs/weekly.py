@@ -26,14 +26,14 @@ class Weekly(Cog):  # must have interactions.Extension or this wont work
     async def weekly(self, ctx: interactions.CommandContext, *args, **kwargs):
         await ctx.defer()
         username = await self.handle_linked_account(ctx, kwargs)
-        if not(username):
+        if not (username):
             return
         user_data = await self.osu.get_user_data(username)
-        if not(user_data):
+        if not (user_data):
             await ctx.send(f"{username} is not a valid osu! username! Please try again.")
             return
         user_weekly_array = await self.database.get_last_weeks_scores(user_data.id)
-        if not(user_weekly_array):
+        if not (user_weekly_array):
             await ctx.send(f"{username} has no scores in the last week!")
             return
         user_weekly_array = await self.sort_weekly_array(user_weekly_array)

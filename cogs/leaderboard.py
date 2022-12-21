@@ -103,13 +103,14 @@ class Leaderboard(Cog):
         not_sniped_main - the number of snipes that this user has sniped on the main user, AND the main user hasnt sniped back
         sniped - the number of snipes that this user has sniped on by the main user
         """
-        calculated_pp = 1000 # Everyone starts with 1000 base pp
+        calculated_pp = 1000  # Everyone starts with 1000 base pp
         total_scores = await self.database.get_all_scores(main_user_id)
         total_scores = len(total_scores)
         # First we apply the general score multiplier for the main user
         if snipes < total_scores:
             # Penalty for players who havent sniped enough
-            calculated_pp = calculated_pp * ((5/100) + (0.95 * (snipes/(total_scores+1))))
+            calculated_pp = calculated_pp * \
+                ((5/100) + (0.95 * (snipes/(total_scores+1))))
 
         # worst case 50pp
 
@@ -125,7 +126,8 @@ class Leaderboard(Cog):
         if not_sniped_back > not_sniped_main:
             calculated_pp *= (not_sniped_back / not_sniped_main)
             # we will also do a base reduction of 0.5 for every held snipe they have as a general penalty
-            calculated_pp = calculated_pp/(1 + 0.01*(not_sniped_back - not_sniped_main))
+            calculated_pp = calculated_pp / \
+                (1 + 0.01*(not_sniped_back - not_sniped_main))
         # If they have more held snipes than to-snipes, then we add 0.5pp for every held snipe they have more than to-snipes
         elif not_sniped_back < not_sniped_main:
             calculated_pp += (not_sniped_main - not_sniped_back) * 0.5

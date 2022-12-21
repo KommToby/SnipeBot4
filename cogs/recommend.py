@@ -1,5 +1,4 @@
 import interactions
-from data_types.osu import UserData
 from embed.recommend import create_recommend_embed, create_recommend_embed_main
 from data_types.interactions import CustomInteractionsClient
 from data_types.cogs import Cog
@@ -33,19 +32,19 @@ class Recommend(Cog):  # must have interactions.Extension or this wont work
                 }
             ]
         ),
-        interactions.Option(
+            interactions.Option(
             name="username",
             description="the username of the friend of the main user",
             type=interactions.OptionType.STRING,
             required=False,
         ),
-        interactions.Option(
+            interactions.Option(
             name="max-sr",
             description="maximum SR of the maps",
             type=interactions.OptionType.NUMBER,
             required=False,
         ),
-        interactions.Option(
+            interactions.Option(
             name="min-sr",
             description="minimum SR of the maps",
             type=interactions.OptionType.NUMBER,
@@ -56,18 +55,18 @@ class Recommend(Cog):  # must have interactions.Extension or this wont work
     async def recommend(self, ctx: interactions.CommandContext, *args, **kwargs):
         await ctx.defer()
         username = await self.handle_linked_account(ctx, kwargs)
-        if not(username):
+        if not (username):
             return
         main_user_id_array = await self.database.get_channel(ctx.channel_id._snowflake)
-        if not(main_user_id_array):
+        if not (main_user_id_array):
             await ctx.send(f"Either nobody is being tracked in this channel, or you've used the command in the wrong channel!")
             return
         user_data = await self.osu.get_user_data(username)
-        if not(user_data):
+        if not (user_data):
             await ctx.send(f"User {username} not found!")
             return
         main_user_data = await self.osu.get_user_data(main_user_id_array[1])
-        if not(main_user_data):
+        if not (main_user_data):
             await ctx.send(f"Main user not found!")
             return
         if str(main_user_data.id) == str(user_data.id):
@@ -91,7 +90,7 @@ class Recommend(Cog):  # must have interactions.Extension or this wont work
         if not friends:
             await ctx.send("Either main user has no friends, or you've used the command in the wrong channel!")
             return
-        
+
         if len(kwargs) > 0:
             if "max-sr" in kwargs:
                 max_sr = kwargs["max-sr"]
@@ -105,9 +104,12 @@ class Recommend(Cog):  # must have interactions.Extension or this wont work
             max_sr = 1000
             min_sr = 0
 
-        snipable_plays_snipability = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        snipable_plays_ids = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        snipable_plays_user_ids = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        snipable_plays_snipability = [
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        snipable_plays_ids = [0, 0, 0, 0, 0, 0, 0, 0, 0,
+                              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        snipable_plays_user_ids = [0, 0, 0, 0, 0, 0, 0, 0,
+                                   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
         # Now we randomise the friends list
         random.shuffle(friends)
@@ -124,7 +126,8 @@ class Recommend(Cog):  # must have interactions.Extension or this wont work
             scores_user_ids = await self.database.get_min_max_scores_snipable_user_ids(friend[1], min_sr, max_sr)
             # we need to sort scores_snipability but maintain the order of the other two lists
             # we do this by zipping the lists together, sorting the zipped list in reverse order, and then unzipping the list
-            scores_snipability, scores_ids, scores_user_ids = zip(*sorted(zip(scores_snipability, scores_ids, scores_user_ids), reverse=True))
+            scores_snipability, scores_ids, scores_user_ids = zip(
+                *sorted(zip(scores_snipability, scores_ids, scores_user_ids), reverse=True))
             # Now we make every list only have 10 elements
             scores_snipability = scores_snipability[:10]
             scores_ids = scores_ids[:10]
@@ -139,25 +142,29 @@ class Recommend(Cog):  # must have interactions.Extension or this wont work
                     continue
                 if scores_snipability[i] < min(snipable_plays_snipability):
                     continue
-                index = snipable_plays_snipability.index(min(snipable_plays_snipability))
+                index = snipable_plays_snipability.index(
+                    min(snipable_plays_snipability))
                 snipable_plays_snipability[index] = scores_snipability[i]
                 snipable_plays_ids[index] = scores_ids[i]
                 snipable_plays_user_ids[index] = scores_user_ids[i]
 
         # now we sort the snipability list and make sure the ids are in the same order in reverse
-        snipable_plays_snipability, snipable_plays_ids, snipable_plays_user_ids = zip(*sorted(zip(snipable_plays_snipability, snipable_plays_ids, snipable_plays_user_ids), reverse=True))
+        snipable_plays_snipability, snipable_plays_ids, snipable_plays_user_ids = zip(
+            *sorted(zip(snipable_plays_snipability, snipable_plays_ids, snipable_plays_user_ids), reverse=True))
 
         # Now we get rid of any initialised values left in the arrays
-        snipable_plays_snipability = [x for x in snipable_plays_snipability if x != 0]
+        snipable_plays_snipability = [
+            x for x in snipable_plays_snipability if x != 0]
         snipable_plays_ids = [x for x in snipable_plays_ids if x != 0]
-        snipable_plays_user_ids = [x for x in snipable_plays_user_ids if x != 0]
+        snipable_plays_user_ids = [
+            x for x in snipable_plays_user_ids if x != 0]
 
         # now we get the beatmaps from the ids
         beatmaps = []
         snipability = []
         user_ids = []
         for i in range(len(snipable_plays_ids)):
-            if i > 24: # 25 beatmaps is good for safety buffer
+            if i > 24:  # 25 beatmaps is good for safety buffer
                 break
             beatmap = await self.database.get_beatmap(snipable_plays_ids[i])
             if beatmap:
@@ -188,7 +195,7 @@ class Recommend(Cog):  # must have interactions.Extension or this wont work
                 user_ids.remove(user_ids[i])
                 usernames.remove(usernames[i])
                 newctx = await get(self.client, interactions.Channel,
-                                       channel_id=int(ctx.channel_id._snowflake))
+                                   channel_id=int(ctx.channel_id._snowflake))
                 await newctx.send(f"Queued score data Scan for {beatmap[0]}...")
                 self.client.tracker.rescan_beatmaps.append(beatmap[0])
 
@@ -207,7 +214,7 @@ class Recommend(Cog):  # must have interactions.Extension or this wont work
                 beatmaps.remove(beatmap)
                 links.remove(links[i])
                 newctx = await get(self.client, interactions.Channel,
-                                       channel_id=int(ctx.channel_id._snowflake))
+                                   channel_id=int(ctx.channel_id._snowflake))
                 await newctx.send(f"Queued score data Scan for {beatmap[0]}...")
                 # Now we tell the program to rescan the beatmap
                 self.client.tracker.rescan_beatmaps.append(beatmap[0])
@@ -270,7 +277,7 @@ class Recommend(Cog):  # must have interactions.Extension or this wont work
         username_array = await self.database.get_linked_user_osu_id(ctx.author.id._snowflake)
         if not username_array:
             await ctx.send("You are not linked to an osu! account - use `/link` to link your account\n"
-                            "Alternatively you can do `/recommend username:username` to get a specific persons profile")
+                           "Alternatively you can do `/recommend username:username` to get a specific persons profile")
             return False
         return username_array[0]
 
@@ -288,6 +295,7 @@ class Recommend(Cog):  # must have interactions.Extension or this wont work
                 return "random"
         else:
             return "random"
+
 
 def setup(client):
     Recommend(client)

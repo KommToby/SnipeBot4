@@ -13,7 +13,7 @@ class Track(Cog):  # must have interactions.Extension or this wont work
 
     @interactions.extension_command(
         name="track",
-        default_member_permissions=interactions.Permissions.ADMINISTRATOR, # admin only
+        default_member_permissions=interactions.Permissions.ADMINISTRATOR,  # admin only
         description="add a user to be tracked in the channel",
         options=[interactions.Option(
             name="username",
@@ -48,7 +48,7 @@ class Track(Cog):  # must have interactions.Extension or this wont work
                     await message.edit(f"Started tracking user {user_data.username} in this channel! \nScanning plays... {i}/{len(beatmaps)}")
                     message_update_time = time.time()
 
-                if not(await self.database.get_score(user_data.id, beatmap[0])):
+                if not (await self.database.get_score(user_data.id, beatmap[0])):
                     user_play = await self.osu.get_score_data(beatmap[0], user_data.id)
                     if user_play:
                         converted_stars = 0
@@ -71,7 +71,7 @@ class Track(Cog):  # must have interactions.Extension or this wont work
                     # accuracy being None signifies old format
                     if local_score_data[3] == None:
                         user_play = await self.osu.get_score_data(beatmap[0], user_data.id)
-                        if not(user_play):
+                        if not (user_play):
                             if i != 0:
                                 elapsed_time = time.time() - start_time
                                 try:

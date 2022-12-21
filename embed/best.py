@@ -19,7 +19,7 @@ async def create_best_embed(best_plays, username: str, period: str, beatmap: lis
             medal = "🥉"
         else:
             medal = ""
-        
+
         mods = ""
         if play[13] != 0:
             modarray = await decode_mods_to_array(play[13])
@@ -41,9 +41,11 @@ async def create_best_embed(best_plays, username: str, period: str, beatmap: lis
             inline=False,
         )
 
-    embed.set_footer(text=f"NOTE: Plays only store if one of the main users has also played the map!")
+    embed.set_footer(
+        text=f"NOTE: Plays only store if one of the main users has also played the map!")
 
     return embed
+
 
 async def convert_datetime_to_timestamp(dateandtime: str):
     # convert the dateandtime string to a datetime object
@@ -52,12 +54,15 @@ async def convert_datetime_to_timestamp(dateandtime: str):
     timestamp = datetime.datetime.timestamp(dateandtime)
     return int(timestamp)
 
+
 async def update_decode(modint: int, value: int, modarray: list, mod: str):
-        modarray.append(mod)
-        modint = modint - value
-        return modint, modarray
+    modarray.append(mod)
+    modint = modint - value
+    return modint, modarray
 
 # converts mod integer back into array of mods
+
+
 async def decode_mods_to_array(modint: int):
     modarray = []
     moddict = {

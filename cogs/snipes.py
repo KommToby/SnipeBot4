@@ -26,14 +26,14 @@ class Snipes(Cog):  # must have interactions.Extension or this wont work
     async def snipes(self, ctx: interactions.CommandContext, *args, **kwargs):
         await ctx.defer()
         username = await self.handle_linked_account(ctx, kwargs)
-        if not(username):
+        if not (username):
             return
         main_user_id_array = await self.database.get_channel(ctx.channel_id._snowflake)
-        if not(main_user_id_array):
+        if not (main_user_id_array):
             await ctx.send(f"Either nobody is being tracked in this channel, or you've used the command in the wrong channel!")
             return
         user_data = await self.osu.get_user_data(username)
-        if not(user_data):
+        if not (user_data):
             await ctx.send(f"{username} is not a valid osu! username! Please try again.")
             return
         if main_user_id_array[2] == username or main_user_id_array[1] == username:
@@ -127,7 +127,8 @@ class Snipes(Cog):  # must have interactions.Extension or this wont work
         # First we apply the general score multiplier for the main user
         if snipes < total_scores:
             # Penalty for players who havent sniped enough
-            calculated_pp = calculated_pp * ((5/100) + (0.95 * (snipes/(total_scores+1))))
+            calculated_pp = calculated_pp * \
+                ((5/100) + (0.95 * (snipes/(total_scores+1))))
 
         # worst case 50pp
 
@@ -143,7 +144,8 @@ class Snipes(Cog):  # must have interactions.Extension or this wont work
         if not_sniped_back > not_sniped_main:
             calculated_pp *= (not_sniped_back / not_sniped_main)
             # we will also do a base reduction of 0.5 for every held snipe they have as a general penalty
-            calculated_pp = calculated_pp/(1 + 0.01*(not_sniped_back - not_sniped_main))
+            calculated_pp = calculated_pp / \
+                (1 + 0.01*(not_sniped_back - not_sniped_main))
         # If they have more held snipes than to-snipes, then we add 0.5pp for every held snipe they have more than to-snipes
         elif not_sniped_back < not_sniped_main:
             calculated_pp += (not_sniped_main - not_sniped_back) * 0.5
