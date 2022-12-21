@@ -117,9 +117,8 @@ class Recommend(Cog):  # must have interactions.Extension or this wont work
         # now we get all the non-zero scores for every friend
         # if the snipability of the score is in the top 25 lowest in the list, we add it to the list and remove the highest
         for friend in friends:
-            await asyncio.sleep(0.1)
             # if the lowest snipability is 70% or higher, we stop
-            if min(snipable_plays_snipability) >= 0.7:
+            if snipable_plays_snipability and min(snipable_plays_snipability) >= 0.7:
                 break
             scores_snipability = await self.database.get_min_max_scores_snipable_values(friend[1], min_sr, max_sr)
             scores_ids = await self.database.get_min_max_scores_snipable_beatmap_ids(friend[1], min_sr, max_sr)
@@ -135,18 +134,18 @@ class Recommend(Cog):  # must have interactions.Extension or this wont work
             if not scores_snipability:
                 continue
             for i in range(len(scores_snipability)):
-                # we need to make sure the main user hasnt played the map
-                if await self.database.get_user_score_on_beatmap_no_zeros(main_user_data.id, scores_ids[i]):
-                    continue
                 if scores_snipability[i] == 0:
+                    continue
+                # we need to make sure the main user hasn't played the map
+                if await self.database.get_user_score_on_beatmap_no_zeros(main_user_data.id, scores_ids[i]):
                     continue
                 if scores_snipability[i] < min(snipable_plays_snipability):
                     continue
-                index = snipable_plays_snipability.index(
-                    min(snipable_plays_snipability))
+                index = snipable_plays_snipability.index(min(snipable_plays_snipability))
                 snipable_plays_snipability[index] = scores_snipability[i]
                 snipable_plays_ids[index] = scores_ids[i]
                 snipable_plays_user_ids[index] = scores_user_ids[i]
+            await asyncio.sleep(0.1)
 
         # now we sort the snipability list and make sure the ids are in the same order in reverse
         snipable_plays_snipability, snipable_plays_ids, snipable_plays_user_ids = zip(
