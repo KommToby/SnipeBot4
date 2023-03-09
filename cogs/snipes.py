@@ -26,14 +26,14 @@ class Snipes(Cog):  # must have interactions.Extension or this wont work
     async def snipes(self, ctx: interactions.CommandContext, *args, **kwargs):
         await ctx.defer()
         username = await self.handle_linked_account(ctx, kwargs)
-        if not (username):
+        if not username:
             return
         main_user_id_array = await self.database.get_channel(ctx.channel_id._snowflake)
-        if not (main_user_id_array):
+        if not main_user_id_array:
             await ctx.send(f"Either nobody is being tracked in this channel, or you've used the command in the wrong channel!")
             return
         user_data = await self.osu.get_user_data(username)
-        if not (user_data):
+        if not user_data:
             await ctx.send(f"{username} is not a valid osu! username! Please try again.")
             return
         if main_user_id_array[2] == username or main_user_id_array[1] == username:
@@ -80,7 +80,7 @@ class Snipes(Cog):  # must have interactions.Extension or this wont work
                 not_sniped_back = friend_leaderboard_data['not_sniped_back']
                 held_snipes = friend_leaderboard_data['held_snipes']
                 break
-        if friend_dict == []:
+        if not friend_dict:
             return -1, 0, 0, 0
         return leaderboard.index(friend_dict), snipe_pp, not_sniped_back, held_snipes
 
@@ -117,7 +117,7 @@ class Snipes(Cog):  # must have interactions.Extension or this wont work
         """
         main_user_id - the osu! id of the main user
         snipes - the number of snipes that this user has made against the main user
-        not_sniped_back - the number of snipes that this user hasnt sniped back against the main user
+        not_sniped_back - the number of snipes that this user hasn't sniped back against the main user
         not_sniped_main - the number of snipes that this user has sniped on the main user, AND the main user hasnt sniped back
         sniped - the number of snipes that this user has sniped on by the main user
         """
@@ -126,7 +126,7 @@ class Snipes(Cog):  # must have interactions.Extension or this wont work
         total_scores = len(total_scores)
         # First we apply the general score multiplier for the main user
         if snipes < total_scores:
-            # Penalty for players who havent sniped enough
+            # Penalty for players who haven't sniped enough
             calculated_pp = calculated_pp * \
                 ((5/100) + (0.95 * (snipes/(total_scores+1))))
 

@@ -17,7 +17,8 @@ class SnipeTracker:
         self.database = client.database
         self.rescan_beatmaps = []
 
-    async def convert_datetime_to_int(self, datetime: str):
+    @staticmethod
+    async def convert_datetime_to_int(datetime: str):
         # '2021-08-23T21:31:10+00:00'
         date = datetime.split('-')
         year = date[0]

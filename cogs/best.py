@@ -5,7 +5,7 @@ from data_types.cogs import Cog
 import datetime
 
 
-class Best(Cog):  # must have interactions.Extension or this wont work
+class Best(Cog):  # must have interactions.Extension or this won't work
     def __init__(self, client: CustomInteractionsClient):
         self.client = client
         self.osu = client.auth
@@ -31,18 +31,18 @@ class Best(Cog):  # must have interactions.Extension or this wont work
     async def count(self, ctx: interactions.CommandContext, *args, **kwargs):
         await ctx.defer()
         username = await self.handle_linked_account(ctx, kwargs)
-        if not (username):
+        if not username:
             return
         user_data = await self.osu.get_user_data(username)
-        if not (user_data):
+        if not user_data:
             await ctx.send(f"User {username} not found!")
             return
         date, period = await self.handle_time(ctx, kwargs)
-        if not (date):
+        if not date:
             return
         best_plays_time = await self.database.get_all_scores_after_date(user_data.id, date)
 
-        # now we remove the scores that dont have pp
+        # now we remove the scores that don't have pp
         best_plays_time = [x for x in best_plays_time if x[6] is not None]
 
         # now we sort the best plays by pp
@@ -56,40 +56,42 @@ class Best(Cog):  # must have interactions.Extension or this wont work
         best_plays_times = []
         for play in best_plays_time:
             beatmap_data = await self.database.get_beatmap(play[1])
-            if beatmap_data:
-                best_plays.append(beatmap_data)
-                best_plays_times.append(play)
+            if not beatmap_data:
+                continue
+            best_plays.append(beatmap_data)
+            best_plays_times.append(play)
 
         embed = await create_best_embed(best_plays_times, user_data.username, period, best_plays)
         await ctx.send(embeds=embed)
 
     async def handle_time(self, ctx, kwargs):
-        if len(kwargs) > 0:
-            if "time" in kwargs:
-                # we check if one of the options was chosen
-                if kwargs['time'].lower() == "all":
-                    return (datetime.datetime.utcnow() - datetime.timedelta(days=20000)).strftime("%Y-%m-%dT%H:%M:%SZ"), kwargs['time']
-                elif kwargs['time'].lower() == "year":
-                    return (datetime.datetime.utcnow() - datetime.timedelta(days=365)).strftime("%Y-%m-%dT%H:%M:%SZ"), kwargs['time']
-                elif kwargs['time'].lower() == "month":
-                    return (datetime.datetime.utcnow() - datetime.timedelta(days=30)).strftime("%Y-%m-%dT%H:%M:%SZ"), kwargs['time']
-                elif kwargs['time'].lower() == "week":
-                    return (datetime.datetime.utcnow() - datetime.timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%SZ"), kwargs['time']
-                elif kwargs['time'].lower() == "day":
-                    return (datetime.datetime.utcnow() - datetime.timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ"), kwargs['time']
-                else:
-                    await ctx.send("Invalid time period: all, year, month, week, day")
-                    return False
-            else:
-                return (datetime.datetime.utcnow() - datetime.timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%SZ"), "week"
-        else:
+        if len(kwargs) <= 0:
             await ctx.send("You need to specify a time period: all, year, month, week, day")
             return False
 
+        if "time" not in kwargs:
+            return (datetime.datetime.utcnow() - datetime.timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%SZ"), "week"
+        else:
+            # we check if one of the options was chosen
+            time = kwargs['time'].lower()
+            match time:
+                case 'all':
+                    return (datetime.datetime.utcnow() - datetime.timedelta(days=20000)).strftime("%Y-%m-%dT%H:%M:%SZ"), kwargs['time']
+                case 'year':
+                    return (datetime.datetime.utcnow() - datetime.timedelta(days=365)).strftime("%Y-%m-%dT%H:%M:%SZ"), kwargs['time']
+                case 'month':
+                    return (datetime.datetime.utcnow() - datetime.timedelta(days=30)).strftime("%Y-%m-%dT%H:%M:%SZ"), kwargs['time']
+                case 'week':
+                    return (datetime.datetime.utcnow() - datetime.timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%SZ"), kwargs['time']
+                case 'day':
+                    return (datetime.datetime.utcnow() - datetime.timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ"), kwargs['time']
+                case _:
+                    await ctx.send("Invalid time period: all, year, month, week, day")
+                    return False
+
     async def handle_linked_account(self, ctx, kwargs):
-        if len(kwargs) > 0:
-            if "username" in kwargs:
-                return kwargs['username']
+        if len(kwargs) > 0 and "username" in kwargs:
+            return kwargs['username']
         username_array = await self.database.get_linked_user_osu_id(ctx.author.id._snowflake)
         if not username_array:
             await ctx.send("You are not linked to an osu! account - use `/link` to link your account\n"

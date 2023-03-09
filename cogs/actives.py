@@ -5,7 +5,7 @@ from data_types.cogs import Cog
 import datetime
 
 
-class Actives(Cog):  # must have interactions.Extension or this wont work
+class Actives(Cog):  # must have interactions.Extension or this won't work
     def __init__(self, client: CustomInteractionsClient):
         self.client = client
         # has to be osuauth since the command is called osu and it clashes

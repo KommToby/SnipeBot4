@@ -28,7 +28,7 @@ async def on_ready():
     print("\n\n\n\n\n\n\n\n")
     try:
         print("Bot Connected To Discord")
-        if client.running == False:
+        if not client.running:
             client.running = True
             for filename in os.listdir("./cogs"):
                 if filename.endswith(".py"):
@@ -52,11 +52,11 @@ async def on_ready():
         else:
             pass
     except Exception as e:
-        print(f"An Error Occured: {e}")
+        print(f"An Error Occurred: {e}")
 
 # must be final line
 if __name__ == '__main__':
     try:
         client.start()
     except Exception as e:
-        print(f"MAIN PROGRAM ERROR OCCURED: {e}")
+        print(f"MAIN PROGRAM ERROR OCCURRED: {e}")

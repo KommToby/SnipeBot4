@@ -4,7 +4,7 @@ from data_types.interactions import CustomInteractionsClient
 from data_types.cogs import Cog
 
 
-class Count(Cog):  # must have interactions.Extension or this wont work
+class Count(Cog):  # must have interactions.Extension or this won't work
     def __init__(self, client: CustomInteractionsClient):
         self.client = client
         self.osu = client.auth
@@ -23,20 +23,19 @@ class Count(Cog):  # must have interactions.Extension or this wont work
             description="the username of the mapper",
             type=interactions.OptionType.STRING,
             required=True,
-        )
-        ]
+        )]
     )
     async def count(self, ctx: interactions.CommandContext, *args, **kwargs):
         await ctx.defer()
         username, mapper = await self.handle_linked_account(ctx, kwargs)
-        if not (username):
+        if not username:
             return
         user_data = await self.osu.get_user_data(username)
         mapper_data = await self.osu.get_user_data(mapper)
-        if not (user_data):
+        if not user_data:
             await ctx.send(f"User {username} not found!")
             return
-        if not (mapper_data):
+        if not mapper_data:
             await ctx.send(f"User {mapper} not found!")
             return
 
