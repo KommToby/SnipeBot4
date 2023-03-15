@@ -12,7 +12,7 @@ This is in a seperate repo as it is a major update, the whole of SnipeBot3 was b
 
 ### Prerequisites
 
-- **Python 3+**: The language the bot is written in - [https://www.python.org/downloads/](https://www.python.org/downloads/)
+- **Python 3.9.13**: The language the bot is written in - [https://www.python.org/downloads/release/python-3913/](https://www.python.org/downloads/release/python-3913/)
 - **interactions-py**: The framework of the bot - `pip install -U discord-py-interactions`
 - **interactions-get**: An extension that allows additional api requests from discord - `pip install -u interactions-get`
 
