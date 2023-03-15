@@ -23,6 +23,7 @@ This is in a seperate repo as it is a major update, the whole of SnipeBot3 was b
 - [KommToby](https://github.com/KommToby) - Creator & Bot Maintainer
 - [wimble](https://github.com/macha-dev) - Website Maintainer
 - [Jamgyo](https://github.com/jamiegyoung) - Contributor
+- [Elodie](https://github.com/SophiaLilly) - Contributor
 - [ito](https://github.com/largereptile) - Contributor
 
 <!-- mention patch notes / changes from snipebot 3 -->
