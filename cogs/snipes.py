@@ -121,7 +121,7 @@ class Snipes(Cog):  # must have interactions.Extension or this wont work
         not_sniped_main - the number of snipes that this user has sniped on the main user, AND the main user hasnt sniped back
         sniped - the number of snipes that this user has sniped on by the main user
         """
-        calculated_pp = 1000
+        calculated_pp = 1000  # Everyone starts with 1000 base pp
         total_scores = await self.database.get_all_scores(main_user_id)
         total_scores = len(total_scores)
         # First we apply the general score multiplier for the main user
@@ -137,9 +137,9 @@ class Snipes(Cog):  # must have interactions.Extension or this wont work
         # Now we multiply this pp by their snipe/sniped history, if they have been sniped more than they have sniped
         if sniped > snipes:
             calculated_pp = calculated_pp * (snipes/sniped)
-        # If they have more, then we add 0.5pp for every snipe they have more than sniped
-        elif sniped < snipes:
-            calculated_pp += (snipes - sniped) * 0.5
+        # If they have over 100 more, then we add 0.5pp for every snipe they have more than sniped
+        elif sniped < snipes and (snipes - sniped) > 100:
+            calculated_pp += ((snipes - sniped)-100) * 0.5
         # Now we reduce the pp by the ratio of held snipes against to-snipes, if they have more to-snipes than held snipes
         if not_sniped_back > not_sniped_main:
             calculated_pp *= (not_sniped_back / not_sniped_main)
@@ -162,7 +162,9 @@ class Snipes(Cog):  # must have interactions.Extension or this wont work
 
         # Now we normalise the pp (30x)
         calculated_pp *= 30
+
         weighted_pp = await self.weight_snipe_pp(calculated_pp)
+        weighted_pp = math.log2(weighted_pp) * 300
         return weighted_pp
 
     async def weight_snipe_pp(self, pp):
