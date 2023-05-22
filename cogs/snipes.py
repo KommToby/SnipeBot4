@@ -119,71 +119,56 @@ class Snipes(Cog):  # must have interactions.Extension or this wont work
         snipes - the number of snipes that this user has made against the main user
         not_sniped_back - the number of snipes that this user hasnt sniped back against the main user
         not_sniped_main - the number of snipes that this user has sniped on the main user, AND the main user hasnt sniped back
-        sniped - the number of snipes that this user has sniped on by the main user
+        sniped - the number of snipes that this user has been sniped by the main user
         """
-        calculated_pp = 1000  # Everyone starts with 1000 base pp
-        total_scores = await self.database.get_all_scores(main_user_id)
-        total_scores = len(total_scores)
-        # First we apply the general score multiplier for the main user
-        if snipes < total_scores:
-            # Penalty for players who havent sniped enough
-            calculated_pp = calculated_pp * \
-                ((5/100) + (0.95 * (snipes/(total_scores+1))))
 
-        # worst case 50pp
+        A = 3
+        B = 2
+        C = 0.5
+        D = 4
 
-        # Now we add 1pp for every single held snipe the user has
-        calculated_pp += not_sniped_main
-        # Now we multiply this pp by their snipe/sniped history, if they have been sniped more than they have sniped
-        if sniped > snipes:
-            calculated_pp = calculated_pp * (snipes/sniped)
-        # If they have over 100 more, then we add 0.5pp for every snipe they have more than sniped
-        elif sniped < snipes and (snipes - sniped) > 100:
-            calculated_pp += ((snipes - sniped)-100) * 0.5
-        # Now we reduce the pp by the ratio of held snipes against to-snipes, if they have more to-snipes than held snipes
-        if not_sniped_back > not_sniped_main:
-            calculated_pp *= (not_sniped_back / not_sniped_main)
-            # we will also do a base reduction of 0.5 for every held snipe they have as a general penalty
-            calculated_pp = calculated_pp / \
-                (1 + 0.01*(not_sniped_back - not_sniped_main))
-        # If they have more held snipes than to-snipes, then we add 0.5pp for every held snipe they have more than to-snipes
-        elif not_sniped_back < not_sniped_main:
-            calculated_pp += (not_sniped_main - not_sniped_back) * 0.5
+        if sniped > 0:
+            calculated_score = max(A * snipes - B * not_sniped_back / sniped - C * not_sniped_back + D * not_sniped_main, 0)
+        else:
+            calculated_score = max(A * snipes - C * not_sniped_back + D * not_sniped_main, 0)
 
-        # If they have less than 100 snipes, then we reduce their pp by 50%
+
+        # If they have less than 100 snipes, then we reduce their score by 50%
         if snipes < 100:
-            calculated_pp *= 0.25
+            calculated_score *= 0.25
         elif snipes < 200:
-            calculated_pp *= 0.5
+            calculated_score *= 0.5
         elif snipes < 300:
-            calculated_pp *= 0.75
+            calculated_score *= 0.75
         elif snipes < 400:
-            calculated_pp *= 0.95
+            calculated_score *= 0.95
 
-        # Now we normalise the pp (30x)
-        calculated_pp *= 30
+        # Now we normalise the score (30x)
+        calculated_score *= 30
 
-        weighted_pp = await self.weight_snipe_pp(calculated_pp)
-        weighted_pp = math.log2(weighted_pp) * 300
-        return weighted_pp
+        weighted_score = await self.weight_snipe_score(calculated_score)
+        if weighted_score>0.0:
+            weighted_score = math.log2(weighted_score) * 300
+        return weighted_score
 
-    async def weight_snipe_pp(self, pp):
-        # PP gets harder to gain every 1000pp that you have.
+
+    async def weight_snipe_score(self, score):
+        # score gets harder to gain every 1000 score that you have.
         # This penalty maxes out at 5x harder to gain
-        if pp <= 1000:
-            return pp
-        new_pp = 0
-        frac = math.floor(pp/1000)
+        if score <= 1000:
+            return score
+        new_score = 0
+        frac = math.floor(score / 1000)
         for i in range(0, frac+1):
             if i > 4:  # the weighting maxes out at 1/5 penalty
-                new_pp += (1/5) * pp
+                new_score += (1/5) * score
                 break
-            elif pp < 1000:
-                new_pp += (1/(i+1))*pp
+            elif score < 1000:
+                new_score += (1/(i+1)) * score
             else:
-                new_pp += (1/(i+1))*1000
-            pp = (pp - 1000)
-        return new_pp
+                new_score += (1/(i+1)) * 1000
+            score = (score - 1000)
+        return new_score
 
     def sort_friend_snipes(self, friends_data):
         # NOT async because it's a local function
