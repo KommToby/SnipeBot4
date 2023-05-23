@@ -3,6 +3,7 @@ from embed.snipable import create_snipable_embed
 from data_types.interactions import CustomInteractionsClient
 from data_types.cogs import Cog
 import random
+from interactions.ext.get import get
 
 
 class Snipable(Cog):  # must have interactions.Extension or this wont work
@@ -40,7 +41,27 @@ class Snipable(Cog):  # must have interactions.Extension or this wont work
             await ctx.send(f"User {username} has no snipable scores! - Did you check the correct user?")
             return
         await self.sort_scores(snipable_scores)
-        beatmaps = await self.get_beatmaps_from_scores(snipable_scores)
+        beatmaps, snipable_scores = await self.get_beatmaps_from_scores(snipable_scores)
+
+        # # now we check if the top ten are up to date
+        checked_scores = 0
+        for i, beatmap in enumerate(beatmaps):
+            scores = await self.osu.get_score_data(beatmap[0], user_data.id)
+            if scores is False:
+                checked_scores += 1
+            elif checked_scores>10:
+                break
+            else:
+                # if the score is not the same as the one in the database, we update it
+                if scores.score.score != snipable_scores[i][2]:
+                    # print(f"{scores.score.score} is not the same as {snipable_scores[i][2]}")
+                    beatmaps.remove(beatmap)
+                    snipable_scores.remove(snipable_scores[i])
+                    newctx = await get(self.client, interactions.Channel,
+                                   channel_id=int(ctx.channel_id._snowflake))
+                    await newctx.send(f"Queued score data Scan for {beatmap[0]}...")
+                    self.client.tracker.rescan_beatmaps.append(beatmap[0])
+
         embed = await create_snipable_embed(user_data.username, snipable_scores, beatmaps)
         await ctx.send(embeds=embed)
 
@@ -78,15 +99,21 @@ class Snipable(Cog):  # must have interactions.Extension or this wont work
             return username_array[0]
 
     async def get_beatmaps_from_scores(self, scores: list):
+        new_scores = scores.copy()
         beatmaps = []
         for i, _ in enumerate(scores):
             if i > 10:
                 break
             beatmap = await self.database.get_beatmap(scores[i][1])
             if not (beatmap):
+                new_scores.remove(scores[i])
+                self.client.tracker.rescan_beatmaps.append(scores[i][1])
+                print(f"added {scores[i][1]} to rescan")
                 continue
             beatmaps.append(beatmap)
-        return beatmaps
+            if len(beatmaps) >= 10:
+                break
+        return beatmaps, new_scores
 
     async def sort_scores(self, scores):
         # sort by the 16th value in the array (snipability) descending
