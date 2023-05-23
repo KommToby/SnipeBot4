@@ -59,8 +59,8 @@ class Snipable(Cog):  # must have interactions.Extension or this wont work
                     snipable_scores.remove(snipable_scores[i])
                     newctx = await get(self.client, interactions.Channel,
                                    channel_id=int(ctx.channel_id._snowflake))
-                    await newctx.send(f"Queued score data Scan for {beatmap[0]}...")
-                    self.client.tracker.rescan_beatmaps.append(beatmap[0])
+                    await newctx.send(f"Rescanning beatmap {beatmap[0]}...")
+                    self.client.tracker.rescan_beatmap(beatmap[0])
 
         embed = await create_snipable_embed(user_data.username, snipable_scores, beatmaps)
         await ctx.send(embeds=embed)
@@ -108,7 +108,7 @@ class Snipable(Cog):  # must have interactions.Extension or this wont work
             if not (beatmap):
                 new_scores.remove(scores[i])
                 self.client.tracker.rescan_beatmaps.append(scores[i][1])
-                print(f"added {scores[i][1]} to rescan")
+                print(f"added {scores[i][1]} to be scanned as a new beatmap")
                 continue
             beatmaps.append(beatmap)
             if len(beatmaps) >= 10:
