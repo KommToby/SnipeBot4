@@ -387,16 +387,23 @@ class Database:
         self.db.commit()
 
     async def add_beatmap(self, id, sr, artist, song, diff, url, len, bpm, mapper, status, bms_id, od, ar, cs, hp):
-        if not(await self.get_beatmap(id)):
-            self.cursor.execute(
-                "INSERT INTO beatmaps VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                (id, sr, artist, song, diff, url, len, bpm,
-                 mapper, status, bms_id, od, ar, cs, hp)
-            )
-            self.db.commit()
+        if status != "ranked" and status != "loved":
+            if not(await self.get_beatmap(id)):
+                self.cursor.execute(
+                    "INSERT INTO beatmaps VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                    (id, sr, artist, song, diff, url, len, bpm,
+                    mapper, status, bms_id, od, ar, cs, hp)
+                )
+                self.db.commit()
+        else:
+            print(f"Beatmap {id} is ranked or loved, not adding to database")
 
     async def add_snipe(self, user_id, beatmap_id, second_user_id, date, first_score, second_score, first_accuracy, second_accuracy, first_mods, second_mods, first_pp, second_pp):
         if not(await self.get_snipe(user_id, beatmap_id, second_user_id)):
+            # check to see if the beatmap exists
+            if not(await self.get_beatmap(beatmap_id)):
+                print(f"Beatmap not found for score, not adding to database")
+                return
             self.cursor.execute(
                 "INSERT INTO snipes VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
                 (user_id, beatmap_id, second_user_id, date, first_score, second_score,
@@ -405,6 +412,10 @@ class Database:
             self.db.commit()
 
     async def add_score(self, user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods, converted_score, converted_bpm, snipability):
+        # check to see if the beatmap exists
+        if not(await self.get_beatmap(beatmap_id)):
+            print(f"Beatmap not found for score, not adding to database")
+            return
         # if score already exists throw an error
         if not(await self.get_score(user_id, beatmap_id)):
             self.cursor.execute(

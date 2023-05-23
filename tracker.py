@@ -122,9 +122,10 @@ class SnipeTracker:
     async def check_main_beatmap(self, play: OsuRecentScore):
         # checks to see if the map is already stored in the database
         if not(await self.database.get_beatmap(play.beatmap.id)):
-            await self.database.add_beatmap(play.beatmap.id, play.beatmap.difficulty_rating, play.beatmapset.artist, play.beatmapset.title, play.beatmap.version, play.beatmap.url, play.beatmap.total_length, play.beatmap.bpm, play.beatmapset.creator, play.beatmap.status, play.beatmap.beatmapset_id, play.beatmap.accuracy, play.beatmap.ar, play.beatmap.cs, play.beatmap.drain)
-            # Checks all users in database for snipes on the new beatmap
-            await self.add_snipes(play)
+            if play.beatmapset.status == "ranked":
+                await self.database.add_beatmap(play.beatmap.id, play.beatmap.difficulty_rating, play.beatmapset.artist, play.beatmapset.title, play.beatmap.version, play.beatmap.url, play.beatmap.total_length, play.beatmap.bpm, play.beatmapset.creator, play.beatmap.status, play.beatmap.beatmapset_id, play.beatmap.accuracy, play.beatmap.ar, play.beatmap.cs, play.beatmap.drain)
+                # Checks all users in database for snipes on the new beatmap
+                await self.add_snipes(play)
 
     # If HR or DT/NC is used, this converts the bpm and star rating of the map for stats
     async def convert_stars_and_bpm(self, play: OsuScoreData):
@@ -373,9 +374,13 @@ class SnipeTracker:
             checked_users_count += 1
             if friend_id not in checked_users:
                 checked_users.append(friend_id)
-        if beatmaps_to_scan != [] and self.rescan_beatmaps != []:
+        if beatmaps_to_scan != [] or self.rescan_beatmaps != []:
             print(f"     checking {len(beatmaps_to_scan) + len(self.rescan_beatmaps)} new beatmaps")
-            await self.check_new_beatmaps(beatmaps_to_scan)
+            if beatmaps_to_scan != []:
+                await self.check_new_beatmaps(beatmaps_to_scan)
+            else:
+                await self.check_new_beatmaps(self.rescan_beatmaps)
+                self.rescan_beatmaps = []
         return local_time, plays
 
     async def check_friend_recent_score(self, active_friends: list, friend_id: str, users: list, recent_plays: list[OsuRecentScore], beatmaps_to_scan: list, recent_score):
@@ -473,7 +478,7 @@ class SnipeTracker:
                 beatmap_data = await self.osu.get_beatmap(beatmap_id)
                 if not(beatmap_data):
                     continue
-                if beatmap_data.mode == 'osu':
+                if beatmap_data.mode == 'osu' and beatmap_data.status == 'ranked':
                     await self.database.add_beatmap(beatmap_id, beatmap_data.difficulty_rating, beatmap_data.beatmapset.artist, beatmap_data.beatmapset.title, beatmap_data.version, beatmap_data.url, beatmap_data.total_length, beatmap_data.bpm, beatmap_data.beatmapset.creator, beatmap_data.status, beatmap_data.beatmapset_id, beatmap_data.accuracy, beatmap_data.ar, beatmap_data.cs, beatmap_data.drain)
                     # should all be passive snipes
                     await self.add_new_beatmap_snipes(beatmap_data)
@@ -506,8 +511,7 @@ class SnipeTracker:
                 if user[1] not in all_users:
                     all_users.append(user[1])
             # Now we have a list of all users with no dupes
-            for user in all_users:
-                await asyncio.sleep(0.1)
+            for i, user in enumerate(all_users):
                 # Get the score of the user on the beatmap
                 score = await self.osu.get_score_data(beatmap_id, user)
                 if score:
@@ -722,8 +726,8 @@ class SnipeTracker:
             snipability *= 0.5
         elif normal_difficulty > 4 and stats['AR'] < 5 and normal_difficulty < 5:
             snipability *= 0.75
-        elif normal_difficulty > 4 and stats['AR'] < 8 and normal_difficulty < 5:
-            snipability *= 0.95 # if the map is high star rating and low AR, its harder to snipe
+        elif normal_difficulty > 4 and stats['AR'] <= 8 and normal_difficulty < 5:
+            snipability *= 0.8 # if the map is high star rating and low AR, its harder to snipe
         elif normal_difficulty > 5 and stats['AR'] <1 and normal_difficulty < 6:
             snipability *= 0.25
         elif normal_difficulty > 5 and stats['AR'] < 5 and normal_difficulty < 6:
@@ -889,11 +893,13 @@ class SnipeTracker:
         if remove_dt:
             mods.remove("DT")
 
-        # final changes due to low AR on low diffs
+        # final changes due to low AR on low diffs or high diffs
         if normal_difficulty > 2 and stats['AR'] < 2:
             snipability *= 0.35
         elif normal_difficulty > 0.5 and stats['AR'] < 1:
             snipability *= 0.5
+        elif normal_difficulty > 6 and stats['AR'] < 8:
+            snipability *= 0.25
 
         # return the snipability
         return snipability

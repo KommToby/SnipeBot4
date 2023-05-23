@@ -115,6 +115,7 @@ class Leaderboard(Cog):
             calculated_score = max(A * snipes - C * not_sniped_back + D * not_sniped_main, 0)
 
 
+
         # If they have less than 100 snipes, then we reduce their score by 50%
         if snipes < 100:
             calculated_score *= 0.25
