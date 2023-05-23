@@ -548,8 +548,8 @@ class SnipeTracker:
                 continue
             # first we add the score of the main user
             converted_stars, converted_bpm, max_combo = await self.convert_stars_and_bpm(main_play.score)
-            snipability = await self.calculate_snipability(main_play.score.beatmap.drain, main_play.score.beatmap.difficulty_rating, {"AR": main_play.score.beatmap.ar, "OD": main_play.score.beatmap.accuracy}, main_play.score.beatmap.bpm, main_play.score.mods, main_play.score.rank, main_play.score.max_combo, main_play.score.rank, main_play.score.beatmap.count_spinners, main_play.score.pp, main_play.score.max_combo, max_combo)
-            await self.database.add_score(main_user[1], data.id, main_play.score.score, main_play.score.accuracy, main_play.score.max_combo, main_play.score.passed, main_play.score.pp, main_play.score.rank, main_play.score.statistics.count_300, main_play.score.statistics.count_100, main_play.score.statistics.count_50, main_play.score.statistics.count_miss, main_play.score.created_at, await self.convert_mods_to_int(main_play.score.mods), converted_stars, converted_bpm)
+            snipability = await self.calculate_snipability(main_play.score.beatmap.drain, main_play.score.beatmap.difficulty_rating, {"AR": main_play.score.beatmap.ar, "OD": main_play.score.beatmap.accuracy}, main_play.score.beatmap.bpm, main_play.score.mods, main_play.score.rank, main_play.score.max_combo, main_play.score.pp, main_play.score.beatmap.count_spinners, main_play.score.pp, main_play.score.max_combo, max_combo)
+            await self.database.add_score(main_user[1], data.id, main_play.score.score, main_play.score.accuracy, main_play.score.max_combo, main_play.score.passed, main_play.score.pp, main_play.score.rank, main_play.score.statistics.count_300, main_play.score.statistics.count_100, main_play.score.statistics.count_50, main_play.score.statistics.count_miss, main_play.score.created_at, await self.convert_mods_to_int(main_play.score.mods), converted_stars, converted_bpm, snipability)
             friends = await self.database.get_user_friends(main_user[0])
             for friend in friends:
                 friend_play = await self.osu.get_score_data(data.id, friend[1])
@@ -717,6 +717,26 @@ class SnipeTracker:
         if stats['OD'] > 10:
             snipability *= 0.99
 
+        # now we check if the map has low AR but high star ratings.
+        if normal_difficulty > 4 and stats['AR'] < 1 and normal_difficulty < 5:
+            snipability *= 0.5
+        elif normal_difficulty > 4 and stats['AR'] < 5 and normal_difficulty < 5:
+            snipability *= 0.75
+        elif normal_difficulty > 4 and stats['AR'] < 8 and normal_difficulty < 5:
+            snipability *= 0.95 # if the map is high star rating and low AR, its harder to snipe
+        elif normal_difficulty > 5 and stats['AR'] <1 and normal_difficulty < 6:
+            snipability *= 0.25
+        elif normal_difficulty > 5 and stats['AR'] < 5 and normal_difficulty < 6:
+            snipability *= 0.5
+        elif normal_difficulty > 5 and stats['AR'] <= 8 and normal_difficulty < 6:
+            snipability *= 0.75
+        elif normal_difficulty > 6 and stats['AR'] < 1:
+            snipability *= 0.1
+        elif normal_difficulty > 6 and stats['AR'] < 5:
+            snipability *= 0.25
+        elif normal_difficulty > 6 and stats['AR'] <= 8:
+            snipability *= 0.5
+
         # bpm handler
         if bpm > 200:
             snipability *= 0.99
@@ -733,6 +753,7 @@ class SnipeTracker:
 
         # pp handler
         if pp is not None:
+            pp = int(pp)
             if pp > 50:
                 snipability *= 0.98
             elif pp > 100:
@@ -867,6 +888,12 @@ class SnipeTracker:
         # Remove DT if needed
         if remove_dt:
             mods.remove("DT")
+
+        # final changes due to low AR on low diffs
+        if normal_difficulty > 2 and stats['AR'] < 2:
+            snipability *= 0.35
+        elif normal_difficulty > 0.5 and stats['AR'] < 1:
+            snipability *= 0.5
 
         # return the snipability
         return snipability
