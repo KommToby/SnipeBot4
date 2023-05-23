@@ -5,7 +5,7 @@ import datetime
 
 class Database:
     def __init__(self, database_name):
-        self.db = sqlite3.connect(database_name)
+        self.db = sqlite3.connect(database_name, timeout=30)
         self.cursor = self.db.cursor()
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS users(

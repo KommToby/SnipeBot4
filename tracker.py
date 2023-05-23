@@ -282,6 +282,13 @@ class SnipeTracker:
                         continue # still no plays
                     else:
                         plays[main_user_data.id] = []
+
+                    # now we remove all recent plays that arent ranked
+                    if recent_plays:
+                        for play in recent_plays:
+                            if play.beatmapset.status != "ranked":
+                                recent_plays.remove(play)
+
                     # Gets the recent score of the main user from the database to compare
                     recent_score = await self.database.get_main_recent_score(main_user_id)
                     print(
@@ -326,7 +333,7 @@ class SnipeTracker:
         all_friends = await self.database.get_all_friends()
         # Below is dupe removal, it also removes any main users from the list.
         all_friends = await self.check_duplicate_friends(all_friends, users)
-        for friend in all_friends:
+        for i, friend in enumerate(all_friends):
             # active user check
             if checked_users_count > 15:
                 pass  # TODO tbh this doesnt need to be implemented for a while, because its pretty fast
@@ -335,13 +342,20 @@ class SnipeTracker:
             recent_plays = await self.osu.get_recent_plays(friend_id)
             if not friend_id in plays:
                 plays[friend_id] = []
+            # remove non ranked maps
+            if recent_plays:
+                for play in recent_plays:
+                    if play.beatmapset.status != "ranked":
+                        recent_plays.remove(play)
             if recent_plays and plays[friend_id] != []:
-                if plays[friend_id].score == recent_plays[0].score and plays[friend_id].beatmap.id == recent_plays[0].beatmap.id:
+                if plays[friend_id].score == recent_plays[0].score and plays[friend_id].beatmap.id == recent_plays[0].beatmap.id or plays[friend_id].beatmapset.status != "ranked":
                     continue  # No need to do anything if the plays are the same
             if not(recent_plays) and plays[friend_id] == []:
                         continue # still no plays
             else:
                 plays[friend_id] = []
+
+
             friend_data = await self.osu.get_user_data(friend_id)
             if not(friend_data):
                 continue
@@ -419,7 +433,20 @@ class SnipeTracker:
                     await self.database.add_score(friend_id, play.beatmap.id, 0, False, False, False, False, False, False, False, False, False, False, False, 0, 0, None)
                     local_score = await self.database.get_user_score_with_zeros(friend_id, play.beatmap.id)
                 # the score is unique, so we can continue
-                if str(play.score) != local_score[2] or local_score is None:
+
+                # if the local_score is none, then we need to check the status of the beatmap
+                if local_score is None:
+                    if play.beatmap.status != "ranked":
+                        continue
+                    else:
+                        # we add the map to the database
+                        await self.database.add_beatmap(play.beatmap.id, play.beatmap.difficulty_rating, play.beatmapset.artist, play.beatmapset.title, play.beatmap.version, play.beatmap.url, play.beatmap.total_length, play.beatmap.bpm, play.beatmapset.creator, play.beatmap.status, play.beatmap.beatmapset_id, play.beatmap.accuracy, play.beatmap.ar, play.beatmap.cs, play.beatmap.drain)
+                        # we add the score to the database
+                        await self.database.add_score(friend_id, play.beatmap.id, 0, False, False, False, False, False, False, False, False, False, False, False, 0, 0, None)
+                        local_score = await self.database.get_user_score_with_zeros(friend_id, play.beatmap.id)
+                        
+
+                if  str(play.score) != local_score[2]:
                     # Comparison between friend and main user begins here
                     main_user_play = await self.osu.get_score_data(beatmap_id, main_user[1])
                     if main_user_play:  # if the main user has actually played the map
@@ -592,13 +619,14 @@ class SnipeTracker:
     async def check_duplicate_friends(self, friends: list, main_users: list):
         # Initialise array for seen friends
         seen_friends = []
+        seen_ids = []
         # Make the main user ids a list of ids from the main_users list
         main_user_ids = {main_user[2] for main_user in main_users}
         # Now iterate for every friend
         for friend in friends:
             # If the friend is not a main user, and hasnt already been added
-            if friend[2] not in main_user_ids and friend[2] not in seen_friends:
-                # Add the new friend to the array
+            if friend[2] not in main_user_ids and friend[1] not in seen_ids:
+                seen_ids.append(friend[1])
                 seen_friends.append(friend)
         # Return list of all seen friends
         return seen_friends
