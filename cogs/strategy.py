@@ -77,7 +77,7 @@ class Strategy(Cog):  # must have commands.cog or this wont work
         sniped - the number of snipes that this user has been sniped by the main user
         """
 
-        A = 3
+        A = 1
         B = 2
         C = 0.5
         D = 4
