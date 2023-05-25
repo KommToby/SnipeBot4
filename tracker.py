@@ -87,9 +87,10 @@ class SnipeTracker:
     async def check_main_beatmap(self, play: OsuRecentScore):
         # checks to see if the map is already stored in the database
         if not(await self.database.get_beatmap(play.beatmap.id)):
-            await self.database.add_beatmap(play.beatmap.id, play.beatmap.difficulty_rating, play.beatmapset.artist, play.beatmapset.title, play.beatmap.version, play.beatmap.url, play.beatmap.total_length, play.beatmap.bpm, play.beatmapset.creator, play.beatmap.status, play.beatmap.beatmapset_id, play.beatmap.accuracy, play.beatmap.ar, play.beatmap.cs, play.beatmap.drain)
-            # Checks all users in database for snipes on the new beatmap
-            await self.add_snipes(play)
+            if play.beatmapset.status == "ranked":
+                await self.database.add_beatmap(play.beatmap.id, play.beatmap.difficulty_rating, play.beatmapset.artist, play.beatmapset.title, play.beatmap.version, play.beatmap.url, play.beatmap.total_length, play.beatmap.bpm, play.beatmapset.creator, play.beatmap.status, play.beatmap.beatmapset_id, play.beatmap.accuracy, play.beatmap.ar, play.beatmap.cs, play.beatmap.drain)
+                # Checks all users in database for snipes on the new beatmap
+                await self.add_snipes(play)
 
     # If HR or DT/NC is used, this converts the bpm and star rating of the map for stats
     async def convert_stars_and_bpm(self, play: OsuScoreData):
@@ -246,6 +247,13 @@ class SnipeTracker:
                         continue # still no plays
                     else:
                         plays[main_user_data.id] = []
+
+                    # now we remove all recent plays that arent ranked
+                    if recent_plays:
+                        for play in recent_plays:
+                            if play.beatmapset.status != "ranked":
+                                recent_plays.remove(play)
+
                     # Gets the recent score of the main user from the database to compare
                     recent_score = await self.database.get_main_recent_score(main_user_id)
                     print(
@@ -290,7 +298,7 @@ class SnipeTracker:
         all_friends = await self.database.get_all_friends()
         # Below is dupe removal, it also removes any main users from the list.
         all_friends = await self.check_duplicate_friends(all_friends, users)
-        for friend in all_friends:
+        for i, friend in enumerate(all_friends):
             # active user check
             if checked_users_count > 15:
                 pass  # TODO tbh this doesnt need to be implemented for a while, because its pretty fast
@@ -299,13 +307,20 @@ class SnipeTracker:
             recent_plays = await self.osu.get_recent_plays(friend_id)
             if not friend_id in plays:
                 plays[friend_id] = []
+            # remove non ranked maps
+            if recent_plays:
+                for play in recent_plays:
+                    if play.beatmapset.status != "ranked":
+                        recent_plays.remove(play)
             if recent_plays and plays[friend_id] != []:
-                if plays[friend_id].score == recent_plays[0].score and plays[friend_id].beatmap.id == recent_plays[0].beatmap.id:
+                if plays[friend_id].score == recent_plays[0].score and plays[friend_id].beatmap.id == recent_plays[0].beatmap.id or plays[friend_id].beatmapset.status != "ranked":
                     continue  # No need to do anything if the plays are the same
             if not(recent_plays) and plays[friend_id] == []:
                         continue # still no plays
             else:
                 plays[friend_id] = []
+
+
             friend_data = await self.osu.get_user_data(friend_id)
             if not(friend_data):
                 continue
@@ -338,9 +353,13 @@ class SnipeTracker:
             checked_users_count += 1
             if friend_id not in checked_users:
                 checked_users.append(friend_id)
-        if beatmaps_to_scan != [] and self.rescan_beatmaps != []:
+        if beatmaps_to_scan != [] or self.rescan_beatmaps != []:
             print(f"     checking {len(beatmaps_to_scan) + len(self.rescan_beatmaps)} new beatmaps")
-            await self.check_new_beatmaps(beatmaps_to_scan)
+            if beatmaps_to_scan != []:
+                await self.check_new_beatmaps(beatmaps_to_scan)
+            else:
+                await self.check_new_beatmaps(self.rescan_beatmaps)
+                self.rescan_beatmaps = []
         return local_time, plays
 
     async def check_friend_recent_score(self, active_friends: list, friend_id: str, users: list, recent_plays: list[OsuRecentScore], beatmaps_to_scan: list, recent_score):
@@ -379,7 +398,20 @@ class SnipeTracker:
                     await self.database.add_score(friend_id, play.beatmap.id, 0, False, False, False, False, False, False, False, False, False, False, False, 0, 0, None)
                     local_score = await self.database.get_user_score_with_zeros(friend_id, play.beatmap.id)
                 # the score is unique, so we can continue
-                if str(play.score) != local_score[2] or local_score is None:
+
+                # if the local_score is none, then we need to check the status of the beatmap
+                if local_score is None:
+                    if play.beatmap.status != "ranked":
+                        continue
+                    else:
+                        # we add the map to the database
+                        await self.database.add_beatmap(play.beatmap.id, play.beatmap.difficulty_rating, play.beatmapset.artist, play.beatmapset.title, play.beatmap.version, play.beatmap.url, play.beatmap.total_length, play.beatmap.bpm, play.beatmapset.creator, play.beatmap.status, play.beatmap.beatmapset_id, play.beatmap.accuracy, play.beatmap.ar, play.beatmap.cs, play.beatmap.drain)
+                        # we add the score to the database
+                        await self.database.add_score(friend_id, play.beatmap.id, 0, False, False, False, False, False, False, False, False, False, False, False, 0, 0, None)
+                        local_score = await self.database.get_user_score_with_zeros(friend_id, play.beatmap.id)
+                        
+
+                if  str(play.score) != local_score[2]:
                     # Comparison between friend and main user begins here
                     main_user_play = await self.osu.get_score_data(beatmap_id, main_user[1])
                     if main_user_play:  # if the main user has actually played the map
@@ -438,7 +470,7 @@ class SnipeTracker:
                 beatmap_data = await self.osu.get_beatmap(beatmap_id)
                 if not(beatmap_data):
                     continue
-                if beatmap_data.mode == 'osu':
+                if beatmap_data.mode == 'osu' and beatmap_data.status == 'ranked':
                     await self.database.add_beatmap(beatmap_id, beatmap_data.difficulty_rating, beatmap_data.beatmapset.artist, beatmap_data.beatmapset.title, beatmap_data.version, beatmap_data.url, beatmap_data.total_length, beatmap_data.bpm, beatmap_data.beatmapset.creator, beatmap_data.status, beatmap_data.beatmapset_id, beatmap_data.accuracy, beatmap_data.ar, beatmap_data.cs, beatmap_data.drain)
                     # should all be passive snipes
                     await self.add_new_beatmap_snipes(beatmap_data)
@@ -471,8 +503,7 @@ class SnipeTracker:
                 if user[1] not in all_users:
                     all_users.append(user[1])
             # Now we have a list of all users with no dupes
-            for user in all_users:
-                await asyncio.sleep(0.1)
+            for i, user in enumerate(all_users):
                 # Get the score of the user on the beatmap
                 score = await self.osu.get_score_data(beatmap_id, user)
                 if score:
@@ -513,8 +544,8 @@ class SnipeTracker:
                 continue
             # first we add the score of the main user
             converted_stars, converted_bpm, max_combo = await self.convert_stars_and_bpm(main_play.score)
-            snipability = await self.calculate_snipability(main_play.score.beatmap.drain, main_play.score.beatmap.difficulty_rating, {"AR": main_play.score.beatmap.ar, "OD": main_play.score.beatmap.accuracy}, main_play.score.beatmap.bpm, main_play.score.mods, main_play.score.rank, main_play.score.max_combo, main_play.score.rank, main_play.score.beatmap.count_spinners, main_play.score.pp, main_play.score.max_combo, max_combo)
-            await self.database.add_score(main_user[1], data.id, main_play.score.score, main_play.score.accuracy, main_play.score.max_combo, main_play.score.passed, main_play.score.pp, main_play.score.rank, main_play.score.statistics.count_300, main_play.score.statistics.count_100, main_play.score.statistics.count_50, main_play.score.statistics.count_miss, main_play.score.created_at, await self.convert_mods_to_int(main_play.score.mods), converted_stars, converted_bpm)
+            snipability = await self.calculate_snipability(main_play.score.beatmap.drain, main_play.score.beatmap.difficulty_rating, {"AR": main_play.score.beatmap.ar, "OD": main_play.score.beatmap.accuracy}, main_play.score.beatmap.bpm, main_play.score.mods, main_play.score.rank, main_play.score.max_combo, main_play.score.pp, main_play.score.beatmap.count_spinners, main_play.score.pp, main_play.score.max_combo, max_combo)
+            await self.database.add_score(main_user[1], data.id, main_play.score.score, main_play.score.accuracy, main_play.score.max_combo, main_play.score.passed, main_play.score.pp, main_play.score.rank, main_play.score.statistics.count_300, main_play.score.statistics.count_100, main_play.score.statistics.count_50, main_play.score.statistics.count_miss, main_play.score.created_at, await self.convert_mods_to_int(main_play.score.mods), converted_stars, converted_bpm, snipability)
             friends = await self.database.get_user_friends(main_user[0])
             for friend in friends:
                 friend_play = await self.osu.get_score_data(data.id, friend[1])
@@ -553,13 +584,14 @@ class SnipeTracker:
     async def check_duplicate_friends(self, friends: list, main_users: list):
         # Initialise array for seen friends
         seen_friends = []
+        seen_ids = []
         # Make the main user ids a list of ids from the main_users list
         main_user_ids = {main_user[2] for main_user in main_users}
         # Now iterate for every friend
         for friend in friends:
             # If the friend is not a main user, and hasnt already been added
-            if friend[2] not in main_user_ids and friend[2] not in seen_friends:
-                # Add the new friend to the array
+            if friend[2] not in main_user_ids and friend[1] not in seen_ids:
+                seen_ids.append(friend[1])
                 seen_friends.append(friend)
         # Return list of all seen friends
         return seen_friends
@@ -682,6 +714,26 @@ class SnipeTracker:
         if stats['OD'] > 10:
             snipability *= 0.99
 
+        # now we check if the map has low AR but high star ratings.
+        if normal_difficulty > 4 and stats['AR'] < 1 and normal_difficulty < 5:
+            snipability *= 0.5
+        elif normal_difficulty > 4 and stats['AR'] < 5 and normal_difficulty < 5:
+            snipability *= 0.75
+        elif normal_difficulty > 4 and stats['AR'] <= 8 and normal_difficulty < 5:
+            snipability *= 0.8 # if the map is high star rating and low AR, its harder to snipe
+        elif normal_difficulty > 5 and stats['AR'] <1 and normal_difficulty < 6:
+            snipability *= 0.25
+        elif normal_difficulty > 5 and stats['AR'] < 5 and normal_difficulty < 6:
+            snipability *= 0.5
+        elif normal_difficulty > 5 and stats['AR'] <= 8 and normal_difficulty < 6:
+            snipability *= 0.75
+        elif normal_difficulty > 6 and stats['AR'] < 1:
+            snipability *= 0.1
+        elif normal_difficulty > 6 and stats['AR'] < 5:
+            snipability *= 0.25
+        elif normal_difficulty > 6 and stats['AR'] <= 8:
+            snipability *= 0.5
+
         # bpm handler
         if bpm > 200:
             snipability *= 0.99
@@ -698,6 +750,7 @@ class SnipeTracker:
 
         # pp handler
         if pp is not None:
+            pp = int(pp)
             if pp > 50:
                 snipability *= 0.98
             elif pp > 100:
@@ -832,6 +885,14 @@ class SnipeTracker:
         # Remove DT if needed
         if remove_dt:
             mods.remove("DT")
+
+        # final changes due to low AR on low diffs or high diffs
+        if normal_difficulty > 2 and stats['AR'] < 2:
+            snipability *= 0.35
+        elif normal_difficulty > 0.5 and stats['AR'] < 1:
+            snipability *= 0.5
+        elif normal_difficulty > 6 and stats['AR'] < 8:
+            snipability *= 0.25
 
         # return the snipability
         return snipability

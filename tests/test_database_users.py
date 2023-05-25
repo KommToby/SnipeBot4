@@ -354,6 +354,24 @@ async def test_db_add_delete_friend(db: Database):
 @pytest.mark.asyncio
 @db_handler
 async def test_db_add_get_score(db: Database):
+    await db.add_beatmap(
+        beatmap_data.id,
+        beatmap_data.difficulty_rating,
+        beatmap_data.beatmapset.artist,
+        beatmap_data.beatmapset.title,
+        beatmap_data.version,
+        beatmap_data.url,
+        beatmap_data.total_length,
+        beatmap_data.bpm,
+        beatmap_data.beatmapset.creator,
+        beatmap_data.status,
+        beatmap_data.beatmapset.id,
+        beatmap_data.accuracy,
+        beatmap_data.ar,
+        beatmap_data.cs,
+        beatmap_data.drain,
+        True
+    )
     await db.add_score(
         score_data.score.user_id,
         score_data.score.beatmap.id,
@@ -371,7 +389,8 @@ async def test_db_add_get_score(db: Database):
         64,  # This is the mod integer value for DT
         score_data.score.beatmap.difficulty_rating,
         score_data.score.beatmap.bpm,
-        0
+        0,
+        True
     )
     database_score = await db.get_score(score_data.score.user_id, score_data.score.beatmap.id)
     assert type(database_score[0]) == int
@@ -402,7 +421,8 @@ async def test_db_add_update_get_score(db: Database):
         64,  # This is the mod integer value for DT
         score_data.score.beatmap.difficulty_rating,
         score_data.score.beatmap.bpm,
-        0
+        0,
+        True
     )
     await db.update_score(
         score_data.score.user_id,
@@ -451,7 +471,8 @@ async def test_db_add_update_get_score_zeros(db: Database):
         64,  # This is the mod integer value for DT
         score_data.score.beatmap.difficulty_rating,
         score_data.score.beatmap.bpm,
-        0
+        0,
+        True
     )
     await db.update_score_zeros(
         score_data.score.user_id,
@@ -487,7 +508,8 @@ async def test_db_add_get_all_scores(db: Database):
             64,  # This is the mod integer value for DT
             score_data.score.beatmap.difficulty_rating,
             i,
-            0
+            0,
+            True
         )
     await db.add_score(
         score_data.score.user_id,
@@ -506,7 +528,8 @@ async def test_db_add_get_all_scores(db: Database):
         64,  # This is the mod integer value for DT
         score_data.score.beatmap.difficulty_rating,
         i,
-        0
+        0,
+        True
     )
     database_score = await db.get_all_scores(score_data.score.user_id)
     assert len(database_score) == 10
@@ -538,7 +561,8 @@ async def test_db_add_get_all_scores_all_users_with_zeros(db: Database):
             64,  # This is the mod integer value for DT
             score_data.score.beatmap.difficulty_rating,
             score_data.score.beatmap.bpm,
-            0
+            0,
+            True
         )
     await db.add_score(
         score_data.score.user_id,
@@ -557,7 +581,8 @@ async def test_db_add_get_all_scores_all_users_with_zeros(db: Database):
         64,  # This is the mod integer value for DT
         score_data.score.beatmap.difficulty_rating,
         score_data.score.beatmap.bpm,
-        0
+        0,
+        True
     )
     database_score = await db.get_all_scores_all_users_with_zeros()
     assert len(database_score) == 11
@@ -597,7 +622,8 @@ async def test_db_get_converted_scores(db: Database):
         64,  # This is the mod integer value for DT
         score_data.score.beatmap.difficulty_rating,
         score_data.score.beatmap.bpm,
-        0
+        0,
+        True
     )
 
     await db.add_score(
@@ -617,7 +643,8 @@ async def test_db_get_converted_scores(db: Database):
         0,
         0,
         0,
-        0
+        0,
+        True
     )
 
     # this wont work with dictionary return because its fetchall
@@ -646,7 +673,8 @@ async def test_db_get_zero_scores(db: Database):
         64,  # This is the mod integer value for DT
         score_data.score.beatmap.difficulty_rating,
         score_data.score.beatmap.bpm,
-        0
+        0,
+        True
     )
 
     await db.add_score(
@@ -666,7 +694,8 @@ async def test_db_get_zero_scores(db: Database):
         0,
         0,
         0,
-        0
+        0,
+        True
     )
 
     await db.add_score(
@@ -686,7 +715,8 @@ async def test_db_get_zero_scores(db: Database):
         0,
         0,
         0,
-        0
+        0,
+        True
     )
 
     await db.add_score(
@@ -706,7 +736,8 @@ async def test_db_get_zero_scores(db: Database):
         0,
         0,
         0,
-        0
+        0,
+        True
     )
 
     zero_scores = await db.get_zero_scores(score_data.score.user_id)
@@ -857,7 +888,8 @@ async def test_db_add_get_beatmap(db: Database):
         beatmap_data.accuracy,
         beatmap_data.ar,
         beatmap_data.cs,
-        beatmap_data.drain
+        beatmap_data.drain,
+        True
     )
     beatmap = await db.get_beatmap(beatmap_data.id)
     assert beatmap[0] == beatmap_data.id
@@ -883,7 +915,8 @@ async def test_db_add_get_all_beatmaps(db: Database):
             beatmap_data.accuracy,
             beatmap_data.ar,
             beatmap_data.cs,
-            beatmap_data.drain
+            beatmap_data.drain,
+            True
         )
     beatmaps = await db.get_all_beatmaps()
     assert len(beatmaps) == 10
@@ -930,7 +963,8 @@ async def test_db_add_get_snipe(db: Database):
         64,
         16,
         score_data.score.pp,
-        score_data.score.pp + 1
+        score_data.score.pp + 1,
+        True
     )
     snipe = await db.get_snipe(7671790, 3601629, 7562902)
     assert snipe[0] == 7671790
@@ -970,7 +1004,8 @@ async def test_db_get_user_beatmap_play(db: Database):
         64,  # This is the mod integer value for DT
         score_data.score.beatmap.difficulty_rating,
         score_data.score.beatmap.bpm,
-        0
+        0,
+        True
     )
     beatmap_play = await db.get_user_beatmap_play(score_data.score.user_id, score_data.score.beatmap.id)
     assert beatmap_play[0] == score_data.score.user.id
@@ -995,7 +1030,8 @@ async def test_db_get_user_snipe_on_beatmap(db: Database):
         64,
         16,
         score_data.score.pp,
-        score_data.score.pp + 1
+        score_data.score.pp + 1,
+        True
     )
     snipe = await db.get_user_snipe_on_beatmap(7671790, 3601629, 7562902)
     assert snipe[0] == 7671790
@@ -1021,7 +1057,8 @@ async def test_db_get_user_score_with_zeros(db: Database):
         64,  # This is the mod integer value for DT
         score_data.score.beatmap.difficulty_rating,
         score_data.score.beatmap.bpm,
-        0
+        0,
+        True
     )
     scores = await db.get_user_score_with_zeros(score_data.score.user_id, score_data.score.beatmap.id)
     assert scores[0] == score_data.score.user.id
@@ -1088,7 +1125,8 @@ async def test_db_get_main_user_score_on_beatmap(db: Database):
         64,  # This is the mod integer value for DT
         score_data.score.beatmap.difficulty_rating,
         score_data.score.beatmap.bpm,
-        0
+        0,
+        True
     )
     score = await db.get_user_score_on_beatmap(score_data.score.user_id, score_data.score.beatmap.id, score_data.score.score)
     assert score[0] == score_data.score.user.id
@@ -1118,7 +1156,8 @@ async def test_db_get_user_snipes(db: Database):
         64,
         16,
         score_data.score.pp,
-        score_data.score.pp + 1
+        score_data.score.pp + 1,
+        True
     )
     snipes = await db.get_user_snipes(7671790, 7562902)
     assert len(snipes) == 1
@@ -1141,7 +1180,8 @@ async def test_db_get_main_user_snipes(db: Database):
         64,
         16,
         score_data.score.pp,
-        score_data.score.pp + 1
+        score_data.score.pp + 1,
+        True
     )
     await db.add_snipe(
         12345,
@@ -1155,7 +1195,8 @@ async def test_db_get_main_user_snipes(db: Database):
         64,
         16,
         score_data.score.pp,
-        score_data.score.pp + 1
+        score_data.score.pp + 1,
+        True
     )
     main_user_snipes = await db.get_main_user_snipes(7671790)
     assert len(main_user_snipes) == 1
@@ -1178,7 +1219,8 @@ async def test_db_get_main_user_sniped(db: Database):
         64,
         16,
         score_data.score.pp,
-        score_data.score.pp + 1
+        score_data.score.pp + 1,
+        True
     )
     await db.add_snipe(
         12345,
@@ -1192,7 +1234,8 @@ async def test_db_get_main_user_sniped(db: Database):
         64,
         16,
         score_data.score.pp,
-        score_data.score.pp + 1
+        score_data.score.pp + 1,
+        True
     )
     main_user_snipes = await db.get_main_user_sniped(7671790)
     assert len(main_user_snipes) == 1
@@ -1233,7 +1276,8 @@ async def test_db_get_week_old_score(db: Database):
         64,  # This is the mod integer value for DT
         score_data.score.beatmap.difficulty_rating,
         score_data.score.beatmap.bpm,
-        0
+        0,
+        True
     )
     await db.add_score(
         score_data.score.user_id,
@@ -1253,7 +1297,8 @@ async def test_db_get_week_old_score(db: Database):
         32,  # This is the mod integer value for not DT
         score_data.score.beatmap.difficulty_rating,
         score_data.score.beatmap.bpm,
-        0
+        0,
+        True
     )
     last_weeks_scores = await db.get_last_weeks_scores(score_data.score.user_id)
     assert len(last_weeks_scores) == 1
@@ -1273,7 +1318,8 @@ async def test_db_get_single_user_snipes(db: Database):
         64,
         16,
         score_data.score.pp,
-        score_data.score.pp + 1
+        score_data.score.pp + 1,
+        True
     )
     await db.add_snipe(
         12345,
@@ -1287,7 +1333,8 @@ async def test_db_get_single_user_snipes(db: Database):
         64,
         16,
         score_data.score.pp,
-        score_data.score.pp + 1
+        score_data.score.pp + 1,
+        True
     )
     main_user_snipes = await db.get_single_user_snipes(7671790, 7562902)
     assert len(main_user_snipes) == 1
@@ -1314,7 +1361,8 @@ async def test_db_get_all_scores_beatmap_ids(db: Database):
         64,  # This is the mod integer value for DT
         score_data.score.beatmap.difficulty_rating,
         score_data.score.beatmap.bpm,
-        0
+        0,
+        True
     )
     await db.add_score(
         score_data.score.user_id,
@@ -1333,7 +1381,8 @@ async def test_db_get_all_scores_beatmap_ids(db: Database):
         32,  # This is the mod integer value for not DT
         score_data.score.beatmap.difficulty_rating,
         score_data.score.beatmap.bpm,
-        0
+        0,
+        True
     )
     beatmap_ids = await db.get_all_scores_beatmap_ids(score_data.score.user_id)
     assert len(beatmap_ids) == 2
@@ -1357,7 +1406,8 @@ async def test_db_get_all_beatmaps_mapper(db: Database):
         beatmap_data.accuracy,
         beatmap_data.ar,
         beatmap_data.cs,
-        beatmap_data.drain
+        beatmap_data.drain,
+        True
     )
     await db.add_beatmap(
         beatmap_data.id+1,
@@ -1374,7 +1424,8 @@ async def test_db_get_all_beatmaps_mapper(db: Database):
         beatmap_data.accuracy,
         beatmap_data.ar,
         beatmap_data.cs,
-        beatmap_data.drain
+        beatmap_data.drain,
+        True
     )
     beatmaps = await db.get_all_beatmaps_mapper("Kommothy")
     assert len(beatmaps) == 1
@@ -1400,7 +1451,8 @@ async def test_db_update_snipability(db: Database):
         32,  # This is the mod integer value for not DT
         score_data.score.beatmap.difficulty_rating,
         score_data.score.beatmap.bpm,
-        0
+        0,
+        True
     )
     await db.update_snipability(score_data.score.user_id, score_data.score.beatmap.id, score_data.score.score, 1)
     a = await db.get_score(score_data.score.user_id, score_data.score.beatmap.id)

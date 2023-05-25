@@ -5,7 +5,7 @@ import datetime
 
 class Database:
     def __init__(self, database_name):
-        self.db = sqlite3.connect(database_name)
+        self.db = sqlite3.connect(database_name, timeout=30)
         self.cursor = self.db.cursor()
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS users(
@@ -386,17 +386,48 @@ class Database:
         )
         self.db.commit()
 
-    async def add_beatmap(self, id, sr, artist, song, diff, url, len, bpm, mapper, status, bms_id, od, ar, cs, hp):
-        if not(await self.get_beatmap(id)):
+    async def add_beatmap(self, id, sr, artist, song, diff, url, len, bpm, mapper, status, bms_id, od, ar, cs, hp, test=False):
+        if status == "ranked" or status == "loved" or test is True:
+            if not(await self.get_beatmap(id)):
+                self.cursor.execute(
+                    "INSERT INTO beatmaps VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                    (id, sr, artist, song, diff, url, len, bpm,
+                    mapper, status, bms_id, od, ar, cs, hp)
+                )
+                self.db.commit()
+        else:
+            print(f"Beatmap {id} is not ranked or loved, not adding to database, and removing from database")
             self.cursor.execute(
-                "INSERT INTO beatmaps VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                (id, sr, artist, song, diff, url, len, bpm,
-                 mapper, status, bms_id, od, ar, cs, hp)
+                "DELETE FROM beatmaps WHERE beatmap_id=?",
+                (id,)
+            )
+            self.cursor.execute(
+                "DELETE FROM scores WHERE beatmap_id=?",
+                (id,)
+            )
+            self.cursor.execute(
+                "DELETE FROM snipes WHERE beatmap_id=?",
+                (id,)
             )
             self.db.commit()
+            print(f"Removed beatmap {id} from database")
 
-    async def add_snipe(self, user_id, beatmap_id, second_user_id, date, first_score, second_score, first_accuracy, second_accuracy, first_mods, second_mods, first_pp, second_pp):
+    async def add_snipe(self, user_id, beatmap_id, second_user_id, date, first_score, second_score, first_accuracy, second_accuracy, first_mods, second_mods, first_pp, second_pp, test=False):
         if not(await self.get_snipe(user_id, beatmap_id, second_user_id)):
+            # check to see if the beatmap exists
+            if not(await self.get_beatmap(beatmap_id)) and test is False:
+                print(f"Beatmap not found for score, not adding to database, and removing all scores on this beatmap from database")
+                self.cursor.execute(
+                    "DELETE FROM scores WHERE beatmap_id=?",
+                    (beatmap_id,)
+                )
+                self.cursor.execute(
+                    "DELETE FROM snipes WHERE beatmap_id=?",
+                    (beatmap_id,)
+                )
+                self.db.commit()
+                print(f"Removed beatmap {beatmap_id} from database")
+                return
             self.cursor.execute(
                 "INSERT INTO snipes VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
                 (user_id, beatmap_id, second_user_id, date, first_score, second_score,
@@ -404,7 +435,11 @@ class Database:
             )
             self.db.commit()
 
-    async def add_score(self, user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods, converted_score, converted_bpm, snipability):
+    async def add_score(self, user_id, beatmap_id, score, accuracy, max_combo, passed, pp, rank, count_300, count_100, count_50, count_miss, date, mods, converted_score, converted_bpm, snipability, test=False):
+        # check to see if the beatmap exists
+        if not(await self.get_beatmap(beatmap_id)) and test is False:
+            print(f"Beatmap not found for score, not adding to database")
+            return
         # if score already exists throw an error
         if not(await self.get_score(user_id, beatmap_id)):
             self.cursor.execute(
