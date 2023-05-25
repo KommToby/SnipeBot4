@@ -1,4 +1,5 @@
 import time
+import re
 from embed.new_best_score import *
 from embed.snipe import *
 from interactions.ext.get import get
@@ -17,67 +18,29 @@ class SnipeTracker:
         self.database = client.database
         self.rescan_beatmaps = []
 
-    async def convert_datetime_to_int(self, datetime: str):
+    async def convert_datetime_to_int(self, datetime_str: str):
         # '2021-08-23T21:31:10+00:00'
-        date = datetime.split('-')
-        year = date[0]
-        month = date[1]
-        date = date[2].split('T')
-        day = date[0]
-        date = date[1].split(':')
-        hour = date[0]
-        minute = date[1]
-        date = date[2].split("+")
-        date = date[0].split("Z")
-        second = date[0]
-        return int(second)+60*int(minute)+3600*int(hour)+86400*int(day)+2678400*int(month)+31536000*int(year)
+        conversion_ratio = [31_536_000, 2_678_400, 86_400, 3_600, 60, 1]
+
+        return sum([a * b for a, b in zip(conversion_ratio, map(int, re.split('[-T:+Z]', datetime_str)))])
 
     # converts modarray into a binary value
-    async def convert_mods_to_int(self, modarray: list):
-        value = 0
-        if modarray:
-            for mod in modarray:
-                if mod == "NF":
-                    value += 1
-                elif mod == "EZ":
-                    value += 2
-                elif mod == "TD":
-                    value += 4
-                elif mod == "HD":
-                    value += 8
-                elif mod == "HR":
-                    value += 16
-                elif mod == "SD":
-                    value += 32
-                elif mod == "DT":
-                    value += 64
-                elif mod == "RX":
-                    value += 128
-                elif mod == "HT":
-                    value += 256
-                elif mod == "NC":
-                    value += 512
-                elif mod == "FL":
-                    value += 1024
-                elif mod == "Autoplay":
-                    value += 2048
-                elif mod == "SO":
-                    value += 4096
-                elif mod == "Relax2":
-                    value += 8192
-                elif mod == "PF":
-                    value += 16384
-        return value
+    async def convert_mods_to_int(self, mod_array: list):
+        mods = ['NF', 'EZ', 'TD', 'HD', 'HR', 'SD', 'DT', 'RX', 'HT', 'NC', 'FL', 'Autoplay', 'SO', 'Relax2', 'PF']
+        mod_index = [i for i, j in enumerate(mods) if j in mod_array]
 
-    async def update_decode(self, modint: int, value: int, modarray: list, mod: str):
-        modarray.append(mod)
-        modint = modint - value
-        return modint, modarray
+        return sum([i * i for i in mod_index])
+
+    async def update_decode(self, mod_int: int, value: int, mod_array: list, mod: str):
+        mod_array.append(mod)
+        mod_int = mod_int - value
+
+        return mod_int, mod_array
 
     # converts mod integer back into array of mods
-    async def decode_mods_to_array(self, modint: int):
-        modarray = []
-        moddict = {
+    async def decode_mods_to_array(self, mod_int: int):
+        mod_array = []
+        mod_dict = {
             16384: "PF",
             8192: "Relax2",
             4096: "SO",
@@ -94,13 +57,15 @@ class SnipeTracker:
             2: "EZ",
             1: "NF"
         }
-        for key in moddict:
-            if modint >= key:
-                if (modint-key) >= 0:
-                    modint, modarray = await self.update_decode(modint, key, modarray, moddict[key])
-        if modint != 0:
-            print("An error occured when decoding mod array")
-        return modarray
+        for key in mod_dict:
+            if mod_int >= key:
+                if (mod_int - key) >= 0:
+                    mod_int, mod_array = await self.update_decode(mod_int, key, mod_array, mod_dict[key])
+
+        if mod_int != 0:
+            print("An error occurred when decoding the mod array.")
+
+        return mod_array
 
     # Start point of the infinite loop
     async def start_loop(self):
@@ -109,14 +74,16 @@ class SnipeTracker:
             try:
                 if plays is None:
                     plays = {}
+
                 s = time.time()
                 plays = await self.tracker_loop(plays)
                 await asyncio.sleep(1)
-                print(
-                    f"Tracker loop took {round((time.time() - s),2)} seconds")
+                print(f'Tracker loop took {round((time.time() - s), 2)} seconds')
+
             except Exception as e:
-                print(f"Error occured in tracker loop: {e}")
+                print(f'Error occurred in tracker loop: {e}')
                 pass
+            # TODO: continue from here - ellie
 
     # Checking a beatmap that the main user has played
     async def check_main_beatmap(self, play: OsuRecentScore):
@@ -279,7 +246,7 @@ class SnipeTracker:
                     if recent_plays:
                         plays[main_user_data.id] = recent_plays[0]
                     if not(recent_plays) and plays[main_user_data.id] == []:
-                        continue # still no plays
+                        continue  # still no plays
                     else:
                         plays[main_user_data.id] = []
 
