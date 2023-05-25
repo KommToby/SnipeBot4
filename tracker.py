@@ -74,10 +74,12 @@ class SnipeTracker:
             try:
                 if plays is None:
                     plays = {}
+
                 s = time.time()
                 plays = await self.tracker_loop(plays)
                 await asyncio.sleep(1)
-                print(f'Tracker loop took {round((time.time() - s),2)} seconds')
+                print(f'Tracker loop took {round((time.time() - s), 2)} seconds')
+
             except Exception as e:
                 print(f'Error occurred in tracker loop: {e}')
                 pass
@@ -244,7 +246,7 @@ class SnipeTracker:
                     if recent_plays:
                         plays[main_user_data.id] = recent_plays[0]
                     if not(recent_plays) and plays[main_user_data.id] == []:
-                        continue # still no plays
+                        continue  # still no plays
                     else:
                         plays[main_user_data.id] = []
 
