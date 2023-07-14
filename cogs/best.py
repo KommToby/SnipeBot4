@@ -66,20 +66,22 @@ class Best(Cog):  # must have interactions.Extension or this wont work
     async def handle_time(self, ctx, kwargs):
         if len(kwargs) > 0:
             if "time" in kwargs:
+                time_kwarg = kwargs['time'].lower()
                 # we check if one of the options was chosen
-                if kwargs['time'].lower() == "all":
-                    return (datetime.datetime.utcnow() - datetime.timedelta(days=20000)).strftime("%Y-%m-%dT%H:%M:%SZ"), kwargs['time']
-                elif kwargs['time'].lower() == "year":
-                    return (datetime.datetime.utcnow() - datetime.timedelta(days=365)).strftime("%Y-%m-%dT%H:%M:%SZ"), kwargs['time']
-                elif kwargs['time'].lower() == "month":
-                    return (datetime.datetime.utcnow() - datetime.timedelta(days=30)).strftime("%Y-%m-%dT%H:%M:%SZ"), kwargs['time']
-                elif kwargs['time'].lower() == "week":
-                    return (datetime.datetime.utcnow() - datetime.timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%SZ"), kwargs['time']
-                elif kwargs['time'].lower() == "day":
-                    return (datetime.datetime.utcnow() - datetime.timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ"), kwargs['time']
+                if time_kwarg == "all":
+                    days_var = 20000
+                elif time_kwarg == "year":
+                    days_var = 365
+                elif time_kwarg == "month":
+                    days_var = 30
+                elif time_kwarg == "week":
+                    days_var = 7
+                elif time_kwarg == "day":
+                    days_var = 1
                 else:
                     await ctx.send("Invalid time period: all, year, month, week, day")
                     return False
+                return (datetime.datetime.utcnow() - datetime.timedelta(days=days_var)).strftime("%Y-%m-%dT%H:%M:%SZ"), kwargs['time']
             else:
                 return (datetime.datetime.utcnow() - datetime.timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%SZ"), "week"
         else:
